@@ -2,6 +2,7 @@
 import os
 import torch
 import scipy.io
+import traceback
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -81,40 +82,53 @@ class WiderFaceDataset(Dataset):
             with open(self.dataset.iloc[idx]['image_location'], 'rb') as f:
                 image = Image.open(f)
                 image = image.convert('RGB')
-                image = self.resize_image(image)
+                image, boxes = self.resize_image(image, self.dataset.iloc[idx]['image_ground_truth'])
 
         except Exception:
-            print("Image not found..", Exception.__traceback__)
+            print("Image not found..", traceback.format_exception())
             return ([], self.dataset.iloc[idx]['image_ground_truth'])
 
         image_tensor = self.pil2tensor(image)
-        ground_truth_tensor = self.dataset.iloc[idx]['image_ground_truth']
-        ground_truth_tensor = torch.tensor(np.array(ground_truth_tensor))
+        # ground_truth_tensor = boxes
+        ground_truth_tensor = torch.tensor(np.array(boxes))
 
         return (image_tensor, ground_truth_tensor)
     
     # Referenced from: https://jdhao.github.io/2017/11/06/resize-image-to-square-with-padding/
-    def resize_image(self, im, dimension=1024):
+    def resize_image(self, im, b_boxes, dimension=1024):
         old_size = im.size
         ratio = float(dimension)/max(old_size)
         new_size = tuple([int(x*ratio) for x in old_size])
 
         im = im.resize(new_size, Image.ANTIALIAS)
-        
+
+        offset_x = (dimension-new_size[0])//2
+        offset_y = (dimension-new_size[1])//2
+
         # create a new image and paste the resized on it
         new_im = Image.new("RGB", (dimension, dimension))
-        new_im.paste(im, ((dimension-new_size[0])//2,
-                            (dimension-new_size[1])//2))
+        new_im.paste(im, (offset_x, offset_y))
 
-        return new_im
+        # Re-size and offset bounding boxes based on image
+        results = []
+
+        for box in b_boxes:
+            x = int(abs(box[0]*ratio + offset_x))
+            y = int(abs(box[1]*ratio + offset_y))
+            l = int(box[2] * ratio)
+            b = int(box[3] * ratio)
+            new_box = [x, y, l, b]
+            results.append(new_box)
+
+        return new_im, results
         
     def generate_anchors(self, file_name):
         image = np.array(Image.open(file_name).convert('RGB'), dtype=np.uint32)
         print(generate_anchors(RPN_ANCHOR_SCALES[0], RPN_ANCHOR_RATIOS, image.shape, 4, 1))
 
     
-    def plot_boxes(self, file, boxes):
-        im = np.array(Image.open(file).convert('RGB'), dtype=np.uint8)
+    def plot_boxes(self, im, boxes):
+        # im = np.array(Image.open(file).convert('RGB'), dtype=np.uint8)
 
         # Create figure and axes
         fig,ax = plt.subplots(1)
