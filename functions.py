@@ -14,7 +14,7 @@ def get_regions(features, N, list_bb):
 
     pos_anc = []
     neg_anc = []
-    scale = 32
+    scale = 64
 
     for bs in box_size:
         for i in range(feat_h):
