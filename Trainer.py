@@ -20,14 +20,10 @@ from numpy.linalg import norm
 
 def custom_collate(batch):
 
-    #(images_1, images_2, subject_1, subject_2, template_1, template_2)
-    images_1 = [item[0] for item in batch]
-    images_2 = [item[1] for item in batch]
-    subject_1 = torch.Tensor([item[2] for item in batch])
-    subject_2 = torch.Tensor([item[3] for item in batch])
-    template_1 = torch.Tensor([item[4] for item in batch])
-    template_2 = torch.Tensor([item[5] for item in batch])
-    return [images_1, images_2, subject_1, subject_2, template_1, template_2]
+    #(images, ground_truth_boxes)
+    images = [item[0] for item in batch]
+    ground_truth_boxes = [item[1] for item in batch]
+    return [images, ground_truth_boxes]
 
 
 
@@ -35,11 +31,11 @@ def custom_collate(batch):
 # https://github.com/pytorch/examples/blob/master/imagenet/main.py
 class Trainer:
 
-    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=128, validation_batch_size=5): 
+    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=5, validation_batch_size=5): 
 
         # Create training dataloader
         self.train_loader = torch.utils.data.DataLoader(training_data, batch_size=training_batch_size, shuffle=True,
-                                                             num_workers=5)
+                                                             num_workers=5, collate_fn=custom_collate)
 
         # Create validation dataloader
         self.validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=validation_batch_size, shuffle=False,
@@ -47,12 +43,6 @@ class Trainer:
 
         self.num_classes = num_classes
         self.early_stopper = EarlyStopping.EarlyStopper()
-    
-    def convert_subjects_to_classes(self, target, subject_class_map):
-        result = []
-        for t in target.numpy():
-            result.append(subject_class_map[t])
-        return Variable(torch.from_numpy(np.array(result)), requires_grad=False)
 
     
     def train(self, model, criterion, optimizer, epoch, usegpu):
@@ -68,49 +58,47 @@ class Trainer:
 
         torch.cuda.empty_cache()
 
-        for i, (data, target) in enumerate(self.train_loader):
+        for i, (images, targets) in enumerate(self.train_loader):
 
-            print(data)
+            for j in range(len(targets)):
 
-            data, target = Variable(data), Variable(target, requires_grad=False)
+                data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
 
-            # target = self.convert_subjects_to_classes(target, subject_class_map)
+                # if usegpu:
+                #     data = data.cuda(non_blocking=True)
+                #     target = target.cuda(non_blocking=True)
 
-            # if usegpu:
-            #     data = data.cuda(non_blocking=True)
-            #     target = target.cuda(non_blocking=True)
+                # # Compute Model output
+                # output = model(data)
 
-            # # Compute Model output
-            # output = model(data)
+                # # Compute Loss
+                # loss = criterion(output, target)
 
-            # # Compute Loss
-            # loss = criterion(output, target)
+                # # measure accuracy and record loss
+                # acc1, acc5 = self.accuracy(output, target, topk=(1, 5))
+                # losses.update(loss.item(), data.size(0))
+                # top1.update(acc1[0], data.size(0))
+                # top5.update(acc5[0], data.size(0))
 
-            # # measure accuracy and record loss
-            # acc1, acc5 = self.accuracy(output, target, topk=(1, 5))
-            # losses.update(loss.item(), data.size(0))
-            # top1.update(acc1[0], data.size(0))
-            # top5.update(acc5[0], data.size(0))
+                # # Clear(zero) Gradients for theta
+                # optimizer.zero_grad()
 
-            # # Clear(zero) Gradients for theta
-            # optimizer.zero_grad()
+                # # Perform BackProp wrt theta
+                # loss.backward()
 
-            # # Perform BackProp wrt theta
-            # loss.backward()
+                # # Update theta
+                # optimizer.step()
 
-            # # Update theta
-            # optimizer.step()
+                # # measure elapsed time
+                # batch_time.update(time.time() - start)
+                # start = time.time()
 
-            # # measure elapsed time
-            # batch_time.update(time.time() - start)
-            # start = time.time()
-
-            # print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
-            #         'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-            #             'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
-            #             epoch, i, len(self.train_loader), batch_time=batch_time,
-            #             loss=losses), end="")
-        
+                # print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
+                #         'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                #             'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
+                #             epoch, i, len(self.train_loader), batch_time=batch_time,
+                #             loss=losses), end="")
+            
         print("\nTraining Accuracy: Acc@1: {top1.avg:.3f}%, Acc@5: {top5.avg:.3f}%".format(top1=top1, top5=top5))
 
     def normalize(self, features):

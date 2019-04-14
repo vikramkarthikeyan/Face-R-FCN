@@ -11,7 +11,7 @@ from tqdm import tqdm
 from torchsummary import summary
 from loaders import WiderfaceDataset
 from Trainer import Trainer
-from models import resnet101
+from models import resnets
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--retrain', dest='retrain', action='store_true', default=False)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     trainer = Trainer(training_set, validation_set)
 
     # Initialize model
-    model = resnet101.resnet101(pretrained=True)
+    model = resnets.resnet50(pretrained=True)
 
     # Modify ResNet by adding an RPN
     num_ftrs = model.fc.in_features
@@ -101,12 +101,12 @@ if __name__ == "__main__":
         trainer.train(model, criterion, optimizer, epoch, use_gpu)
 
         # Checkpointing the model after every epoch
-        trainer.save_checkpoint({
-                        'epoch': epoch + 1,
-                        'state_dict': model.state_dict(),
-                        'best_accuracy': 0,
-                        'optimizer' : optimizer.state_dict(),
-        }, model_name)
+        # trainer.save_checkpoint({
+        #                 'epoch': epoch + 1,
+        #                 'state_dict': model.state_dict(),
+        #                 'best_accuracy': 0,
+        #                 'optimizer' : optimizer.state_dict(),
+        # }, model_name)
 
 
 

@@ -1,5 +1,6 @@
 
 import os
+import torch
 import scipy.io
 import numpy as np
 import pandas as pd
@@ -66,8 +67,8 @@ class WiderFaceDataset(Dataset):
 
                 # self.plot_boxes(file_path,bounding_boxes_filtered)
                 # self.generate_anchors(file_name)
-                break
-            break
+                # break
+            # break
         
         # convert to pandas
         self.dataset = pd.DataFrame.from_dict(image_metadata)
@@ -80,17 +81,32 @@ class WiderFaceDataset(Dataset):
             with open(self.dataset.iloc[idx]['image_location'], 'rb') as f:
                 image = Image.open(f)
                 image = image.convert('RGB')
+                image = self.resize_image(image)
 
         except Exception:
             print("Image not found..", Exception.__traceback__)
             return ([], self.dataset.iloc[idx]['image_ground_truth'])
 
-        tensor = self.pil2tensor(image)
+        image_tensor = self.pil2tensor(image)
+        ground_truth_tensor = self.dataset.iloc[idx]['image_ground_truth']
+        ground_truth_tensor = torch.tensor(np.array(ground_truth_tensor))
 
-        print(tensor.shape)
+        return (image_tensor, ground_truth_tensor)
+    
+    # Referenced from: https://jdhao.github.io/2017/11/06/resize-image-to-square-with-padding/
+    def resize_image(self, im, dimension=1024):
+        old_size = im.size
+        ratio = float(dimension)/max(old_size)
+        new_size = tuple([int(x*ratio) for x in old_size])
 
-        return (tensor, self.dataset.iloc[idx]['image_ground_truth'])
+        im = im.resize(new_size, Image.ANTIALIAS)
+        
+        # create a new image and paste the resized on it
+        new_im = Image.new("RGB", (dimension, dimension))
+        new_im.paste(im, ((dimension-new_size[0])//2,
+                            (dimension-new_size[1])//2))
 
+        return new_im
         
     def generate_anchors(self, file_name):
         image = np.array(Image.open(file_name).convert('RGB'), dtype=np.uint32)
