@@ -89,7 +89,7 @@ class WiderFaceDataset(Dataset):
         # ground_truth_tensor = boxes
         ground_truth_tensor = torch.tensor(np.array(boxes))
 
-        return (image_tensor, ground_truth_tensor)
+        return (image_tensor, ground_truth_tensor, self.dataset.iloc[idx]['image_location'])
     
     # Referenced from: https://jdhao.github.io/2017/11/06/resize-image-to-square-with-padding/
     def resize_image(self, im, b_boxes, dimension=1024):

@@ -6,12 +6,11 @@ from torch.autograd import Variable
 
 from resnets import resnet50
 from rpn import RPN
-from proposal_target_layer import _ProposalTargetLayer
 
 INPUT_CHANNELS_RPN = 2048
 ANCHOR_SIZES = [(128, 128), (256, 128), (128, 256), (256, 256), (256, 512), (512, 256)]
 STRIDE = 1
-
+IMAGE_VS_FEATURE_SCALE = 3
 
 class _RFCN(nn.Module):
     """ R-FCN """
@@ -31,8 +30,7 @@ class _RFCN(nn.Module):
         print(self.feature_extractor)
 
         # Define the RPN
-        self.RCNN_rpn = RPN(INPUT_CHANNELS_RPN, ANCHOR_SIZES, STRIDE)
-        self.RCNN_proposal_target = _ProposalTargetLayer(self.n_classes)
+        self.RCNN_rpn = RPN(INPUT_CHANNELS_RPN, ANCHOR_SIZES, STRIDE, IMAGE_VS_FEATURE_SCALE)
 
         # TODO: Define the pooling layers
 

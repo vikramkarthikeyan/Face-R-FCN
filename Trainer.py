@@ -23,7 +23,8 @@ def custom_collate(batch):
     #(images, ground_truth_boxes)
     images = [item[0] for item in batch]
     ground_truth_boxes = [item[1] for item in batch]
-    return [images, ground_truth_boxes]
+    image_paths = [item[2] for item in batch]
+    return [images, ground_truth_boxes, image_paths]
 
 
 
@@ -58,11 +59,13 @@ class Trainer:
 
         torch.cuda.empty_cache()
 
-        for i, (images, targets) in enumerate(self.train_loader):
+        for i, (images, targets, image_paths) in enumerate(self.train_loader):
 
             for j in range(len(targets)):
 
                 data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
+
+                model(data, image_paths[j], target, 1)
 
                 # if usegpu:
                 #     data = data.cuda(non_blocking=True)
