@@ -14,12 +14,9 @@ import torch.nn as nn
 import numpy as np
 import math
 import yaml
-from model.utils.config import cfg
-from .generate_anchors import generate_anchors
-from .bbox_transform import bbox_transform_inv, clip_boxes, clip_boxes_batch
-from model.nms.nms_wrapper import nms
-
 import pdb
+
+from PIL import Image
 
 DEBUG = False
 
@@ -115,7 +112,7 @@ def get_regions(features, N, list_bb):
                     # neg_anc.append((x * scale, (x + bs[0]) * scale, y * scale, (y + bs[1]) * scale))
                     neg_anc.append([y * scale, x * scale,  bs[1], bs[0]])
 
-    return pos_anc, neg_anc
+    return pos_anc, neg_anc[:100]
 
 
 def calc_IOU(boxA, boxB):
