@@ -60,13 +60,13 @@ class WiderFaceDataset(Dataset):
                     image_metadata['image_ground_truth'].append(bounding_boxes_filtered)
 
                 # Plot anchors
-                positive_anchors, negative_anchors = get_regions(np.array(Image.open(file_path).convert('RGB'), dtype=np.uint32), 100, bounding_boxes_filtered)
-                print("positive:",len(positive_anchors))
-                print("negative:",len(negative_anchors))
-                self.plot_boxes(file_path, positive_anchors, [], bounding_boxes_filtered)
+                # positive_anchors, negative_anchors = get_regions(np.array(Image.open(file_path).convert('RGB'), dtype=np.uint32), 100, bounding_boxes_filtered)
+                # print("positive:",len(positive_anchors))
+                # print("negative:",len(negative_anchors))
+                # self.plot_boxes(file_path, positive_anchors, [], bounding_boxes_filtered)
 
                 break
-            # break
+            break
         
         # convert to pandas
         self.dataset = pd.DataFrame.from_dict(image_metadata)
