@@ -8,7 +8,7 @@ import math
 import pdb
 import time
 
-from proposal_layer import _ProposalLayer
+from .proposal_layer import _ProposalLayer
 
 
 # Referred from https://github.com/jmerkow/R-FCN.rsna2018
@@ -51,7 +51,7 @@ class RPN(nn.Module):
         )
         return x
 
-    def forward(self, base_feat, im_info, gt_boxes, num_boxes):
+    def forward(self, base_feat, im_info, gt_boxes, num_boxes, image):
 
         batch_size = base_feat.size(0)
 
@@ -71,7 +71,7 @@ class RPN(nn.Module):
         # proposal layer
         cfg_key = 'TRAIN' if self.training else 'TEST'
 
-        rois = self.RPN_proposal(base_feat, gt_boxes, im_info)
+        rois = self.RPN_proposal(base_feat, gt_boxes, im_info, image)
 
 
         return rois, self.rpn_loss_cls, self.rpn_loss_box

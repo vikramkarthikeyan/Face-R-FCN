@@ -65,8 +65,8 @@ class WiderFaceDataset(Dataset):
                 # print("negative:",len(negative_anchors))
                 # self.plot_boxes(file_path, positive_anchors, [], bounding_boxes_filtered)
 
-                break
-            break
+                # break
+            # break
         
         # convert to pandas
         self.dataset = pd.DataFrame.from_dict(image_metadata)

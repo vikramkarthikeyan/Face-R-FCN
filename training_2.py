@@ -78,9 +78,6 @@ if __name__ == "__main__":
     
     end_epochs = start_epochs + EPOCHS
 
-    # Train the model
-    summary(model, (3, 1024, 1024))
-
     highest_accuracy = 0
     highest_accuracy_5 = 0
 

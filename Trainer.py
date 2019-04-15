@@ -65,7 +65,7 @@ class Trainer:
 
                 data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
 
-                model(data, image_paths[j], target, 1)
+                model([data], [image_paths[j]], target, [1])
 
                 # if usegpu:
                 #     data = data.cuda(non_blocking=True)

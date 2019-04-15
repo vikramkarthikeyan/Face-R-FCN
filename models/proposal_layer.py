@@ -12,11 +12,16 @@ from __future__ import absolute_import
 import torch
 import torch.nn as nn
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import math
 import yaml
 import pdb
+import torchvision
 
 from PIL import Image
+
+
 
 DEBUG = False
 
@@ -33,18 +38,24 @@ class _ProposalLayer(nn.Module):
         self._box_sizes = box_sizes
         self._scale = scale
 
-    def forward(self, features, b_boxes, im_path):
+    def forward(self, features, b_boxes, im_path, image):
+
+        orig_b_boxes = b_boxes
 
         # Convert bounding boxes to a scale of the feature map from the input image
-
+        b_boxes = scale_boxes(b_boxes, self._scale, 'down')
         
         # Generate anchors
-        positive_anchors, negative_anchors = get_regions(features, 100, b_boxes)
+        positive_anchors, negative_anchors = get_regions(features, 100, b_boxes, self._box_sizes)
 
         # Convert anchors to original image size
+        b_boxes = scale_boxes(b_boxes, self._scale, 'up')
+        positive_anchors = scale_boxes(positive_anchors, self._scale, 'up')
+        negative_anchors = scale_boxes(negative_anchors, self._scale, 'up')
+
 
         # Plot anchors on original image
-        plot_boxes(im_path, positive_anchors, negative_anchors, b_boxes)
+        plot_boxes(image[0], positive_anchors, negative_anchors, b_boxes)
 
         return []
 
@@ -56,8 +67,24 @@ class _ProposalLayer(nn.Module):
         """Reshaping happens during the call to forward."""
         pass
 
+def scale_boxes(boxes, scale, scale_type):
+    results = []
 
-def get_regions(features, N, list_bb):
+    if scale_type == 'down':
+        scale = 1/scale
+
+    for box in boxes:
+        x = int(float(box[0]) * scale)
+        y = int(float(box[1]) * scale)
+        l = int(float(box[2]) * scale)
+        b = int(float(box[3]) * scale)
+        results.append([x,y,l,b])
+    
+    return results
+    
+
+
+def get_regions(features, N, list_bb, box_size):
     """
     Function to generate Positive and Negative anchors.
     :param features:  Extracted features
@@ -67,10 +94,9 @@ def get_regions(features, N, list_bb):
     """
 
     # box_size = [(32, 32), (64, 32), (32, 64)]
-    box_size = [(128, 128), (256, 128), (128, 256), (256, 256), (256, 512), (512, 256)]
+    # box_size = [(128, 128), (256, 128), (128, 256), (256, 256), (256, 512), (512, 256)]
     """Sizes for region proposals"""
-
-    feat_h, feat_w, _ = features.shape
+    _, _, feat_h, feat_w = features.shape
 
     print("Shape of features:", features.shape)
     print("Shape of bounding box:", list_bb[0])
@@ -104,7 +130,7 @@ def get_regions(features, N, list_bb):
                 
                     # print(max_iou)
 
-                if max_iou > 0.762:
+                if max_iou > 0.7:
                     print(frame_a, frame_b, max_iou)
                     # pos_anc.append((x * scale, (x + bs[0]) * scale, y * scale, (y + bs[1]) * scale))
                     pos_anc.append([y * scale, x * scale,  bs[1], bs[0]])
@@ -147,8 +173,11 @@ def calc_IOU(boxA, boxB):
     return iou
 
 
-def plot_boxes(file, positive_anchors, negative_anchors, boxes):
-        im = np.array(Image.open(file).convert('RGB'), dtype=np.uint8)
+def plot_boxes(im, positive_anchors, negative_anchors, boxes):
+    # torchvision.transforms.ToPILImage().
+
+        image = torchvision.transforms.ToPILImage()(im)
+        im = np.array(image, dtype=np.uint8)
 
         # Create figure and axes
         fig,ax = plt.subplots(1)
