@@ -72,7 +72,7 @@ class WiderFaceDataset(Dataset):
                 self.plot_boxes(file_path, positive_anchors, bounding_boxes_filtered)
 
                 break
-            break
+            # break
         
         # convert to pandas
         self.dataset = pd.DataFrame.from_dict(image_metadata)
@@ -199,6 +199,7 @@ def generate_anchors(scales, ratios, shape, feature_stride, anchor_stride):
                             box_centers + 0.5 * box_sizes], axis=1)
     return boxes
 
+
 def get_regions(features, N, list_bb):
     """
     Function to generate Positive and Negative anchors.
@@ -208,39 +209,51 @@ def get_regions(features, N, list_bb):
     :return:          Positive and negative anchors.
     """
 
-    box_size = [(32, 32), (64, 32), (32, 64)]
+    # box_size = [(32, 32), (64, 32), (32, 64)]
+    box_size = [(128, 128), (256, 128), (128, 256), (256, 256), (256, 512), (512, 256)]
     """Sizes for region proposals"""
 
     feat_h, feat_w, _ = features.shape
+
+    print("Shape of features:", features.shape)
+    print("Shape of bounding box:", list_bb[0])
 
     pos_anc = []
     neg_anc = []
     scale = 1
 
     for bs in box_size:
-        for i in range(0, feat_h, 2):
-            for j in range(0, feat_w, 2):
+        for i in range(0, feat_h):
+            for j in range(0, feat_w):
 
                 max_iou = 0
 
                 x = min(feat_h, max(0, (i - (bs[0] // 2))))
                 y = min(feat_w, max(0, (j - (bs[1] // 2))))
 
-                im_slice = features[x:x + bs[0], y:y + bs[1]]
+                # im_slice = features[x:x + bs[0], y:y + bs[1]]
+                frame_a = (x, y, x + bs[0], y + bs[1])
+                """
+                Frame A is the sliding window for calculation.
+                """
 
                 for bb in list_bb:
-                    iou = calc_IOU((x, x + bs[0], y, y + bs[1]), (bb[0], bb[1], bb[0] + bb[2], bb[1] + bb[3]))
+                    frame_b = (bb[1], bb[0], bb[1] + bb[3], bb[0] + bb[2])
+                    """
+                    Frame B is the input """
+                    iou = calc_IOU(frame_a, frame_b)
                     if max_iou < iou:
                         max_iou = iou
                 
                     # print(max_iou)
 
-                if max_iou > 0.23:
+                if max_iou > 0.762:
+                    print(frame_a, frame_b, max_iou)
                     # pos_anc.append((x * scale, (x + bs[0]) * scale, y * scale, (y + bs[1]) * scale))
-                    pos_anc.append([y * scale, x * scale,  bs[0], bs[1]])
-                elif max_iou < 0.01:
+                    pos_anc.append([y * scale, x * scale,  bs[1], bs[0]])
+                elif max_iou < 0.05:
                     # neg_anc.append((x * scale, (x + bs[0]) * scale, y * scale, (y + bs[1]) * scale))
-                    neg_anc.append((x * scale, (x + bs[0]) * scale, y * scale, (y + bs[1]) * scale))
+                    neg_anc.append([y * scale, x * scale,  bs[1], bs[0]])
 
     return pos_anc, neg_anc
 
