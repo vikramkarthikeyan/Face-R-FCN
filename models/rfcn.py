@@ -8,10 +8,10 @@ from torch.autograd import Variable
 from .resnets import resnet50
 from .rpn import RPN
 
-INPUT_CHANNELS_RPN = 2048
-ANCHOR_SIZES = [(1, 1), (2, 1), (1, 2), (2, 2), (2, 4), (4, 2), (4,4)]
+INPUT_CHANNELS_RPN = 1024
+ANCHOR_SIZES = [(1, 1), (2, 1), (1, 2), (2, 2), (2, 4), (4, 2), (4,4), (8,8), (8, 16), (16, 8), (16,16), (32, 16), (16, 32), (32,32), (32, 64), (64, 32)]
 STRIDE = 1
-IMAGE_VS_FEATURE_SCALE = 32
+IMAGE_VS_FEATURE_SCALE = 16
 
 class _RFCN(nn.Module):
     """ R-FCN """
@@ -27,7 +27,7 @@ class _RFCN(nn.Module):
         self.feature_extractor = resnet50(pretrained=True)
 
         # Modify ResNet by removing last layer and avg pooling
-        self.feature_extractor = torch.nn.Sequential(*(list(self.feature_extractor.children())[:-2]))
+        self.feature_extractor = torch.nn.Sequential(*(list(self.feature_extractor.children())[:-3]))
         print(self.feature_extractor)
 
         # Define the RPN

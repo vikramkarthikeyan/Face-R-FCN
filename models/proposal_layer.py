@@ -93,8 +93,6 @@ def get_regions(features, N, list_bb, box_size):
     :return:          Positive and negative anchors.
     """
 
-    # box_size = [(32, 32), (64, 32), (32, 64)]
-    # box_size = [(128, 128), (256, 128), (128, 256), (256, 256), (256, 512), (512, 256)]
     """Sizes for region proposals"""
     _, _, feat_h, feat_w = features.shape
 
@@ -130,7 +128,7 @@ def get_regions(features, N, list_bb, box_size):
                 
                     # print(max_iou)
 
-                if max_iou > 0.7:
+                if max_iou > 0.6:
                     print(frame_a, frame_b, max_iou)
                     # pos_anc.append((x * scale, (x + bs[0]) * scale, y * scale, (y + bs[1]) * scale))
                     pos_anc.append([y * scale, x * scale,  bs[1], bs[0]])
@@ -138,7 +136,13 @@ def get_regions(features, N, list_bb, box_size):
                     # neg_anc.append((x * scale, (x + bs[0]) * scale, y * scale, (y + bs[1]) * scale))
                     neg_anc.append([y * scale, x * scale,  bs[1], bs[0]])
 
-    return pos_anc, neg_anc[:100]
+    indices = np.random.permutation(len(neg_anc))
+
+    neg_filtered = []
+    for idx in indices[:100]:
+        neg_filtered.append(neg_anc[idx])
+
+    return pos_anc, neg_filtered
 
 
 def calc_IOU(boxA, boxB):
@@ -174,29 +178,27 @@ def calc_IOU(boxA, boxB):
 
 
 def plot_boxes(im, positive_anchors, negative_anchors, boxes):
-    # torchvision.transforms.ToPILImage().
 
-        image = torchvision.transforms.ToPILImage()(im)
-        im = np.array(image, dtype=np.uint8)
+    image = torchvision.transforms.ToPILImage()(im)
+    im = np.array(image, dtype=np.uint8)
 
-        # Create figure and axes
-        fig,ax = plt.subplots(1)
+    # Create figure and axes
+    fig,ax = plt.subplots(1)
+    # Display the image
+    ax.imshow(im)
 
-        # Display the image
-        ax.imshow(im)
-
-        if positive_anchors:
-            for i, box in enumerate(positive_anchors):
-                rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='green',facecolor='none')
-                ax.add_patch(rect)
-        
-        if negative_anchors:
-            for i, box in enumerate(negative_anchors):
-                rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='red', facecolor='none')
-                ax.add_patch(rect)
-
-        for i, box in enumerate(boxes):
-            rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='blue', facecolor='none')
+    if positive_anchors:
+        for i, box in enumerate(positive_anchors):
+            rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='green',facecolor='none')
+            ax.add_patch(rect)
+    
+    if negative_anchors:
+        for i, box in enumerate(negative_anchors):
+            rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='red', facecolor='none')
             ax.add_patch(rect)
 
-        plt.show()
+    for i, box in enumerate(boxes):
+        rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='blue', facecolor='none')
+        ax.add_patch(rect)
+
+    plt.show()
