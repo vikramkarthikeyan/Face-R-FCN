@@ -11,7 +11,7 @@ from tqdm import tqdm
 from torchsummary import summary
 from loaders import WiderfaceDataset
 from Trainer import Trainer
-from models import resnets
+from models import rfcn
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--retrain', dest='retrain', action='store_true', default=False)
@@ -41,17 +41,8 @@ if __name__ == "__main__":
     # Initialize trainer
     trainer = Trainer(training_set, validation_set)
 
-    # Initialize model
-    model = resnets.resnet50(pretrained=True)
-
-    # Modify ResNet by adding an RPN
-    num_ftrs = model.fc.in_features
-
-    # Re-Initialize the output layer to the number of subjects in split
-    model.fc = nn.Sequential(
-            nn.Linear(num_ftrs, 100),
-            nn.Softmax(1)
-        )
+    # Initialize R-FCN model
+    model = rfcn._RFCN()
 
     # -------------------------------------------------
     print("\nChecking if a GPU is available...")
@@ -86,9 +77,6 @@ if __name__ == "__main__":
         start_epochs = checkpoint['epoch']
     
     end_epochs = start_epochs + EPOCHS
-
-    # Train the model
-    summary(model, (3, 1024, 1024))
 
     highest_accuracy = 0
     highest_accuracy_5 = 0
