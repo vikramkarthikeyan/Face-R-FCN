@@ -51,27 +51,22 @@ class RPN(nn.Module):
         )
         return x
 
-    def forward(self, base_feat, im_info, gt_boxes, num_boxes, image):
-
-        batch_size = base_feat.size(0)
+    def forward(self, base_features, im_info, gt_boxes):
 
         # return feature map after convrelu layer
-        rpn_conv1 = F.relu(self.RPN_Conv(base_feat), inplace=True)
+        rpn_conv1 = F.relu(self.RPN_Conv(base_features), inplace=True)
 
         # get rpn classification score
-        rpn_cls_score = self.RPN_cls_score(rpn_conv1)
+        rpn_classification_score = self.RPN_cls_score(rpn_conv1)
 
-        rpn_cls_score_reshape = self.reshape(rpn_cls_score, 2)
-        rpn_cls_prob_reshape = F.softmax(rpn_cls_score_reshape, dim=1)
-        rpn_cls_prob = self.reshape(rpn_cls_prob_reshape, self.nc_score_out)
+        rpn_classification_score_reshape = self.reshape(rpn_classification_score, 2)
+        rpn_classification_prob_reshape = F.softmax(rpn_classification_score_reshape, dim=1)
+        rpn_classification_prob = self.reshape(rpn_classification_prob_reshape, self.nc_score_out)
 
         # get rpn offsets to the anchor boxes
-        rpn_bbox_pred = self.RPN_bbox_pred(rpn_conv1)
+        rpn_bbox_predictions = self.RPN_bbox_pred(rpn_conv1)
 
-        # proposal layer
-        cfg_key = 'TRAIN' if self.training else 'TEST'
-
-        rois = self.RPN_proposal(base_feat, gt_boxes, im_info, image)
+        rois = self.RPN_proposal(rpn_classification_prob.data, rpn_bbox_predictions.data, im_info)
 
 
         return rois, self.rpn_loss_cls, self.rpn_loss_box

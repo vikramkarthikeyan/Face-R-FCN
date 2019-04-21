@@ -37,24 +37,21 @@ class _ProposalLayer(nn.Module):
         self._box_sizes = box_sizes
         self._scale = scale
 
-    def forward(self, features, b_boxes, im_path, image):
+    def forward(self, scores, bbox_deltas, image_info):
 
-        orig_b_boxes = b_boxes
+        # Algorithm
+        # 1. At each location i (h,w) generate A anchors of different scales and ratios
+        # 2. Apply predicted bounding box deltas to each of the A anchors
+        # 3. Crop adjusted bounding boxes so that they are within the feature dimensions
+        # 4. Remove those predicted bounding boxes that have a size lesser than some threshold
+        # 5. Associate each bounding box with the scores predicted
+        # 6. Sort all (bounding box, score) pairs by score from highest to lowest
+        # 7. Take top pre_nms_topN proposals before NMS
+        # 8. Apply NMS with threshold 0.7 to remaining proposals
+        # 9. Take after_nms_topN proposals after NMS
+        # 10. Return the top proposals (-> RoIs top, scores top)
 
-        # Convert bounding boxes to a scale of the feature map from the input image
-        b_boxes = image_processing.scale_boxes(b_boxes, self._scale, 'down')
-        
-        # Generate anchors
-        positive_anchors, negative_anchors = anchors.generate_anchors(features, 100, b_boxes, self._box_sizes)
-
-        # Convert anchors to original image size
-        b_boxes = image_processing.scale_boxes(b_boxes, self._scale, 'up')
-        positive_anchors = image_processing.scale_boxes(positive_anchors, self._scale, 'up')
-        negative_anchors = image_processing.scale_boxes(negative_anchors, self._scale, 'up')
-
-
-        # Plot anchors on original image
-        image_plotting.plot_boxes(image[0], positive_anchors, negative_anchors, b_boxes)
+        print(scores)
 
         return []
 

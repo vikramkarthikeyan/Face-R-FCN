@@ -31,19 +31,17 @@ class _RFCN(nn.Module):
 
         # TODO: Define the pooling layers
 
-    def forward(self, image, image_metadata, gt_boxes, num_boxes):
+    def forward(self, image, image_metadata, gt_boxes):
 
-        image_metadata = image_metadata
-        gt_boxes = gt_boxes
-        num_boxes = num_boxes
-
-        # feed image data to base model to obtain base feature map
+        # Add an extra dimension to the image tensor to handle batches in the future
         sizes = image[0].size()
-        reshaped = image[0].reshape(1,sizes[0], sizes[1], sizes[2])
-        base_feat = self.feature_extractor(reshaped)
+        reshaped_image = image[0].reshape(1, sizes[0], sizes[1], sizes[2])
+        
+        # Pass the image onto the feature extractor
+        base_features = self.feature_extractor(reshaped_image)
 
         # feed base feature map tp RPN to obtain rois
-        rois, rpn_loss_cls, rpn_loss_bbox = self.RCNN_rpn(base_feat, image_metadata, gt_boxes, num_boxes, image)
+        rois, rpn_loss_cls, rpn_loss_bbox = self.RCNN_rpn(base_features, image_metadata, gt_boxes)
 
         # if it is training phrase, then use ground trubut bboxes for refining
         # if self.training:
