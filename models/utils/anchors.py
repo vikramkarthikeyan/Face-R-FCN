@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 def generate_anchors(dimensions, box_sizes):
     """
@@ -29,7 +30,7 @@ def generate_anchors(dimensions, box_sizes):
         anchors_list.append(x_list)
 
 
-    return np.array(anchors_list)
+    return torch.from_numpy(np.array(anchors_list))
 
     #             im_slice = features[x:x + bs[0], y:y + bs[1]]
     #             frame_a = (x, y, x + bs[0], y + bs[1])

@@ -28,6 +28,8 @@ class _ProposalLayer(nn.Module):
 
     def forward(self, scores, bbox_deltas, image_info):
 
+        batch_size = 1
+
         # Algorithm
         # 1. At each location i (h,w) generate A anchors of different scales and ratios
         # 2. Apply predicted bounding box deltas to each of the A anchors
@@ -44,8 +46,18 @@ class _ProposalLayer(nn.Module):
         _, _, height, width = scores.shape
         boxes = anchors.generate_anchors((height, width), self.box_sizes)
 
+        # Step 1.a - Transform anchors shape based on batch size
+        boxes_shape = boxes.shape
+        boxes = boxes.view(batch_size, boxes_shape[0], boxes_shape[1], boxes_shape[2], boxes_shape[3])
+
+        # Step 1.b - Transform bbox_deltas shape to match the anchor 
+        bbox_deltas_shape = bbox_deltas.shape
+        split_deltas = bbox_deltas.view(bbox_deltas_shape[0], 16, 4, bbox_deltas_shape[2], bbox_deltas_shape[3])
+        split_deltas = split_deltas.view(bbox_deltas_shape[0], 16, bbox_deltas_shape[2], bbox_deltas_shape[3], 4)
+
         # Step 2
-        boxes = transform_boxes(boxes, bbox_deltas)
+        adjusted_boxes = transform_boxes(boxes.numpy(), split_deltas.numpy())
+
 
 
         return []
@@ -59,33 +71,4 @@ class _ProposalLayer(nn.Module):
         pass
 
 def transform_boxes(boxes, deltas):
-    print(boxes.shape)
-    print(deltas.shape)
-
-def bbox_transform_inv(boxes, deltas, batch_size):
-    widths = boxes[:, :, 2] - boxes[:, :, 0] + 1.0
-    heights = boxes[:, :, 3] - boxes[:, :, 1] + 1.0
-    ctr_x = boxes[:, :, 0] + 0.5 * widths
-    ctr_y = boxes[:, :, 1] + 0.5 * heights
-
-    dx = deltas[:, :, 0::4]
-    dy = deltas[:, :, 1::4]
-    dw = deltas[:, :, 2::4]
-    dh = deltas[:, :, 3::4]
-
-    pred_ctr_x = dx * widths.unsqueeze(2) + ctr_x.unsqueeze(2)
-    pred_ctr_y = dy * heights.unsqueeze(2) + ctr_y.unsqueeze(2)
-    pred_w = torch.exp(dw) * widths.unsqueeze(2)
-    pred_h = torch.exp(dh) * heights.unsqueeze(2)
-
-    pred_boxes = deltas.clone()
-    # x1
-    pred_boxes[:, :, 0::4] = pred_ctr_x - 0.5 * pred_w
-    # y1
-    pred_boxes[:, :, 1::4] = pred_ctr_y - 0.5 * pred_h
-    # x2
-    pred_boxes[:, :, 2::4] = pred_ctr_x + 0.5 * pred_w
-    # y2
-    pred_boxes[:, :, 3::4] = pred_ctr_y + 0.5 * pred_h
-
-    return pred_boxes
+    return np.add(boxes, deltas)
