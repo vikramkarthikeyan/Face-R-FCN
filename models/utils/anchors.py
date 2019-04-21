@@ -1,28 +1,17 @@
-def generate_anchors(features, N, list_bb, box_size):
+def generate_anchors(dimensions, box_sizes):
     """
-    Function to generate Positive and Negative anchors.
-    :param features:  Extracted features
-    :param N:         Number of bounding boxes
-    :param list_bb:   Bounding boxes (scaled to current configuration)
-    :return:          Positive and negative anchors.
+    Function to generate anchors.
+    :param dimensions:  Dimensions of extracted features
+    :return:         A*i Anchors (A anchors per location i)
     """
-
-    _, _, feat_h, feat_w = features.shape
-    """Sizes for region proposals assuming batch input"""
-
-    print("Shape of features:", features.shape)
-    print("Shape of bounding box:", list_bb[0])
-
-    # pos_anc = []
-    # neg_anc = []
-    # scale = 1
+    print("Input dimensions:", dimensions)
+    feat_h, feat_w = dimensions
 
     anchors_list = []
 
-    for bs in box_size:
+    for bs in box_sizes:
         for i in range(0, feat_h):
             for j in range(0, feat_w):
-                # max_iou = 0
 
                 x = min(feat_h, max(0, (i - (bs[0] // 2))))
                 y = min(feat_w, max(0, (j - (bs[1] // 2))))
@@ -31,7 +20,7 @@ def generate_anchors(features, N, list_bb, box_size):
 
                 anchors_list.append((x, y, l, w))
 
-    return anchors_list
+    return list(set(anchors_list))
 
     #             im_slice = features[x:x + bs[0], y:y + bs[1]]
     #             frame_a = (x, y, x + bs[0], y + bs[1])

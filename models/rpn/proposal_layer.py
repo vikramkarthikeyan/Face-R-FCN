@@ -33,9 +33,9 @@ class _ProposalLayer(nn.Module):
     def __init__(self, feat_stride, box_sizes, scale):
         super(_ProposalLayer, self).__init__()
 
-        self._feat_stride = feat_stride
-        self._box_sizes = box_sizes
-        self._scale = scale
+        self.feat_stride = feat_stride
+        self.box_sizes = box_sizes
+        self.scale = scale
 
     def forward(self, scores, bbox_deltas, image_info):
 
@@ -51,7 +51,10 @@ class _ProposalLayer(nn.Module):
         # 9. Take after_nms_topN proposals after NMS
         # 10. Return the top proposals (-> RoIs top, scores top)
 
-        print(scores)
+        # Step 1
+        _, _, height, width = scores.shape
+        boxes = anchors.generate_anchors((height, width), self.box_sizes)
+
 
         return []
 
