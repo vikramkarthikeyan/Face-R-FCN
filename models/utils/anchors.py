@@ -6,14 +6,15 @@ def generate_anchors(dimensions, box_sizes):
     :param dimensions:  Dimensions of extracted features
     :return:         A*i Anchors (A anchors per location i)
     """
-    print("Input dimensions:", dimensions)
+    # print("Input dimensions:", dimensions)
     feat_h, feat_w = dimensions
 
     anchors_list = []
 
     for bs in box_sizes:
-        anc_tmp = []
+        x_list = []
         for i in range(0, feat_h):
+            y_list = []
             for j in range(0, feat_w):
 
                 x = min(feat_h, max(0, (i - (bs[0] // 2))))
@@ -21,8 +22,12 @@ def generate_anchors(dimensions, box_sizes):
                 l = min(feat_h, x + bs[0]) - x
                 w = min(feat_w, y + bs[1]) - y
 
-                anc_tmp.append((x, y, l, w))
-        anchors_list.append(anc_tmp)
+                y_list.append((x, y, l, w))
+            
+            x_list.append(y_list)
+        
+        anchors_list.append(x_list)
+
 
     return np.array(anchors_list)
 
