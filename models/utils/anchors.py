@@ -1,3 +1,5 @@
+import numpy as np
+
 def generate_anchors(dimensions, box_sizes):
     """
     Function to generate anchors.
@@ -19,11 +21,10 @@ def generate_anchors(dimensions, box_sizes):
                 l = min(feat_h, x + bs[0]) - x
                 w = min(feat_w, y + bs[1]) - y
 
-                # anchors_list.append((x, y, l, w))
                 anc_tmp.append((x, y, l, w))
-        anchors_list.append(list(set(anc_tmp)))
+        anchors_list.append(anc_tmp)
 
-    return anchors_list
+    return np.array(anchors_list)
 
     #             im_slice = features[x:x + bs[0], y:y + bs[1]]
     #             frame_a = (x, y, x + bs[0], y + bs[1])
