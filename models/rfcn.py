@@ -6,12 +6,8 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 from .resnets import resnet50
-from .rpn import RPN
-
-INPUT_CHANNELS_RPN = 1024
-ANCHOR_SIZES = [(1, 1), (2, 1), (1, 2), (2, 2), (2, 4), (4, 2), (4,4), (8,8), (8, 16), (16, 8), (16,16), (32, 16), (16, 32), (32,32), (32, 64), (64, 32)]
-STRIDE = 1
-IMAGE_VS_FEATURE_SCALE = 8
+from .config import rfcn_config
+from .rpn import rpn
 
 class _RFCN(nn.Module):
     """ R-FCN """
@@ -31,7 +27,7 @@ class _RFCN(nn.Module):
         print(self.feature_extractor)
 
         # Define the RPN
-        self.RCNN_rpn = RPN(INPUT_CHANNELS_RPN, ANCHOR_SIZES, STRIDE, IMAGE_VS_FEATURE_SCALE)
+        self.RCNN_rpn = rpn.RPN(rfcn_config.INPUT_CHANNELS_RPN, rfcn_config.ANCHOR_SIZES, rfcn_config.STRIDE, rfcn_config.IMAGE_VS_FEATURE_SCALE)
 
         # TODO: Define the pooling layers
 
