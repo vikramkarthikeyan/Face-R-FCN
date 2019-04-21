@@ -22,6 +22,7 @@ import torchvision
 from .utils import anchors
 from .utils import image_plotting
 from .utils import image_processing
+from .config import rpn_config
 
 class _ProposalLayer(nn.Module):
     """
