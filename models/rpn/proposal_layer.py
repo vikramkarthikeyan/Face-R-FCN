@@ -35,9 +35,9 @@ class _ProposalLayer(nn.Module):
         # 2. Apply predicted bounding box deltas to each of the A anchors
         # 3. Clip adjusted bounding boxes so that they are within the feature dimensions
         # 4. Remove those predicted bounding boxes that have a size lesser than some threshold
-        # 5. Associate each bounding box with the scores predicted
-        # 6. Sort all (bounding box, score) pairs by score from highest to lowest
-        # 7. Take top pre_nms_topN proposals before NMS
+        # 5. Order all scores from highest to lowest
+        # 6. Take top pre_nms_topN proposals before NMS by applying score orders on proposals
+        # 7. Combine anchors and scores in single representation
         # 8. Apply NMS with threshold 0.7 to remaining proposals
         # 9. Take after_nms_topN proposals after NMS
         # 10. Return the top proposals (-> RoIs top, scores top)
@@ -76,7 +76,7 @@ class _ProposalLayer(nn.Module):
         filtered_boxes = np.reshape(filtered_boxes, (batch_size, filtered_boxes.shape[0], filtered_boxes.shape[1]))
         filtered_scores = np.reshape(filtered_scores, (batch_size, filtered_scores.shape[0]))
 
-        # Steps 5,6 - Sort scores and anchors
+        # Steps 5 - Sort scores
         filtered_scores = torch.from_numpy(filtered_scores)
         _, orders = torch.sort(filtered_scores, 1, True)
         
@@ -88,14 +88,33 @@ class _ProposalLayer(nn.Module):
             scores = filtered_scores[i]
             order = orders[i]
             
-            # Step 7 - Take top pre_nms_topN proposals before NMS
+            # Step 6 - Take top pre_nms_topN proposals before NMS
             if rpn_config.PRE_NMS_TOP_N > 0:
                 order = order[:rpn_config.PRE_NMS_TOP_N]
 
+            # Step 6.a - Filter those topN anchors and scores based on sorted scores
             proposals = proposals[order, :]
-            scores = scores[order].view(-1,1)
+            scores = scores[order].numpy()
+
+            # Step 7 - Combine anchors and scores
+            scores = np.reshape(scores, (scores.shape[0], 1))
+            combined = np.concatenate((proposals, scores),axis=1)
 
             # Step 8 - Apply NMS with a specific threshold in config
+            keep_anchors_postNMS = nms(combined, rpn_config.NMS_THRESH)
+            print(keep_anchors_postNMS)
+
+            # Step 9 - Take TopN post NMS proposals
+            if rpn_config.POST_NMS_TOP_N > 0:
+                keep_anchors_postNMS = keep_anchors_postNMS[:rpn_config.POST_NMS_TOP_N]
+
+            proposals = proposals[keep_anchors_postNMS, :]
+            scores = scores[keep_anchors_postNMS, :]
+
+            # Step 10 - Return topN proposals as output
+            num_proposal = proposals.shape[0]
+            output[i,:,0] = i
+            output[i, :num_proposal, 1:] = torch.from_numpy(proposals)
 
         return output
 
@@ -140,4 +159,37 @@ def filter_boxes(boxes, min_size):
     min_sizes.fill(min_size)
 
     keep = ((widths >= min_sizes) & (heights >= min_sizes))
+    return keep
+
+def nms(entries, thresh):
+
+    x1 = entries[:, 0]
+    y1 = entries[:, 1]
+    l = entries[:, 2]
+    b = entries[:, 3]
+    scores = entries[:, 4]
+
+    x2 = x1 + l
+    y2 = y1 + b    
+
+    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+    order = scores.argsort()[::-1]
+
+    keep = []
+    while order.size > 0:
+        i = order.item(0)
+        keep.append(i)
+        xx1 = np.maximum(x1[i], x1[order[1:]])
+        yy1 = np.maximum(y1[i], y1[order[1:]])
+        xx2 = np.maximum(x2[i], x2[order[1:]])
+        yy2 = np.maximum(y2[i], y2[order[1:]])
+
+        w = np.maximum(0.0, xx2 - xx1 + 1)
+        h = np.maximum(0.0, yy2 - yy1 + 1)
+        inter = w * h
+        ovr = inter / (areas[i] + areas[order[1:]] - inter)
+
+        inds = np.where(ovr <= thresh)[0]
+        order = order[inds + 1]
+
     return keep
