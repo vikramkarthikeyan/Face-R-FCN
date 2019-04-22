@@ -33,7 +33,7 @@ class _ProposalLayer(nn.Module):
         # Algorithm
         # 1. At each location i (h,w) generate A anchors of different scales and ratios
         # 2. Apply predicted bounding box deltas to each of the A anchors
-        # 3. Crop adjusted bounding boxes so that they are within the feature dimensions
+        # 3. Clip adjusted bounding boxes so that they are within the feature dimensions
         # 4. Remove those predicted bounding boxes that have a size lesser than some threshold
         # 5. Associate each bounding box with the scores predicted
         # 6. Sort all (bounding box, score) pairs by score from highest to lowest
@@ -42,7 +42,7 @@ class _ProposalLayer(nn.Module):
         # 9. Take after_nms_topN proposals after NMS
         # 10. Return the top proposals (-> RoIs top, scores top)
 
-        # Step 1
+        # Step 1 - Generate Anchors
         _, _, height, width = scores.shape
         boxes = anchors.generate_anchors((height, width), self.box_sizes)
 
@@ -55,12 +55,30 @@ class _ProposalLayer(nn.Module):
         split_deltas = bbox_deltas.view(bbox_deltas_shape[0], 16, 4, bbox_deltas_shape[2], bbox_deltas_shape[3])
         split_deltas = split_deltas.view(bbox_deltas_shape[0], 16, bbox_deltas_shape[2], bbox_deltas_shape[3], 4)
 
-        # Step 2
-        adjusted_boxes = transform_boxes(boxes.numpy(), split_deltas.numpy())
+        # Step 2 - Apply bounding box transformations
+        adjusted_boxes = np.add(boxes.numpy(), split_deltas.numpy())
+
+        # Step 3 - Clip boxes so that they are within the feature dimensions
+        clipped_boxes = clip_boxes(adjusted_boxes, height, width, batch_size)
+
+        # Step 4 - Filter those boxes that have dimensions lesser than minimum
+        keep = filter_boxes(clipped_boxes, rpn_config.MIN_SIZE)
+
+        # Steps 5,6 - Sort scores and anchors
+        _, orders = torch.sort(scores, 1, True)
+
+        output = scores.new(batch_size, rpn_config.POST_NMS_TOP_N, 5).zero_()
+
+        for i in range(batch_size):
+            proposals = clipped_boxes[i]
+            scores = scores[i]
+            order = orders[i]
+
+            if rpn_config.PRE_NMS_TOP_N > 0:
+                order = order[:rpn_config.PRE_NMS_TOP_N]
 
 
-
-        return []
+        return output
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""
@@ -70,5 +88,37 @@ class _ProposalLayer(nn.Module):
         """Reshaping happens during the call to forward."""
         pass
 
-def transform_boxes(boxes, deltas):
-    return np.add(boxes, deltas)
+def clip_boxes(boxes, length, width, batch_size):
+
+    for i in range(batch_size):
+        for channel in boxes[i]:
+            for x in channel:
+                for y in x:
+
+                    # Check if the entry exceeds the bounds, else clip
+                    y[2] = y[0] + y[2]
+                    y[3] = y[1] + y[3]
+
+                    y[0] = np.clip(y[0], 0, length-1)
+                    y[1] = np.clip(y[1], 0, length-1)
+                    y[2] = np.clip(y[2], 0, length-1)
+                    y[3] = np.clip(y[3], 0, length-1)
+
+
+                    y[2] = y[2] - y[0]
+                    y[3] = y[3] - y[1]
+
+    return boxes
+
+def filter_boxes(boxes, min_size):
+    """Remove all boxes with any side smaller than min_size."""
+
+    widths = boxes[:, :, :, :, 2]
+    heights = boxes[:, :, :, :, 3]
+    
+    keep = np.zeros_like(widths)
+    min_sizes = keep.copy()
+    min_sizes.fill(min_size)
+
+    keep = ((widths >= min_sizes) & (heights >= min_sizes))
+    return keep

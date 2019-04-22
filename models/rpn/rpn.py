@@ -25,7 +25,7 @@ class RPN(nn.Module):
         self.RPN_Conv = nn.Conv2d(self.input_channels, 512, 3, 1, 1, bias=True)
 
         # define bg/fg classifcation score layer
-        self.nc_score_out = len(anchor_dimensions) * 2 # 2(bg/fg) * 9 (anchors)
+        self.nc_score_out = len(anchor_dimensions)
         self.RPN_cls_score = nn.Conv2d(512, self.nc_score_out, 1, 1, 0)
 
         # define anchor box offset prediction layer
