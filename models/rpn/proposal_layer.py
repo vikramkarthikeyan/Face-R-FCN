@@ -77,20 +77,25 @@ class _ProposalLayer(nn.Module):
         filtered_scores = np.reshape(filtered_scores, (batch_size, filtered_scores.shape[0]))
 
         # Steps 5,6 - Sort scores and anchors
-        scores = torch.from_numpy(filtered_scores)
-        _, orders = torch.sort(scores, 1, True)
+        filtered_scores = torch.from_numpy(filtered_scores)
+        _, orders = torch.sort(filtered_scores, 1, True)
         
         # Create output array for RPN results
-        output = scores.new(batch_size, rpn_config.POST_NMS_TOP_N, 5).zero_()
+        output = filtered_scores.new(batch_size, rpn_config.POST_NMS_TOP_N, 5).zero_()
 
         for i in range(batch_size):
-            proposals = clipped_boxes[i]
-            scores = scores[i]
+            proposals = filtered_boxes[i]
+            scores = filtered_scores[i]
             order = orders[i]
-
+            
+            # Step 7 - Take top pre_nms_topN proposals before NMS
             if rpn_config.PRE_NMS_TOP_N > 0:
                 order = order[:rpn_config.PRE_NMS_TOP_N]
 
+            proposals = proposals[order, :]
+            scores = scores[order].view(-1,1)
+
+            # Step 8 - Apply NMS with a specific threshold in config
 
         return output
 
