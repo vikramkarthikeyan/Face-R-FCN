@@ -64,9 +64,23 @@ class _ProposalLayer(nn.Module):
         # Step 4 - Filter those boxes that have dimensions lesser than minimum
         keep = filter_boxes(clipped_boxes, rpn_config.MIN_SIZE)
 
-        # Steps 5,6 - Sort scores and anchors
-        _, orders = torch.sort(scores, 1, True)
+        # Step 4.a - Flatten and get only boxes and scores that passed the filter
+        keep = np.reshape(keep, (batch_size, -1))
+        clipped_boxes = np.reshape(clipped_boxes, (batch_size, -1, 4))
+        scores = np.reshape(scores.numpy(), (batch_size, -1))
 
+        filtered_boxes = clipped_boxes[keep]
+        filtered_scores = scores[keep]
+
+        # TODO: Check if this needs to be changed in case of a batch
+        filtered_boxes = np.reshape(filtered_boxes, (batch_size, filtered_boxes.shape[0], filtered_boxes.shape[1]))
+        filtered_scores = np.reshape(filtered_scores, (batch_size, filtered_scores.shape[0]))
+
+        # Steps 5,6 - Sort scores and anchors
+        scores = torch.from_numpy(filtered_scores)
+        _, orders = torch.sort(scores, 1, True)
+        
+        # Create output array for RPN results
         output = scores.new(batch_size, rpn_config.POST_NMS_TOP_N, 5).zero_()
 
         for i in range(batch_size):
