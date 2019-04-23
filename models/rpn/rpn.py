@@ -25,7 +25,7 @@ class RPN(nn.Module):
         self.RPN_Conv = nn.Conv2d(self.input_channels, 512, 3, 1, 1, bias=True)
 
         # define bg/fg classifcation score layer
-        self.nc_score_out = len(anchor_dimensions)
+        self.nc_score_out = len(anchor_dimensions) 
         self.RPN_cls_score = nn.Conv2d(512, self.nc_score_out, 1, 1, 0)
 
         # define anchor box offset prediction layer
@@ -67,6 +67,21 @@ class RPN(nn.Module):
         rpn_bbox_predictions = self.RPN_bbox_pred(rpn_conv1)
 
         rois = self.RPN_proposal(rpn_classification_prob.data, rpn_bbox_predictions.data, im_info)
+
+        self.rpn_loss_cls = 0
+        self.rpn_loss_box = 0
+
+        # generating training labels and build the rpn loss
+        if self.training:
+            assert gt_boxes is not None
+
+            # Get anchor targets
+
+            # Compute cross-entropy classification loss
+
+            # Compute smooth l1 bbox regression loss
+
+
 
 
         return rois, self.rpn_loss_cls, self.rpn_loss_box
