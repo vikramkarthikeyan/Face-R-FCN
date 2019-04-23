@@ -60,6 +60,8 @@ class _RFCN(nn.Module):
         #     rpn_loss_cls = 0
         #     rpn_loss_bbox = 0
 
+        rois = Variable(rois)
+
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
             """
