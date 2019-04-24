@@ -18,17 +18,16 @@ def generate_anchors(dimensions, box_sizes):
             y_list = []
             for j in range(0, feat_w):
 
-                x = min(feat_h, max(0, (i - (bs[0] // 2))))
-                y = min(feat_w, max(0, (j - (bs[1] // 2))))
-                l = min(feat_h, x + bs[0]) - x
-                w = min(feat_w, y + bs[1]) - y
+                x = (i - (bs[0] // 2))
+                y = (j - (bs[1] // 2))
+                l = x + bs[0]
+                w = y + bs[1]
 
                 y_list.append((x, y, l, w))
             
             x_list.append(y_list)
         
         anchors_list.append(x_list)
-
 
     return torch.from_numpy(np.array(anchors_list))
 
