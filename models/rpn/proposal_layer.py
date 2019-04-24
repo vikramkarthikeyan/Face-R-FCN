@@ -26,7 +26,7 @@ class _ProposalLayer(nn.Module):
         self.box_sizes = box_sizes
         self.scale = scale
 
-    def forward(self, scores, bbox_deltas, image_info):
+    def forward(self, scores, bbox_deltas, image_metadata):
 
         batch_size = 1
 
@@ -81,7 +81,7 @@ class _ProposalLayer(nn.Module):
         _, orders = torch.sort(filtered_scores, 1, True)
         
         # Create output array for RPN results
-        output = filtered_scores.new(batch_size, rpn_config.POST_NMS_TOP_N, 5).zero_()
+        output = filtered_scores.new(batch_size, rpn_config.POST_NMS_TOP_N, 4).zero_()
 
         for i in range(batch_size):
             proposals = filtered_boxes[i]
@@ -114,7 +114,7 @@ class _ProposalLayer(nn.Module):
             # Step 10 - Return topN proposals as output
             num_proposal = proposals.shape[0]
             output[i,:,0] = i
-            output[i, :num_proposal, 1:] = torch.from_numpy(proposals)
+            output[i, :num_proposal, 0:] = torch.from_numpy(proposals)
 
         return output
 

@@ -69,6 +69,8 @@ class Trainer:
                     data = data.cuda(non_blocking=True)
                     target = target.cuda(non_blocking=True)
                 
+                target = np.array(target)
+                target = np.reshape(target, (1, target.shape[0], target.shape[1]))
                 model([data], [image_paths[j]], target)
 
                 # # Compute Model output

@@ -51,7 +51,7 @@ class RPN(nn.Module):
         )
         return x
 
-    def forward(self, base_features, im_info, gt_boxes):
+    def forward(self, base_features, image_metadata, gt_boxes):
 
         # return feature map after convrelu layer
         rpn_conv1 = F.relu(self.RPN_Conv(base_features), inplace=True)
@@ -66,7 +66,7 @@ class RPN(nn.Module):
         # get rpn offsets to the anchor boxes
         rpn_bbox_predictions = self.RPN_bbox_pred(rpn_conv1)
 
-        rois = self.RPN_proposal(rpn_classification_prob.data, rpn_bbox_predictions.data, im_info)
+        rois = self.RPN_proposal(rpn_classification_prob.data, rpn_bbox_predictions.data, image_metadata)
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0

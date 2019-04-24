@@ -8,7 +8,7 @@ from torch.autograd import Variable
 from .resnets import resnet50
 from .config import rfcn_config
 from .rpn import rpn
-# from .rpn import proposal_target_layer
+from .rpn import proposal_target_layer
 
 class _RFCN(nn.Module):
     """ R-FCN """
@@ -32,7 +32,7 @@ class _RFCN(nn.Module):
         self.RCNN_rpn = rpn.RPN(rfcn_config.INPUT_CHANNELS_RPN, rfcn_config.ANCHOR_SIZES, rfcn_config.STRIDE, rfcn_config.IMAGE_VS_FEATURE_SCALE)
 
         # Define the proposal target layer
-        # self.RCNN_proposal_target = proposal_target_layer(self.n_classes)
+        self.RCNN_proposal_target = proposal_target_layer._ProposalTargetLayer(self.n_classes)
 
         # TODO: Define the pooling layers
 
@@ -49,8 +49,8 @@ class _RFCN(nn.Module):
         rois, rpn_loss_cls, rpn_loss_bbox = self.RCNN_rpn(base_features, image_metadata, gt_boxes)
 
         # if it is training phrase, then use ground truth bboxes for refining proposals
-        # if self.training:
-            # roi_data = self.RCNN_proposal_target(rois, gt_boxes)
+        if self.training:
+            rois = self.RCNN_proposal_target(rois, gt_boxes)
         #     rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
 
         #     rois_label = Variable(rois_label.view(-1).long())
