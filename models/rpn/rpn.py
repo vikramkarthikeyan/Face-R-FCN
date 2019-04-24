@@ -9,7 +9,7 @@ import pdb
 import time
 
 from .proposal_layer import _ProposalLayer
-
+from .anchor_target_layer import _AnchorLayer
 
 # Referred from https://github.com/jmerkow/R-FCN.rsna2018
 class RPN(nn.Module):
@@ -36,6 +36,7 @@ class RPN(nn.Module):
         self.RPN_proposal = _ProposalLayer(self.feat_stride, self.anchor_dimensions, scale)
 
         # TODO: define anchor target layer
+        self.RPN_anchor_target = _AnchorLayer()
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
@@ -76,6 +77,7 @@ class RPN(nn.Module):
             assert gt_boxes is not None
 
             # Get anchor targets
+            # self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
 
             # Compute cross-entropy classification loss
 
