@@ -38,13 +38,19 @@ class _AnchorLayer(nn.Module):
         #
         # .
 
+        print("--------------------")
+        print("ANCHOR LAYER")
+        print("--------------------")
+
         _, _, height, width = cls_scores.shape
 
         batch_size = gt_boxes.shape[0]
         # batch_size = 1
 
-        print("CLS_SCORES:", cls_scores.shape)
-        print("GT_BOXES:", gt_boxes.shape)
+        gt_boxes = torch.tensor(gt_boxes)
+
+        print("CLS_SCORES:", cls_scores.shape, type(cls_scores))
+        print("GT_BOXES:", gt_boxes.shape, type(gt_boxes))
 
         # 1. Generating anchors
         all_anchors = generate_anchors((height, width), cfg.ANCHOR_SIZES)
@@ -59,7 +65,7 @@ class _AnchorLayer(nn.Module):
         clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size).view(-1, 4)
         # clipped_boxes = clipped_boxes.view(-1)
 
-        print("CLIPPED:", clipped_boxes.shape)
+        print("CLIPPED:", clipped_boxes.shape, type(clipped_boxes))
 
         # 3. Get all area overlap for the kept anchors
         # overlaps = self.bbox_overlaps_batch(torch.tensor(clipped_boxes), torch.tensor(gt_boxes))
