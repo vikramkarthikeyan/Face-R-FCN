@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from .resnets import resnet50
+# from .resnets import resnet50
 from .config import rfcn_config
 from .rpn import rpn
 from .rpn import proposal_target_layer
@@ -19,14 +19,6 @@ class _RFCN(nn.Module):
         # Initialize two types of losses
         self.RCNN_loss_cls = 0
         self.RCNN_loss_bbox = 0
-
-        # Initialize the base feature extraction ResNet
-        self.feature_extractor = resnet50(pretrained=True)
-
-        # Modify ResNet by removing last layer and avg pooling
-        self.feature_extractor = torch.nn.Sequential(*(list(self.feature_extractor.children())[:-4]))
-        
-        print(self.feature_extractor)
 
         # Define the RPN
         self.RCNN_rpn = rpn.RPN(rfcn_config.INPUT_CHANNELS_RPN, rfcn_config.ANCHOR_SIZES, rfcn_config.STRIDE, rfcn_config.IMAGE_VS_FEATURE_SCALE)
@@ -43,7 +35,7 @@ class _RFCN(nn.Module):
         reshaped_image = image[0].reshape(1, sizes[0], sizes[1], sizes[2])
         
         # Pass the image onto the feature extractor
-        base_features = self.feature_extractor(reshaped_image)
+        base_features = self.RCNN_base(reshaped_image)
 
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.RCNN_rpn(base_features, image_metadata, gt_boxes)
@@ -84,4 +76,4 @@ class _RFCN(nn.Module):
 
     def create_architecture(self):
         self._init_modules()
-        self._init_weights()
+        # self._init_weights()

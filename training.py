@@ -11,7 +11,7 @@ from tqdm import tqdm
 from torchsummary import summary
 from loaders import WiderfaceDataset
 from Trainer import Trainer
-from models import rfcn
+# from models import rfcn
 from models.resnets import RFCN_resnet
 
 parser = argparse.ArgumentParser()
@@ -43,8 +43,9 @@ if __name__ == "__main__":
     trainer = Trainer(training_set, validation_set)
 
     # Initialize R-FCN model
-    # model = RFCN_resnet(pretrained=True)
-    model = rfcn._RFCN()
+    model = RFCN_resnet(pretrained=True)
+    model.create_architecture()
+    # model = rfcn._RFCN()
 
     # -------------------------------------------------
     print("\nChecking if a GPU is available...")

@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 from .rfcn import _RFCN
+from .config import resnet_config
 
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
@@ -249,6 +250,7 @@ def resnext101_32x8d(pretrained=False, **kwargs):
 
 class RFCN_resnet(_RFCN):
     def __init__(self, num_layers=101, pretrained=False):
+        self.n_classes = 2
         self.num_layers = num_layers
         self.pretrained = pretrained
 
@@ -282,35 +284,32 @@ class RFCN_resnet(_RFCN):
             nn.ReLU()
         )
 
-        if self.class_agnostic:
-            self.RCNN_bbox_base = nn.Conv2d(in_channels=1024, out_channels=4 * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
-                                            kernel_size=1, stride=1, padding=0, bias=False)
-        else:
-            self.RCNN_bbox_base = nn.Conv2d(in_channels=1024, out_channels=4 * self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
+        self.RCNN_bbox_base = nn.Conv2d(in_channels=1024, out_channels=4 * self.n_classes * resnet_config.POOLING_SIZE * resnet_config.POOLING_SIZE,
                                             kernel_size=1, stride=1, padding=0, bias=False)
 
-        self.RCNN_cls_base = nn.Conv2d(in_channels=1024, out_channels=self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
+        self.RCNN_cls_base = nn.Conv2d(in_channels=1024, out_channels=self.n_classes * resnet_config.POOLING_SIZE * resnet_config.POOLING_SIZE,
                                        kernel_size=1, stride=1, padding=0, bias=False)
 
         # Fix blocks
         for p in self.RCNN_base[0].parameters(): p.requires_grad=False
         for p in self.RCNN_base[1].parameters(): p.requires_grad=False
 
-        assert (0 <= cfg.RESNET.FIXED_BLOCKS < 4)
-        if cfg.RESNET.FIXED_BLOCKS >= 3:
+        assert (0 <= resnet_config.FIXED_BLOCKS < 4)
+
+        if resnet_config.FIXED_BLOCKS >= 3:
             for p in self.RCNN_base[6].parameters(): p.requires_grad=False
-        if cfg.RESNET.FIXED_BLOCKS >= 2:
+        if resnet_config.FIXED_BLOCKS >= 2:
             for p in self.RCNN_base[5].parameters(): p.requires_grad=False
-        if cfg.RESNET.FIXED_BLOCKS >= 1:
+        if resnet_config.FIXED_BLOCKS >= 1:
             for p in self.RCNN_base[4].parameters(): p.requires_grad=False
 
-        def set_bn_fix(m):
-            classname = m.__class__.__name__
-            if classname.find('BatchNorm') != -1:
-                for p in m.parameters(): p.requires_grad=False
+        # def set_bn_fix(m):
+        #     classname = m.__class__.__name__
+        #     if classname.find('BatchNorm') != -1:
+        #         for p in m.parameters(): p.requires_grad=False
 
-        self.RCNN_base.apply(set_bn_fix)
-        self.RCNN_conv_new.apply(set_bn_fix)
+        # self.RCNN_base.apply(set_bn_fix)
+        # self.RCNN_conv_new.apply(set_bn_fix)
 
     def train(self, mode=True):
         # Override train so that the training mode is set as we want
@@ -318,7 +317,7 @@ class RFCN_resnet(_RFCN):
         if mode:
             # Set fixed blocks to be in eval mode
             self.RCNN_base.eval()
-            for fix_layer in range(6, 3 + cfg.RESNET.FIXED_BLOCKS, -1):
+            for fix_layer in range(6, 3 + resnet_config.FIXED_BLOCKS, -1):
                 self.RCNN_base[fix_layer].train()
 
             def set_bn_eval(m):
@@ -328,5 +327,3 @@ class RFCN_resnet(_RFCN):
 
             self.RCNN_base.apply(set_bn_eval)
             self.RCNN_conv_new.apply(set_bn_eval)
-
-model = resnet(imdb.classes, 101, pretrained=True, class_agnostic=args.class_agnostic)
