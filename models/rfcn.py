@@ -6,9 +6,10 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 # from .resnets import resnet50
-from .config import rfcn_config
+from .config import rfcn_config, resnet_config
 from .rpn import rpn
 from .rpn import proposal_target_layer
+from .psroi import psroi_pooling
 
 class _RFCN(nn.Module):
     """ R-FCN """
@@ -26,7 +27,16 @@ class _RFCN(nn.Module):
         # Define the proposal target layer
         self.RCNN_proposal_target = proposal_target_layer._ProposalTargetLayer(self.n_classes)
 
-        # TODO: Define the pooling layers
+        # Define the pooling layers
+        self.RCNN_psroi_pool_cls = psroi_pooling.PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
+                                          spatial_scale=1/16.0, group_size=resnet_config.POOLING_SIZE,
+                                          output_dim=self.n_classes)
+        self.RCNN_psroi_pool_loc = psroi_pooling.PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
+                                          spatial_scale=1/16.0, group_size=resnet_config.POOLING_SIZE,
+                                          output_dim=4)
+
+        # Finally define the average pooling layer based on the grid size
+        self.pooling = nn.AvgPool2d(kernel_size=resnet_config.POOLING_SIZE, stride=resnet_config.POOLING_SIZE)
 
     def forward(self, image, image_metadata, gt_boxes):
 
@@ -60,9 +70,63 @@ class _RFCN(nn.Module):
         base_features = self.RCNN_conv_new(base_features)
         print(base_features.shape)
 
-        # Do ROI pooling based on position based score maps
+        # Get position based score maps
         cls_feat = self.RCNN_cls_base(base_features)
         bbox_base = self.RCNN_bbox_base(base_features)
+
+        # Do PSROI average pooling on the position based score maps
+        pooled_feat_cls = self.RCNN_psroi_pool_cls(cls_feat, rois.view(-1, 5))
+        cls_score = self.pooling(pooled_feat_cls)
+        cls_score = cls_score.squeeze()
+
+        pooled_feat_loc = self.RCNN_psroi_pool_loc(bbox_base, rois.view(-1, 5))
+        pooled_feat_loc = self.pooling(pooled_feat_loc)
+        bbox_pred = pooled_feat_loc.squeeze()
+
+        cls_prob = F.softmax(cls_score, dim=1)
+
+        RCNN_loss_cls = 0
+        RCNN_loss_bbox = 0
+
+        # if self.training:
+            # RCNN_loss_cls, RCNN_loss_bbox = self.ohem_detect_loss(cls_score, rois_label, bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
+    
+    def ohem_detect_loss(self, cls_score, rois_label, bbox_pred, rois_target, rois_inside_ws, rois_outside_ws):
+
+        def log_sum_exp(x):
+            x_max = x.data.max()
+            return torch.log(torch.sum(torch.exp(x - x_max), dim=1, keepdim=True)) + x_max
+
+        batch_size =1
+
+        num_hard = rfcn_config.PSROI_TRAINING_BATCH_SIZE * batch_size
+        pos_idx = rois_label > 0
+        num_pos = pos_idx.int().sum()
+
+        # classification loss
+        num_classes = cls_score.size(1)
+        weight = cls_score.data.new(num_classes).fill_(1.)
+        weight[0] = num_pos.data[0] / num_hard
+
+        conf_p = cls_score.detach()
+        conf_t = rois_label.detach()
+
+        # rank on cross_entropy loss
+        loss_c = log_sum_exp(conf_p) - conf_p.gather(1, conf_t.view(-1,1))
+        loss_c[pos_idx] = 100. # include all positive samples
+        _, topk_idx = torch.topk(loss_c.view(-1), num_hard)
+        loss_cls = F.cross_entropy(cls_score[topk_idx], rois_label[topk_idx], weight=weight)
+
+        # bounding box regression L1 loss
+        pos_idx = pos_idx.unsqueeze(1).expand_as(bbox_pred)
+        loc_p = bbox_pred[pos_idx].view(-1, 4)
+        loc_t = rois_target[pos_idx].view(-1, 4)
+        loss_box = F.smooth_l1_loss(loc_p, loc_t)
+
+        return loss_cls, loss_box
+
+
+
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):

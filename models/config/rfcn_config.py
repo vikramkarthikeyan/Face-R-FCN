@@ -7,6 +7,7 @@ IMAGE_VS_FEATURE_SCALE = 8
 OHEM = True
 ROI_BATCH_SIZE = 50
 FG_FRACTION = 0.25
+PSROI_TRAINING_BATCH_SIZE = 128
 
 
 ################################################

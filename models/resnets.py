@@ -284,9 +284,11 @@ class RFCN_resnet(_RFCN):
             nn.ReLU()
         )
 
+        # Define the classification branch
         self.RCNN_bbox_base = nn.Conv2d(in_channels=1024, out_channels=4 * self.n_classes * resnet_config.POOLING_SIZE * resnet_config.POOLING_SIZE,
                                             kernel_size=1, stride=1, padding=0, bias=False)
 
+        # Define the box regression branch
         self.RCNN_cls_base = nn.Conv2d(in_channels=1024, out_channels=self.n_classes * resnet_config.POOLING_SIZE * resnet_config.POOLING_SIZE,
                                        kernel_size=1, stride=1, padding=0, bias=False)
 
