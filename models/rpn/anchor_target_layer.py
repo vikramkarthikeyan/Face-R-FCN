@@ -42,7 +42,7 @@ class _AnchorLayer(nn.Module):
 
         batch_size = gt_boxes.shape[0]
         # batch_size = 1
-
+        print("\n\n----Proposal Layer----\n")
         print("CLS_SCORES:", cls_scores.shape)
         print("GT_BOXES:", gt_boxes.shape)
 
