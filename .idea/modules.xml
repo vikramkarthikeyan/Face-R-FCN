@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/Face-R-FCN.iml" filepath="$PROJECT_DIR$/.idea/Face-R-FCN.iml" />
+      <module fileurl="file:///media/ved/DATA/University of Buffalo/SEM 2/Biometrics and Image Processing/R-FCN.rsna2018/.idea/R-FCN.rsna2018.iml" filepath="/media/ved/DATA/University of Buffalo/SEM 2/Biometrics and Image Processing/R-FCN.rsna2018/.idea/R-FCN.rsna2018.iml" />
+    </modules>
+  </component>
+</project>
