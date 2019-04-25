@@ -46,8 +46,9 @@ if __name__ == "__main__":
 
     # -------------------------------------------------
     print("\nChecking if a GPU is available...")
-    use_gpu = torch.cuda.is_available()
-    
+    # use_gpu = torch.cuda.is_available()
+    use_gpu = False
+
     # Initialize new model
     if use_gpu:
         model = model.cuda()
