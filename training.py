@@ -12,6 +12,7 @@ from torchsummary import summary
 from loaders import WiderfaceDataset
 from Trainer import Trainer
 from models import rfcn
+from models.resnets import RFCN_resnet
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--retrain', dest='retrain', action='store_true', default=False)
@@ -42,6 +43,7 @@ if __name__ == "__main__":
     trainer = Trainer(training_set, validation_set)
 
     # Initialize R-FCN model
+    # model = RFCN_resnet(pretrained=True)
     model = rfcn._RFCN()
 
     # -------------------------------------------------

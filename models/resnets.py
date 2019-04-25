@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
+from .rfcn import _RFCN
 
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
@@ -245,3 +246,87 @@ def resnext101_32x8d(pretrained=False, **kwargs):
     # if pretrained:
     #     model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
     return model
+
+class RFCN_resnet(_RFCN):
+    def __init__(self, num_layers=101, pretrained=False):
+        self.num_layers = num_layers
+        self.pretrained = pretrained
+
+        _RFCN.__init__(self)
+
+    def _init_modules(self):
+        resnet = eval('resnet{}()'.format(self.num_layers))
+
+        if self.pretrained:
+            print("Loading pretrained weights ...")
+            resnet.load_state_dict(model_zoo.load_url(model_urls['resnet101']))
+
+        # Build feature extractor resnet
+        self.RCNN_base = nn.Sequential(
+            resnet.conv1,
+            resnet.bn1,
+            resnet.relu,
+            resnet.maxpool,
+            resnet.layer1,
+            resnet.layer2,
+            resnet.layer3,
+        )
+
+        # Build the connector conv layer for reducing dimension and pass to PSROI
+        self.RCNN_conv_1x1 = nn.Conv2d(in_channels=2048, out_channels=1024,
+                  kernel_size=1, stride=1, padding=0, bias=False)
+
+        self.RCNN_conv_new = nn.Sequential(
+            resnet.layer4,
+            self.RCNN_conv_1x1,
+            nn.ReLU()
+        )
+
+        if self.class_agnostic:
+            self.RCNN_bbox_base = nn.Conv2d(in_channels=1024, out_channels=4 * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
+                                            kernel_size=1, stride=1, padding=0, bias=False)
+        else:
+            self.RCNN_bbox_base = nn.Conv2d(in_channels=1024, out_channels=4 * self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
+                                            kernel_size=1, stride=1, padding=0, bias=False)
+
+        self.RCNN_cls_base = nn.Conv2d(in_channels=1024, out_channels=self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
+                                       kernel_size=1, stride=1, padding=0, bias=False)
+
+        # Fix blocks
+        for p in self.RCNN_base[0].parameters(): p.requires_grad=False
+        for p in self.RCNN_base[1].parameters(): p.requires_grad=False
+
+        assert (0 <= cfg.RESNET.FIXED_BLOCKS < 4)
+        if cfg.RESNET.FIXED_BLOCKS >= 3:
+            for p in self.RCNN_base[6].parameters(): p.requires_grad=False
+        if cfg.RESNET.FIXED_BLOCKS >= 2:
+            for p in self.RCNN_base[5].parameters(): p.requires_grad=False
+        if cfg.RESNET.FIXED_BLOCKS >= 1:
+            for p in self.RCNN_base[4].parameters(): p.requires_grad=False
+
+        def set_bn_fix(m):
+            classname = m.__class__.__name__
+            if classname.find('BatchNorm') != -1:
+                for p in m.parameters(): p.requires_grad=False
+
+        self.RCNN_base.apply(set_bn_fix)
+        self.RCNN_conv_new.apply(set_bn_fix)
+
+    def train(self, mode=True):
+        # Override train so that the training mode is set as we want
+        nn.Module.train(self, mode)
+        if mode:
+            # Set fixed blocks to be in eval mode
+            self.RCNN_base.eval()
+            for fix_layer in range(6, 3 + cfg.RESNET.FIXED_BLOCKS, -1):
+                self.RCNN_base[fix_layer].train()
+
+            def set_bn_eval(m):
+                classname = m.__class__.__name__
+                if classname.find('BatchNorm') != -1:
+                    m.eval()
+
+            self.RCNN_base.apply(set_bn_eval)
+            self.RCNN_conv_new.apply(set_bn_eval)
+
+model = resnet(imdb.classes, 101, pretrained=True, class_agnostic=args.class_agnostic)
