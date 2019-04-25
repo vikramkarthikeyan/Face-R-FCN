@@ -50,20 +50,18 @@ class _RFCN(nn.Module):
 
         # if it is training phrase, then use ground truth bboxes for refining proposals
         if self.training:
-            rois = self.RCNN_proposal_target(rois, gt_boxes)
-        #     rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = roi_data
-
-        #     rois_label = Variable(rois_label.view(-1).long())
-        #     rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
-        #     rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
-        #     rois_outside_ws = Variable(rois_outside_ws.view(-1, rois_outside_ws.size(2)))
-        # else:
-        #     rois_label = None
-        #     rois_target = None
-        #     rois_inside_ws = None
-        #     rois_outside_ws = None
-        #     rpn_loss_cls = 0
-        #     rpn_loss_bbox = 0
+            rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = self.RCNN_proposal_target(rois, gt_boxes)
+            rois_label = Variable(rois_label.view(-1).long())
+            rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
+            rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
+            rois_outside_ws = Variable(rois_outside_ws.view(-1, rois_outside_ws.size(2)))
+        else:
+            rois_label = None
+            rois_target = None
+            rois_inside_ws = None
+            rois_outside_ws = None
+            rpn_loss_cls = 0
+            rpn_loss_bbox = 0
 
         rois = Variable(rois)
 
