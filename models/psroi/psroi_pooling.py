@@ -27,6 +27,8 @@ class PSRoIPoolingFunction(Function):
         # psroi_pooling.psroi_pooling_forward_cuda(self.pooled_height, self.pooled_width, self.spatial_scale, self.group_size, self.output_dim, \
         # features, rois, output, mappingchannel)
 
+        # print(output.shape)
+
         self.output = output
         self.mappingchannel = mappingchannel
         self.rois = rois
