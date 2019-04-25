@@ -38,10 +38,6 @@ class _AnchorLayer(nn.Module):
         #
         # .
 
-        print("--------------------")
-        print("ANCHOR LAYER")
-        print("--------------------")
-
         _, _, height, width = cls_scores.shape
 
         batch_size = gt_boxes.shape[0]
@@ -49,8 +45,9 @@ class _AnchorLayer(nn.Module):
 
         gt_boxes = torch.tensor(gt_boxes)
 
-        print("CLS_SCORES:", cls_scores.shape, type(cls_scores))
-        print("GT_BOXES:", gt_boxes.shape, type(gt_boxes))
+        print("\n\n----Anchor Target Layer----\n")
+        print("CLS_SCORES:", cls_scores.shape)
+        print("GT_BOXES:", gt_boxes.shape)
 
         # 1. Generating anchors
         all_anchors = generate_anchors((height, width), cfg.ANCHOR_SIZES)

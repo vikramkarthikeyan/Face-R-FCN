@@ -57,6 +57,13 @@ class _RFCN(nn.Module):
 
         rois = Variable(rois)
 
+        base_features = self.RCNN_conv_new(base_features)
+        print(base_features.shape)
+
+        # Do ROI pooling based on position based score maps
+        cls_feat = self.RCNN_cls_base(base_features)
+        bbox_base = self.RCNN_bbox_base(base_features)
+
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):
             """
