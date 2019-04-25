@@ -37,7 +37,7 @@ class RPN(nn.Module):
         # define proposal layer
         self.RPN_proposal = _ProposalLayer(self.feat_stride, self.anchor_dimensions, scale)
 
-        # TODO: define anchor target layer
+        # defined anchor target layer
         self.RPN_anchor_target = _AnchorLayer()
 
         self.rpn_loss_cls = 0
@@ -80,7 +80,7 @@ class RPN(nn.Module):
             # Get anchor targets
             # labels, targets = self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
 
-            # Compute cross-entropy classification loss
+            # TODO: Compute cross-entropy classification loss
 
             # Compute smooth l1 bbox regression loss
 
