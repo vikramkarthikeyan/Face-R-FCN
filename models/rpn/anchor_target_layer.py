@@ -55,8 +55,8 @@ class _AnchorLayer(nn.Module):
         print("ANCHORS:", all_anchors.shape)
 
         # 2. Clipping anchors which are not necessary
-        clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size)
-        # clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size).view(-1, 4)
+        # clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size)
+        clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size).view(-1, 4)
         # clipped_boxes = clipped_boxes.view(-1)
 
         print("CLIPPED:", clipped_boxes.shape)
@@ -127,7 +127,15 @@ class _AnchorLayer(nn.Module):
 
         for i in range(batch_size):
             overlaps_image = []
-            for anchor in anchors[i]:
+            for anchor in anchors:
+
+                # print("-----------------")
+                # print("bbox_overlaps")
+                # print("-----------------")
+                #
+                # print("ANCHOR", anchor)
+                # print("GT", gt_boxes[i][0])
+
                 IOU_anchor_vs_all_gt = [calc_IOU(anchor, gt_box) for gt_box in gt_boxes[i]]
 
                 overlaps_image.append(IOU_anchor_vs_all_gt)
