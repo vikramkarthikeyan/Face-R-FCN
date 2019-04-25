@@ -96,13 +96,14 @@ class _ProposalLayer(nn.Module):
             proposals = proposals[order, :]
             scores = scores[order].numpy()
 
+            print("\n----Proposal Layer----\n\nPRE NMS SIZE:",proposals.shape)
+
             # Step 7 - Combine anchors and scores
             scores = np.reshape(scores, (scores.shape[0], 1))
             combined = np.concatenate((proposals, scores),axis=1)
 
             # Step 8 - Apply NMS with a specific threshold in config
             keep_anchors_postNMS = nms(combined, rpn_config.NMS_THRESH)
-            print(keep_anchors_postNMS)
 
             # Step 9 - Take TopN post NMS proposals
             if rpn_config.POST_NMS_TOP_N > 0:
@@ -111,11 +112,14 @@ class _ProposalLayer(nn.Module):
             proposals = proposals[keep_anchors_postNMS, :]
             scores = scores[keep_anchors_postNMS, :]
 
+            print("\nPOST NMS SIZE:",proposals.shape)
+
             # Step 10 - Return topN proposals as output
             num_proposal = proposals.shape[0]
             output[i,:,0] = i
             output[i, :num_proposal, 0:] = torch.from_numpy(proposals)
-
+            
+        output = output[:, :num_proposal, ]
         return output
 
     def backward(self, top, propagate_down, bottom):
@@ -161,6 +165,7 @@ def filter_boxes(boxes, min_size):
     keep = ((widths >= min_sizes) & (heights >= min_sizes))
     return keep
 
+# https://www.pyimagesearch.com/2014/11/17/non-maximum-suppression-object-detection-python/
 def nms(entries, thresh):
 
     x1 = entries[:, 0]
@@ -172,24 +177,55 @@ def nms(entries, thresh):
     x2 = x1 + l
     y2 = y1 + b    
 
-    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
-    order = scores.argsort()[::-1]
-
+    # Initialize list of picked indices
     keep = []
-    while order.size > 0:
-        i = order.item(0)
+
+    # Calculate areas of all bounding boxes
+    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+
+    # Sort the bounding boxes by the bottom-right y-coordinate of the bounding box
+    idxs = np.argsort(y2)
+
+    # keep looping while some indexes still remain in the indexes list
+    while len(idxs) > 0:
+		# grab the last index in the indexes list, add the index
+		# value to the list of picked indexes, then initialize
+		# the suppression list (i.e. indexes that will be deleted)
+		# using the last index
+        last = len(idxs) - 1
+        i = idxs[last]
         keep.append(i)
-        xx1 = np.maximum(x1[i], x1[order[1:]])
-        yy1 = np.maximum(y1[i], y1[order[1:]])
-        xx2 = np.maximum(x2[i], x2[order[1:]])
-        yy2 = np.maximum(y2[i], y2[order[1:]])
+        suppress = [last]
+        
+        # loop over all indexes in the indexes list
+        for pos in range(0, last):
+            # grab the current index
+            j = idxs[pos]
 
-        w = np.maximum(0.0, xx2 - xx1 + 1)
-        h = np.maximum(0.0, yy2 - yy1 + 1)
-        inter = w * h
-        ovr = inter / (areas[i] + areas[order[1:]] - inter)
+            # find the largest (x, y) coordinates for the start of
+            # the bounding box and the smallest (x, y) coordinates
+            # for the end of the bounding box
+            xx1 = max(x1[i], x1[j])
+            yy1 = max(y1[i], y1[j])
+            xx2 = min(x2[i], x2[j])
+            yy2 = min(y2[i], y2[j])
 
-        inds = np.where(ovr <= thresh)[0]
-        order = order[inds + 1]
+            # compute the width and height of the bounding box
+            w = max(0, xx2 - xx1 + 1)
+            h = max(0, yy2 - yy1 + 1)
 
+            # compute the ratio of overlap between the computed
+            # bounding box and the bounding box in the area list
+            overlap = float(w * h) / areas[j]
+
+            # if there is sufficient overlap, suppress the
+            # current bounding box
+            if overlap > rpn_config.NMS_THRESH:
+                suppress.append(pos)
+ 
+        # delete all indexes from the index list that are in the suppression list
+        idxs = np.delete(idxs, suppress)
+ 
+    # return only the bounding boxes that were picked
     return keep
+

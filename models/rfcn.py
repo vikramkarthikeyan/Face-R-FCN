@@ -24,7 +24,7 @@ class _RFCN(nn.Module):
         self.feature_extractor = resnet50(pretrained=True)
 
         # Modify ResNet by removing last layer and avg pooling
-        self.feature_extractor = torch.nn.Sequential(*(list(self.feature_extractor.children())[:-3]))
+        self.feature_extractor = torch.nn.Sequential(*(list(self.feature_extractor.children())[:-4]))
         
         print(self.feature_extractor)
 
