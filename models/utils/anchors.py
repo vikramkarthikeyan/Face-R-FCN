@@ -78,8 +78,8 @@ def calc_IOU(boxA, boxB):
     yA = max(boxA[1], boxB[1])
     # xB = min(boxA[2], boxB[2])
     # yB = min(boxA[3], boxB[3])
-    xB = min(boxA[0] + boxA[2], boxB[0] + boxB[2])
-    yB = min(boxA[1] + boxA[3], boxB[1] + boxB[3])
+    xB = min(boxA[0] + boxA[2] - 1, boxB[0] + boxB[2] - 1)
+    yB = min(boxA[1] + boxA[3] - 1, boxB[1] + boxB[3] - 1)
 
     # compute the area of intersection rectangle
     interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)

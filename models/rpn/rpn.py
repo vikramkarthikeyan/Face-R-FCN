@@ -77,7 +77,7 @@ class RPN(nn.Module):
             assert gt_boxes is not None
 
             # Get anchor targets
-            # self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
+            self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
 
             # Compute cross-entropy classification loss
 
