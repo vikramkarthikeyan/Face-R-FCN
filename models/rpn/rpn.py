@@ -11,12 +11,14 @@ import time
 from .proposal_layer import _ProposalLayer
 from .anchor_target_layer import _AnchorLayer
 
+
 # Referred from https://github.com/jmerkow/R-FCN.rsna2018
 class RPN(nn.Module):
     """ Region proposal network """
+
     def __init__(self, input_channels, anchor_dimensions, stride, scale):
         super(RPN, self).__init__()
-        
+
         self.input_channels = input_channels  # get depth of input feature map, e.g., 512
         self.anchor_dimensions = anchor_dimensions
         self.feat_stride = stride
@@ -25,11 +27,11 @@ class RPN(nn.Module):
         self.RPN_Conv = nn.Conv2d(self.input_channels, 512, 3, 1, 1, bias=True)
 
         # define bg/fg classifcation score layer
-        self.nc_score_out = len(anchor_dimensions) 
+        self.nc_score_out = len(anchor_dimensions)
         self.RPN_cls_score = nn.Conv2d(512, self.nc_score_out, 1, 1, 0)
 
         # define anchor box offset prediction layer
-        self.nc_bbox_out = len(anchor_dimensions) * 4 # 4(coords) * 9 (anchors)
+        self.nc_bbox_out = len(anchor_dimensions) * 4  # 4(coords) * 9 (anchors)
         self.RPN_bbox_pred = nn.Conv2d(512, self.nc_bbox_out, 1, 1, 0)
 
         # define proposal layer
@@ -53,7 +55,6 @@ class RPN(nn.Module):
         return x
 
     def forward(self, base_features, image_metadata, gt_boxes):
-
         # return feature map after convrelu layer
         rpn_conv1 = F.relu(self.RPN_Conv(base_features), inplace=True)
 
@@ -77,13 +78,10 @@ class RPN(nn.Module):
             assert gt_boxes is not None
 
             # Get anchor targets
-            self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
+            labels, targets = self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
 
             # Compute cross-entropy classification loss
 
             # Compute smooth l1 bbox regression loss
-
-
-
 
         return rois, self.rpn_loss_cls, self.rpn_loss_box

@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from ..utils.anchors import generate_anchors
+from ..utils.anchors import generate_anchors, calc_IOU
 from ..config import rfcn_config as cfg
 import numpy as np
 
@@ -55,22 +55,40 @@ class _AnchorLayer(nn.Module):
         print("ANCHORS:", all_anchors.shape)
 
         # 2. Clipping anchors which are not necessary
-        clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size).view(-1, 4)
+        clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size)
+        # clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size).view(-1, 4)
         # clipped_boxes = clipped_boxes.view(-1)
 
         print("CLIPPED:", clipped_boxes.shape)
 
-        overlaps = self.bbox_overlaps_batch(torch.tensor(clipped_boxes), torch.tensor(gt_boxes))
+        # 3. Get all area overlap for the kept anchors
+        # overlaps = self.bbox_overlaps_batch(torch.tensor(clipped_boxes), torch.tensor(gt_boxes))
+        overlaps = self.bbox_overlaps(clipped_boxes, gt_boxes)
+        overlaps[overlaps == 0] = 1e-5
 
         max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
-        gt_max_overlaps, _ = torch.max(overlaps, 1)
+        gt_max_overlaps, arggt_max_overlaps = torch.max(overlaps, 1)
 
-        print("OVERLAPS:", overlaps)
-        print("OVERLAPS:", overlaps.shape)
+        # print("OVERLAPS:", overlaps)
+        print("OVERLAPS SHAPE:", overlaps.shape)
+        print("OVERLAPS ARGS SHAPE:", argmax_overlaps.shape)
+        print("OVERLAPS ARGS:", argmax_overlaps)
 
+        # 4. Create labels for all anchors generated and set them as -1.
+        labels = overlaps.new(batch_size, clipped_boxes.shape[0]).fill_(-1)
 
+        # 5. Calculate best possible over lap w. r. t. all GT boxes. Choose the best GT box for this match
+        max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
+        # gt_max_overlaps, arggt_max_overlaps = torch.max(overlaps, 1)
 
+        labels[max_overlaps > cfg.RPN_POSITIVE_OVERLAP] = 1
+        labels[max_overlaps < cfg.RPN_NEGATIVE_OVERLAP] = 0
 
+        targets = clipped_boxes.view(-1, 4) - gt_boxes.view(-1, 4)[argmax_overlaps, :]
+
+        targets = targets.view(batch_size, -1, 4)
+
+        return labels, targets
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""
@@ -79,6 +97,9 @@ class _AnchorLayer(nn.Module):
     def reshape(self, bottom, top):
         """Reshaping happens during the call to forward."""
         pass
+
+    # def bbox_transform_batch(self, ex_rois, gt_rois):
+    # # from bbox_transform.py
 
     def clip_boxes(self, boxes, length, width, batch_size):
 
@@ -100,6 +121,21 @@ class _AnchorLayer(nn.Module):
 
         return boxes
 
+    def bbox_overlaps(self, anchors, gt_boxes):
+        batch_size = gt_boxes.shape[0]
+        overlaps = []
+
+        for i in range(batch_size):
+            overlaps_image = []
+            for anchor in anchors[i]:
+                IOU_anchor_vs_all_gt = [calc_IOU(anchor, gt_box) for gt_box in gt_boxes[i]]
+
+                overlaps_image.append(IOU_anchor_vs_all_gt)
+
+            overlaps.append(overlaps_image)
+
+        return torch.tensor(overlaps)
+
     def bbox_overlaps_batch(self, anchors, gt_boxes):
         """
         anchors: (N, 4) ndarray of float
@@ -109,41 +145,41 @@ class _AnchorLayer(nn.Module):
         """
         batch_size = gt_boxes.shape[0]
 
-        if anchors.dim() == 2:
-            N = anchors.size(0)
-            K = gt_boxes.shape[1]
+        # if anchors.dim() == 2:
+        N = anchors.size(0)
+        K = gt_boxes.shape[1]
 
-            anchors = anchors.view(1, N, 4).expand(batch_size, N, 4).contiguous()
-            gt_boxes = gt_boxes[:, :, :4].contiguous()
-            # anchors = anchors.view(1, N, 4).expand(batch_size, N, 4)
-            # gt_boxes = gt_boxes[:, :, :4]
+        anchors = anchors.view(1, N, 4).expand(batch_size, N, 4).contiguous()
+        gt_boxes = gt_boxes[:, :, :4].contiguous()
+        # anchors = anchors.view(1, N, 4).expand(batch_size, N, 4)
+        # gt_boxes = gt_boxes[:, :, :4]
 
-            gt_boxes_x = (gt_boxes[:, :, 2] - gt_boxes[:, :, 0] + 1)
-            gt_boxes_y = (gt_boxes[:, :, 3] - gt_boxes[:, :, 1] + 1)
-            gt_boxes_area = (gt_boxes_x * gt_boxes_y).view(batch_size, 1, K)
+        gt_boxes_x = (gt_boxes[:, :, 2] - gt_boxes[:, :, 0] + 1)
+        gt_boxes_y = (gt_boxes[:, :, 3] - gt_boxes[:, :, 1] + 1)
+        gt_boxes_area = (gt_boxes_x * gt_boxes_y).view(batch_size, 1, K)
 
-            anchors_boxes_x = (anchors[:, :, 2] - anchors[:, :, 0] + 1)
-            anchors_boxes_y = (anchors[:, :, 3] - anchors[:, :, 1] + 1)
-            anchors_area = (anchors_boxes_x * anchors_boxes_y).view(batch_size, N, 1)
+        anchors_boxes_x = (anchors[:, :, 2] - anchors[:, :, 0] + 1)
+        anchors_boxes_y = (anchors[:, :, 3] - anchors[:, :, 1] + 1)
+        anchors_area = (anchors_boxes_x * anchors_boxes_y).view(batch_size, N, 1)
 
-            gt_area_zero = (gt_boxes_x == 1) & (gt_boxes_y == 1)
-            anchors_area_zero = (anchors_boxes_x == 1) & (anchors_boxes_y == 1)
+        gt_area_zero = (gt_boxes_x == 1) & (gt_boxes_y == 1)
+        anchors_area_zero = (anchors_boxes_x == 1) & (anchors_boxes_y == 1)
 
-            boxes = anchors.view(batch_size, N, 1, 4).expand(batch_size, N, K, 4)
-            query_boxes = gt_boxes.view(batch_size, 1, K, 4).expand(batch_size, N, K, 4)
+        boxes = anchors.view(batch_size, N, 1, 4).expand(batch_size, N, K, 4)
+        query_boxes = gt_boxes.view(batch_size, 1, K, 4).expand(batch_size, N, K, 4)
 
-            iw = (torch.min(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) -
-                  torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
-            iw[iw < 0] = 0
+        iw = (torch.min(boxes[:, :, :, 2], query_boxes[:, :, :, 2]) -
+              torch.max(boxes[:, :, :, 0], query_boxes[:, :, :, 0]) + 1)
+        iw[iw < 0] = 0
 
-            ih = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
-                  torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
-            ih[ih < 0] = 0
-            ua = anchors_area + gt_boxes_area - (iw * ih)
-            overlaps = iw * ih / ua
+        ih = (torch.min(boxes[:, :, :, 3], query_boxes[:, :, :, 3]) -
+              torch.max(boxes[:, :, :, 1], query_boxes[:, :, :, 1]) + 1)
+        ih[ih < 0] = 0
+        ua = anchors_area + gt_boxes_area - (iw * ih)
+        overlaps = iw * ih / ua
 
-            # mask the overlap here.
-            overlaps.masked_fill_(gt_area_zero.view(batch_size, 1, K).expand(batch_size, N, K), 0)
-            overlaps.masked_fill_(anchors_area_zero.view(batch_size, N, 1).expand(batch_size, N, K), -1)
+        # mask the overlap here.
+        overlaps.masked_fill_(gt_area_zero.view(batch_size, 1, K).expand(batch_size, N, K), 0)
+        overlaps.masked_fill_(anchors_area_zero.view(batch_size, N, 1).expand(batch_size, N, K), -1)
 
         return overlaps
