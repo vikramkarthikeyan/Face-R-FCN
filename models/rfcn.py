@@ -64,24 +64,41 @@ class _RFCN(nn.Module):
             rois_outside_ws = None
             rpn_loss_cls = 0
             rpn_loss_bbox = 0
+        
+        print("ROIS generated:",rois.shape)
+        
+        print("\n\n----ROIS generated, moving onto PSROI----\n")
 
         rois = Variable(rois)
 
         base_features = self.RCNN_conv_new(base_features)
-        print(base_features.shape)
+        
+        print("Features after conversion layer:",base_features.shape)
 
         # Get position based score maps
         cls_feat = self.RCNN_cls_base(base_features)
         bbox_base = self.RCNN_bbox_base(base_features)
 
+        print("PS Score maps for classification:", cls_feat.shape)
+        print("PS Score maps for bounding boxes:", bbox_base.shape)
+
+        # Flatten the ROIs generated from all the images in the batch as a single array of ROIs
+        flattened_rois = rois.view(-1, 4)
+
         # Do PSROI average pooling on the position based score maps
-        pooled_feat_cls = self.RCNN_psroi_pool_cls(cls_feat, rois.view(-1, 5))
+        pooled_feat_cls = self.RCNN_psroi_pool_cls(cls_feat, flattened_rois)
         cls_score = self.pooling(pooled_feat_cls)
         cls_score = cls_score.squeeze()
 
-        pooled_feat_loc = self.RCNN_psroi_pool_loc(bbox_base, rois.view(-1, 5))
+        pooled_feat_loc = self.RCNN_psroi_pool_loc(bbox_base, flattened_rois)
         pooled_feat_loc = self.pooling(pooled_feat_loc)
         bbox_pred = pooled_feat_loc.squeeze()
+
+        print("\n\n----PSROI----")
+        print("\nAfter PSROI on score maps for classification:",pooled_feat_cls.shape)
+        print("After PSROI on score maps for bounding boxes:",pooled_feat_loc.shape)
+        print("\nAfter averaging score maps:", cls_score.shape)
+        print("After averaging bbox_pred:", bbox_pred.shape)
 
         cls_prob = F.softmax(cls_score, dim=1)
 
@@ -90,6 +107,11 @@ class _RFCN(nn.Module):
 
         # if self.training:
             # RCNN_loss_cls, RCNN_loss_bbox = self.ohem_detect_loss(cls_score, rois_label, bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
+        
+        # Convert it to the batchwise format and return, TODO: Replace "1" with batch size hopefully soon
+        cls_prob = cls_prob.view(1, rois.size(1), -1)
+        bbox_pred = bbox_pred.view(1, rois.size(1), -1)
+
     
     def ohem_detect_loss(self, cls_score, rois_label, bbox_pred, rois_target, rois_inside_ws, rois_outside_ws):
 
