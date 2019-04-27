@@ -105,8 +105,8 @@ class _RFCN(nn.Module):
         RCNN_loss_cls = 0
         RCNN_loss_bbox = 0
 
-        # if self.training:
-            # RCNN_loss_cls, RCNN_loss_bbox = self.ohem_detect_loss(cls_score, rois_label, bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
+        if self.training:
+            RCNN_loss_cls, RCNN_loss_bbox = self.ohem_detect_loss(cls_score, rois_label, bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
         
         # Convert it to the batchwise format and return, TODO: Replace "1" with batch size hopefully soon
         cls_prob = cls_prob.view(1, rois.size(1), -1)
@@ -115,27 +115,33 @@ class _RFCN(nn.Module):
     
     def ohem_detect_loss(self, cls_score, rois_label, bbox_pred, rois_target, rois_inside_ws, rois_outside_ws):
 
+        print("\n\n-----OHEM-----")
+
         def log_sum_exp(x):
             x_max = x.data.max()
             return torch.log(torch.sum(torch.exp(x - x_max), dim=1, keepdim=True)) + x_max
 
-        batch_size =1
+        batch_size = 1
 
         num_hard = rfcn_config.PSROI_TRAINING_BATCH_SIZE * batch_size
         pos_idx = rois_label > 0
         num_pos = pos_idx.int().sum()
 
+        print("Number of positive examples:",num_pos.data)
+
         # classification loss
         num_classes = cls_score.size(1)
         weight = cls_score.data.new(num_classes).fill_(1.)
-        weight[0] = num_pos.data[0] / num_hard
+        weight[0] = num_pos.data / num_hard
 
+        # Detach is used to clone a tensor which is removed from the computation graph
         conf_p = cls_score.detach()
         conf_t = rois_label.detach()
 
         # rank on cross_entropy loss
         loss_c = log_sum_exp(conf_p) - conf_p.gather(1, conf_t.view(-1,1))
         loss_c[pos_idx] = 100. # include all positive samples
+        print(loss_c)
         _, topk_idx = torch.topk(loss_c.view(-1), num_hard)
         loss_cls = F.cross_entropy(cls_score[topk_idx], rois_label[topk_idx], weight=weight)
 
