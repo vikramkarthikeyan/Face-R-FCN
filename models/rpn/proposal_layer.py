@@ -52,8 +52,9 @@ class _ProposalLayer(nn.Module):
 
         # Step 1.b - Transform bbox_deltas shape to match the anchor 
         bbox_deltas_shape = bbox_deltas.shape
-        split_deltas = bbox_deltas.view(bbox_deltas_shape[0], 16, 4, bbox_deltas_shape[2], bbox_deltas_shape[3])
-        split_deltas = split_deltas.view(bbox_deltas_shape[0], 16, bbox_deltas_shape[2], bbox_deltas_shape[3], 4)
+        # Changed 16 to 18: VEDHARIS
+        split_deltas = bbox_deltas.view(bbox_deltas_shape[0], 18, 4, bbox_deltas_shape[2], bbox_deltas_shape[3])
+        split_deltas = split_deltas.view(bbox_deltas_shape[0], 18, bbox_deltas_shape[2], bbox_deltas_shape[3], 4)
 
         # Step 2 - Apply bounding box transformations
         adjusted_boxes = np.add(boxes.numpy(), split_deltas.numpy())

@@ -1,8 +1,12 @@
 import torch
 from torch import nn
-from ..utils.anchors import generate_anchors, calc_IOU
+from ..utils.anchors import generate_anchors2, calc_IOU, calc_IOU2
 from ..config import rfcn_config as cfg
 import numpy as np
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from PIL import Image
 
 
 class _AnchorLayer(nn.Module):
@@ -10,7 +14,7 @@ class _AnchorLayer(nn.Module):
     def __init__(self):
         super(_AnchorLayer, self).__init__()
 
-    def forward(self, cls_scores, gt_boxes, image_info=None):
+    def forward(self, cls_scores, gt_boxes_old, image_info=None):
 
         # Algorithm to follow:
         #
@@ -30,7 +34,7 @@ class _AnchorLayer(nn.Module):
         # 6. Anchors with overlap area above POS_TH are labeled 1.
         # 7. Anchors with overlap area below NEG_TH are labeled 0.
         #
-        # TODO: If number of anchors is too much, subsample from these to get an acceptable number. Change label only.
+        # DONE: If number of anchors is too much, subsample from these to get an acceptable number. Change label only.
         #
         # 8. generate the regression targets for the GT boxes for the best overlap from step 5.
         #
@@ -39,18 +43,24 @@ class _AnchorLayer(nn.Module):
         # .
 
         _, _, height, width = cls_scores.shape
+        scale = 1024 // height
 
-        batch_size = gt_boxes.shape[0]
+        flag_demo = True
+        # flag_demo = False
+
+        batch_size = gt_boxes_old.shape[0]
         # batch_size = 1
 
-        gt_boxes = torch.tensor(gt_boxes)
+        # gt_boxes = torch.tensor(gt_boxes_old).float() / 16
+        # gt_boxes = torch.div(torch.tensor(gt_boxes_old).float(), 16.0)
+        gt_boxes = torch.tensor(gt_boxes_old)
 
         print("\n\n----Anchor Target Layer----\n")
         print("CLS_SCORES:", cls_scores.shape)
-        print("GT_BOXES:", gt_boxes.shape)
+        print("GT_BOXES:", gt_boxes.shape, gt_boxes)
 
         # 1. Generating anchors
-        all_anchors = generate_anchors((height, width), cfg.ANCHOR_SIZES)
+        all_anchors = generate_anchors2((height, width), cfg.ANCHOR_SIZES)
 
         all_anchors = all_anchors.view(batch_size, all_anchors.shape[0], all_anchors.shape[1],
                                        all_anchors.shape[2], all_anchors.shape[3])
@@ -58,22 +68,41 @@ class _AnchorLayer(nn.Module):
         print("ANCHORS:", all_anchors.shape)
 
         # 2. Clipping anchors which are not necessary
-        # clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size)
-        clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size).view(-1, 4)
-        # clipped_boxes = clipped_boxes.view(-1)
+        clipped_boxes, indices = self.clip_boxes(all_anchors, height, width, batch_size)
+        # clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size).view(-1, 4)
+        # keep = ((all_anchors[:, 0] >= 0) &
+        #         (all_anchors[:, 1] >= 0) &
+        #         (all_anchors[:, 2] < height) &
+        #         (all_anchors[:, 3] < width))
+        #
+        # inds_inside = torch.nonzero(keep).view(-1)
 
-        print("CLIPPED:", clipped_boxes.shape, type(clipped_boxes))
+        # for clip in clipped_boxes:
+        #     print(clip)
+
+        # clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size).view(-1, 4)
+        # clipped_boxes = clipped_boxes.view(-1)
+        # np_clipped = clipped_boxes.numpy()
+
+        print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
 
         # 3. Get all area overlap for the kept anchors
         # overlaps = self.bbox_overlaps_batch(torch.tensor(clipped_boxes), torch.tensor(gt_boxes))
+        # overlaps = self.bbox_overlaps(clipped_boxes.float(), gt_boxes)
         overlaps = self.bbox_overlaps(clipped_boxes, gt_boxes)
         overlaps[overlaps == 0] = 1e-5
+        print(overlaps[overlaps > 1], "empty is good")
+        print(overlaps[overlaps > cfg.RPN_POSITIVE_OVERLAP], "empty is not good")
+        # print(overlaps)
+        # print(overlaps[overlaps > 0.01])
 
         max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
-        gt_max_overlaps, arggt_max_overlaps = torch.max(overlaps, 1)
+        gt_max_overlaps, argmax_gt_max_overlaps = torch.max(overlaps, 1)
+        print("GT_MAX:", gt_max_overlaps, argmax_gt_max_overlaps)
 
         # print("OVERLAPS:", overlaps)
         print("OVERLAPS SHAPE:", overlaps.shape)
+        print("OVERLAPS MAX SHAPE:", max_overlaps.shape)
         print("OVERLAPS ARGS SHAPE:", argmax_overlaps.shape)
         print("OVERLAPS ARGS:", argmax_overlaps)
 
@@ -81,15 +110,68 @@ class _AnchorLayer(nn.Module):
         labels = overlaps.new(batch_size, clipped_boxes.shape[0]).fill_(-1)
 
         # 5. Calculate best possible over lap w. r. t. all GT boxes. Choose the best GT box for this match
-        max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
+        # max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
         # gt_max_overlaps, arggt_max_overlaps = torch.max(overlaps, 1)
 
         labels[max_overlaps > cfg.RPN_POSITIVE_OVERLAP] = 1
         labels[max_overlaps < cfg.RPN_NEGATIVE_OVERLAP] = 0
+        # labels[max_overlaps > cfg.FACE_THRESH] = 1
+        # labels[max_overlaps < cfg.FACE_THRESH] = 0
 
-        targets = clipped_boxes.view(-1, 4) - gt_boxes.view(-1, 4)[argmax_overlaps, :]
+        pos_anc_cnt = torch.sum(max_overlaps > cfg.RPN_POSITIVE_OVERLAP)
 
-        targets = targets.view(batch_size, -1, 4)
+        cutoff_cnt = max(1, 3 * pos_anc_cnt)
+
+        if torch.sum(max_overlaps < cfg.RPN_NEGATIVE_OVERLAP) > cutoff_cnt:
+            for i in range(batch_size):
+                bg_inds = torch.nonzero(labels[i] == 0).view(-1)
+                rand_num = torch.from_numpy(np.random.permutation(bg_inds.shape[0])).type_as(gt_boxes).long()
+                disable_inds = bg_inds[rand_num[:bg_inds.size(0) - cutoff_cnt]]
+                labels[i][disable_inds] = -1
+
+        if flag_demo:
+
+            print((max_overlaps > cfg.RPN_POSITIVE_OVERLAP).view(-1))
+
+            pos_anc = clipped_boxes[(labels == 1).view(-1), :]
+            neg_anc = clipped_boxes[(labels == 0).view(-1), :]
+
+            img = Image.open(image_info[0])
+            plt.imshow(self.resize_image(img))
+            ax = plt.gca()
+            # rect = Rectangle((50, 100), 40, 30, linewidth=1, edgecolor='g', facecolor='none')
+
+            for anc in neg_anc[:100, :]:
+                anc_ = anc * scale
+                ax.add_patch(
+                    Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3], linewidth=2, edgecolor='r', facecolor='none'))
+
+            for anc in pos_anc:
+                anc_ = anc * scale
+                ax.add_patch(
+                    Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3], linewidth=2, edgecolor='g', facecolor='none'))
+
+            for anc in gt_boxes[0]:
+                anc_ = anc
+                ax.add_patch(
+                    Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3], linewidth=2, edgecolor='b', facecolor='none'))
+
+            plt.show()
+
+        targets = clipped_boxes.view(-1, 4).float() - (gt_boxes.view(-1, 4)[argmax_overlaps, :].float() / scale)
+
+        # targets = targets.view(batch_size, -1, 4)
+
+        label_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 1).fill_(-1)
+        target_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 4).fill_(0)
+
+        print("LABEL_ip:", labels.shape)
+        print("LABEL_OP:", label_op.shape)
+        # print("INDICES:", indices)
+
+        for lab, ind in zip(labels[0], indices):
+            label_op[ind] = lab
+        # label_op[:, indices] = labels
 
         return labels, targets
 
@@ -103,43 +185,60 @@ class _AnchorLayer(nn.Module):
 
     # def bbox_transform_batch(self, ex_rois, gt_rois):
     # # from bbox_transform.py
+    def plot_boxes(self, anchors, color='r'):
+        pass
 
     def clip_boxes(self, boxes, length, width, batch_size):
 
+        output = []
+        op2 = []
+        inds = []
+
         for i in range(batch_size):
-            for channel in boxes[i]:
-                for x in channel:
-                    for y in x:
-                        # Check if the entry exceeds the bounds, else clip
-                        y[2] = y[0] + y[2]
-                        y[3] = y[1] + y[3]
+            new_batch = []
+            for ch, channel in enumerate(boxes[i]):
+                new_channel = []
+                for x_n, x in enumerate(channel):
+                    new_x = []
+                    for y_n, y in enumerate(x):
 
-                        y[0] = np.clip(y[0], 0, length - 1)
-                        y[1] = np.clip(y[1], 0, length - 1)
-                        y[2] = np.clip(y[2], 0, length - 1)
-                        y[3] = np.clip(y[3], 0, length - 1)
+                        if y[0] >= 0 and y[1] >= 0 and (y[0] + y[2]) < length and (y[1] + y[3]) < width:
+                            op2.append(y.numpy())
+                            inds.append((i, ch, x_n, y_n))
 
-                        y[2] = y[2] - y[0]
-                        y[3] = y[3] - y[1]
+        #                 Check if the entry exceeds the bounds, else clip
+        #                 y[2] = y[0] + y[2]
+        #                 y[3] = y[1] + y[3]
+        #
+        #                 y[0] = np.clip(y[0], 0, length - 1)
+        #                 y[1] = np.clip(y[1], 0, length - 1)
+        #                 y[2] = np.clip(y[2], 0, length - 1)
+        #                 y[3] = np.clip(y[3], 0, length - 1)
+        #
+        #                 y[2] = y[2] - y[0]
+        #                 y[3] = y[3] - y[1]
+        #
+        #
+        #                 new_x.append(y.numpy())
+        #             new_channel.append(new_x)
+        #         new_batch.append(new_channel)
+        #     output.append(new_batch)
+        # output = np.array(output)
+        # print("CLIPPING OUTPUT:", output.shape)
 
-        return boxes
+        # return torch.from_numpy(np.array(output))
+        # return torch.from_numpy(np.array(op2)), torch.from_numpy(np.array(inds))
+        return torch.from_numpy(np.array(op2)), inds
+        # return boxes
 
-    def bbox_overlaps(self, anchors, gt_boxes):
+    def bbox_overlaps(self, anchors, gt_boxes, factor=16):
         batch_size = gt_boxes.shape[0]
         overlaps = []
 
         for i in range(batch_size):
             overlaps_image = []
             for anchor in anchors:
-
-                # print("-----------------")
-                # print("bbox_overlaps")
-                # print("-----------------")
-                #
-                # print("ANCHOR", anchor)
-                # print("GT", gt_boxes[i][0])
-
-                IOU_anchor_vs_all_gt = [calc_IOU(anchor, gt_box) for gt_box in gt_boxes[i]]
+                IOU_anchor_vs_all_gt = [calc_IOU(anchor * factor, gt_box) for gt_box in gt_boxes[i]]
 
                 overlaps_image.append(IOU_anchor_vs_all_gt)
 
@@ -194,3 +293,19 @@ class _AnchorLayer(nn.Module):
         overlaps.masked_fill_(anchors_area_zero.view(batch_size, N, 1).expand(batch_size, N, K), -1)
 
         return overlaps
+
+    def resize_image(self, im, dimension=512):
+        old_size = im.size
+        ratio = float(dimension) / max(old_size)
+        new_size = tuple([int(x * ratio) for x in old_size])
+
+        im = im.resize(new_size, Image.ANTIALIAS)
+
+        offset_x = (dimension - new_size[0]) // 2
+        offset_y = (dimension - new_size[1]) // 2
+
+        # create a new image and paste the resized on it
+        new_im = Image.new("RGB", (dimension, dimension))
+        new_im.paste(im, (offset_x, offset_y))
+
+        return new_im
