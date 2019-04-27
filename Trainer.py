@@ -35,7 +35,7 @@ class Trainer:
     def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=5, validation_batch_size=5): 
 
         # Create training dataloader
-        self.train_loader = torch.utils.data.DataLoader(training_data, batch_size=training_batch_size, shuffle=True,
+        self.train_loader = torch.utils.data.DataLoader(training_data, batch_size=training_batch_size, shuffle=False,
                                                              num_workers=1, collate_fn=custom_collate)
 
         # Create validation dataloader

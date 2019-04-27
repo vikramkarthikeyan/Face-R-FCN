@@ -2,38 +2,38 @@ import numpy as np
 import torch
 
 
-def generate_anchors(dimensions, box_sizes):
-    """
-    Function to generate anchors.
-    :param dimensions:  Dimensions of extracted features
-    :return:         A*i Anchors (A anchors per location i)
-    """
-    # print("Input dimensions:", dimensions)
-    feat_h, feat_w = dimensions
+# def generate_anchors(dimensions, box_sizes):
+#     """
+#     Function to generate anchors.
+#     :param dimensions:  Dimensions of extracted features
+#     :return:         A*i Anchors (A anchors per location i)
+#     """
+#     # print("Input dimensions:", dimensions)
+#     feat_h, feat_w = dimensions
 
-    anchors_list = []
+#     anchors_list = []
 
-    for bs in box_sizes:
-        x_list = []
-        for i in range(0, feat_h):
-            y_list = []
-            for j in range(0, feat_w):
+#     for bs in box_sizes:
+#         x_list = []
+#         for i in range(0, feat_h):
+#             y_list = []
+#             for j in range(0, feat_w):
 
-                x = (i - (bs[0] // 2))
-                y = (j - (bs[1] // 2))
-                l = x + bs[0]
-                w = y + bs[1]
+#                 x = (i - (bs[0] // 2))
+#                 y = (j - (bs[1] // 2))
+#                 l = x + bs[0]
+#                 w = y + bs[1]
 
-                y_list.append((x, y, l, w))
+#                 y_list.append((x, y, l, w))
             
-            x_list.append(y_list)
+#             x_list.append(y_list)
         
-        anchors_list.append(x_list)
+#         anchors_list.append(x_list)
 
-    return torch.from_numpy(np.array(anchors_list))
+#     return torch.from_numpy(np.array(anchors_list))
 
 
-def generate_anchors2(dimensions, box_sizes):
+def generate_anchors(dimensions, box_sizes):
     """
     Function to generate anchors.
     :param dimensions:  Dimensions of extracted features
@@ -63,38 +63,6 @@ def generate_anchors2(dimensions, box_sizes):
         anchors_list.append(x_list)
 
     return torch.from_numpy(np.array(anchors_list))
-
-    #             im_slice = features[x:x + bs[0], y:y + bs[1]]
-    #             frame_a = (x, y, x + bs[0], y + bs[1])
-    #             """
-    #             Frame A is the sliding window for calculation.
-    #             """
-    #
-    #             for bb in list_bb:
-    #                 frame_b = (bb[1], bb[0], bb[1] + bb[3], bb[0] + bb[2])
-    #                 """
-    #                 Frame B is the input """
-    #                 iou = calc_IOU(frame_a, frame_b)
-    #                 if max_iou < iou:
-    #                     max_iou = iou
-    #
-    #                 # print(max_iou)
-    #
-    #             if max_iou > 0.6:
-    #                 print(frame_a, frame_b, max_iou)
-    #                 # pos_anc.append((x * scale, (x + bs[0]) * scale, y * scale, (y + bs[1]) * scale))
-    #                 pos_anc.append([y * scale, x * scale,  bs[1], bs[0]])
-    #             elif max_iou < 0.05:
-    #                 # neg_anc.append((x * scale, (x + bs[0]) * scale, y * scale, (y + bs[1]) * scale))
-    #                 neg_anc.append([y * scale, x * scale,  bs[1], bs[0]])
-    #
-    # indices = np.random.permutation(len(neg_anc))
-    #
-    # neg_filtered = []
-    # for idx in indices[:100]:
-    #     neg_filtered.append(neg_anc[idx])
-    #
-    # return pos_anc, neg_filtered
 
 
 def calc_IOU(boxA, boxB):

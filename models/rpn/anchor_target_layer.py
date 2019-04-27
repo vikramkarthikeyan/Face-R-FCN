@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from ..utils.anchors import generate_anchors2, calc_IOU, calc_IOU2
+from ..utils.anchors import generate_anchors, calc_IOU, calc_IOU2
 from ..config import rfcn_config as cfg
 import numpy as np
 
@@ -51,8 +51,6 @@ class _AnchorLayer(nn.Module):
         batch_size = gt_boxes_old.shape[0]
         # batch_size = 1
 
-        # gt_boxes = torch.tensor(gt_boxes_old).float() / 16
-        # gt_boxes = torch.div(torch.tensor(gt_boxes_old).float(), 16.0)
         gt_boxes = torch.tensor(gt_boxes_old)
 
         print("\n\n----Anchor Target Layer----\n")
@@ -60,7 +58,7 @@ class _AnchorLayer(nn.Module):
         print("GT_BOXES:", gt_boxes.shape, gt_boxes)
 
         # 1. Generating anchors
-        all_anchors = generate_anchors2((height, width), cfg.ANCHOR_SIZES)
+        all_anchors = generate_anchors((height, width), cfg.ANCHOR_SIZES)
 
         all_anchors = all_anchors.view(batch_size, all_anchors.shape[0], all_anchors.shape[1],
                                        all_anchors.shape[2], all_anchors.shape[3])
