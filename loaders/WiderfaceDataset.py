@@ -1,4 +1,3 @@
-
 import os
 import torch
 import scipy.io
@@ -9,8 +8,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import torchvision.transforms as transforms
 
+from models.config import rfcn_config as cfg
+
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
+
 
 # https://www.cs.virginia.edu/~vicente/recognition/notebooks/image_processing_lab.html
 class WiderFaceDataset(Dataset):
@@ -20,9 +22,9 @@ class WiderFaceDataset(Dataset):
         self.metadata_path = metadata_path
         self.transform = transform
         self.pil2tensor = transforms.ToTensor()
-        
+
         self.convert_to_image_list(self.metadata_path)
-    
+
     def convert_to_image_list(self, path):
         self.f = scipy.io.loadmat(path)
         self.event_list = self.f.get('event_list')
@@ -30,7 +32,6 @@ class WiderFaceDataset(Dataset):
         self.face_bbx_list = self.f.get('face_bbx_list')
         self.occlusion_label_list = self.f.get('occlusion_label_list')
         self.pose_label_list = self.f.get('pose_label_list')
-
 
         image_metadata = {
             'image_location': [],
@@ -42,9 +43,9 @@ class WiderFaceDataset(Dataset):
 
             for file_idx, file_path in enumerate(self.file_list[idx][0]):
                 file_name = file_path[0][0] + '.jpg'
-                file_name = event + '/' +file_name
-                file_path = os.path.abspath('data/widerface/WIDER_train/images/'+file_name)
-                
+                file_name = event + '/' + file_name
+                file_path = os.path.abspath('data/widerface/WIDER_train/images/' + file_name)
+
                 bounding_boxes = self.face_bbx_list[idx][0][file_idx][0]
                 occlusions = self.occlusion_label_list[idx][0][file_idx][0]
                 pose = self.pose_label_list[idx][0][file_idx][0]
@@ -67,10 +68,10 @@ class WiderFaceDataset(Dataset):
 
                 # break
             # break
-        
+
         # convert to pandas
         self.dataset = pd.DataFrame.from_dict(image_metadata)
-        
+
     def __len__(self):
         return len(self.dataset)
 
@@ -79,7 +80,8 @@ class WiderFaceDataset(Dataset):
             with open(self.dataset.iloc[idx]['image_location'], 'rb') as f:
                 image = Image.open(f)
                 image = image.convert('RGB')
-                image, boxes = self.resize_image(image, self.dataset.iloc[idx]['image_ground_truth'])
+                image, boxes = self.resize_image(image, self.dataset.iloc[idx]['image_ground_truth'],
+                                                 dimension=cfg.IMAGE_INPUT_DIMS)
 
         except Exception:
             print("Image not found..", traceback.format_exception())
@@ -90,17 +92,17 @@ class WiderFaceDataset(Dataset):
         ground_truth_tensor = torch.tensor(np.array(boxes))
 
         return (image_tensor, ground_truth_tensor, self.dataset.iloc[idx]['image_location'])
-    
+
     # Referenced from: https://jdhao.github.io/2017/11/06/resize-image-to-square-with-padding/
     def resize_image(self, im, b_boxes, dimension=512):
         old_size = im.size
-        ratio = float(dimension)/max(old_size)
-        new_size = tuple([int(x*ratio) for x in old_size])
+        ratio = float(dimension) / max(old_size)
+        new_size = tuple([int(x * ratio) for x in old_size])
 
         im = im.resize(new_size, Image.ANTIALIAS)
 
-        offset_x = (dimension-new_size[0])//2
-        offset_y = (dimension-new_size[1])//2
+        offset_x = (dimension - new_size[0]) // 2
+        offset_y = (dimension - new_size[1]) // 2
 
         # create a new image and paste the resized on it
         new_im = Image.new("RGB", (dimension, dimension))
@@ -110,39 +112,42 @@ class WiderFaceDataset(Dataset):
         results = []
 
         for box in b_boxes:
-            x = int(abs(box[0]*ratio + offset_x))
-            y = int(abs(box[1]*ratio + offset_y))
+            x = int(abs(box[0] * ratio + offset_x))
+            y = int(abs(box[1] * ratio + offset_y))
             l = int(box[2] * ratio)
             b = int(box[3] * ratio)
             new_box = [x, y, l, b]
             results.append(new_box)
 
         return new_im, results
-    
+
     def plot_boxes(self, file, positive_anchors, negative_anchors, boxes):
         im = np.array(Image.open(file).convert('RGB'), dtype=np.uint8)
 
         # Create figure and axes
-        fig,ax = plt.subplots(1)
+        fig, ax = plt.subplots(1)
 
         # Display the image
         ax.imshow(im)
 
         if positive_anchors:
             for i, box in enumerate(positive_anchors):
-                rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='green',facecolor='none')
+                rect = patches.Rectangle((box[0], box[1]), box[2], box[3], linewidth=1, edgecolor='green',
+                                         facecolor='none')
                 ax.add_patch(rect)
-        
+
         if negative_anchors:
             for i, box in enumerate(negative_anchors):
-                rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='red', facecolor='none')
+                rect = patches.Rectangle((box[0], box[1]), box[2], box[3], linewidth=1, edgecolor='red',
+                                         facecolor='none')
                 ax.add_patch(rect)
 
         for i, box in enumerate(boxes):
-            rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='blue', facecolor='none')
+            rect = patches.Rectangle((box[0], box[1]), box[2], box[3], linewidth=1, edgecolor='blue', facecolor='none')
             ax.add_patch(rect)
 
         plt.show()
+
 
 def get_regions(features, N, list_bb):
     """
@@ -188,16 +193,16 @@ def get_regions(features, N, list_bb):
                     iou = calc_IOU(frame_a, frame_b)
                     if max_iou < iou:
                         max_iou = iou
-                
+
                     # print(max_iou)
 
                 if max_iou > 0.762:
                     print(frame_a, frame_b, max_iou)
                     # pos_anc.append((x * scale, (x + bs[0]) * scale, y * scale, (y + bs[1]) * scale))
-                    pos_anc.append([y * scale, x * scale,  bs[1], bs[0]])
+                    pos_anc.append([y * scale, x * scale, bs[1], bs[0]])
                 elif max_iou < 0.05:
                     # neg_anc.append((x * scale, (x + bs[0]) * scale, y * scale, (y + bs[1]) * scale))
-                    neg_anc.append([y * scale, x * scale,  bs[1], bs[0]])
+                    neg_anc.append([y * scale, x * scale, bs[1], bs[0]])
 
     return pos_anc, neg_anc
 
@@ -232,4 +237,3 @@ def calc_IOU(boxA, boxB):
 
     # return the intersection over union value
     return iou
-

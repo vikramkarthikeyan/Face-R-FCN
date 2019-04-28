@@ -43,19 +43,22 @@ class _AnchorLayer(nn.Module):
         # .
 
         _, _, height, width = cls_scores.shape
-        scale = 1024 // height
+        scale = cfg.IMAGE_INPUT_DIMS // height
 
-        flag_demo = True
-        # flag_demo = False
+        # flag_verbose = True
+        flag_verbose = False
+        # flag_demo = True
+        flag_demo = False
 
         batch_size = gt_boxes_old.shape[0]
         # batch_size = 1
 
         gt_boxes = torch.tensor(gt_boxes_old)
 
-        print("\n\n----Anchor Target Layer----\n")
-        print("CLS_SCORES:", cls_scores.shape)
-        print("GT_BOXES:", gt_boxes.shape, gt_boxes)
+        if flag_verbose:
+            print("\n\n----Anchor Target Layer----\n")
+            print("CLS_SCORES:", cls_scores.shape)
+            print("GT_BOXES:", gt_boxes.shape, gt_boxes)
 
         # 1. Generating anchors
         all_anchors = generate_anchors((height, width), cfg.ANCHOR_SIZES)
@@ -63,7 +66,8 @@ class _AnchorLayer(nn.Module):
         all_anchors = all_anchors.view(batch_size, all_anchors.shape[0], all_anchors.shape[1],
                                        all_anchors.shape[2], all_anchors.shape[3])
 
-        print("ANCHORS:", all_anchors.shape)
+        if flag_verbose:
+            print("ANCHORS:", all_anchors.shape)
 
         # 2. Clipping anchors which are not necessary
         clipped_boxes, indices = self.clip_boxes(all_anchors, height, width, batch_size)
@@ -82,15 +86,17 @@ class _AnchorLayer(nn.Module):
         # clipped_boxes = clipped_boxes.view(-1)
         # np_clipped = clipped_boxes.numpy()
 
-        print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
+        if flag_verbose:
+            print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
 
         # 3. Get all area overlap for the kept anchors
         # overlaps = self.bbox_overlaps_batch(torch.tensor(clipped_boxes), torch.tensor(gt_boxes))
         # overlaps = self.bbox_overlaps(clipped_boxes.float(), gt_boxes)
         overlaps = self.bbox_overlaps(clipped_boxes, gt_boxes)
         overlaps[overlaps == 0] = 1e-5
-        print(overlaps[overlaps > 1], "empty is good")
-        print(overlaps[overlaps > cfg.RPN_POSITIVE_OVERLAP], "empty is not good")
+        if flag_verbose:
+            print(overlaps[overlaps > 1], "empty is good")
+            print(overlaps[overlaps > cfg.RPN_POSITIVE_OVERLAP], "empty is not good")
         # print(overlaps)
         # print(overlaps[overlaps > 0.01])
 
@@ -98,11 +104,12 @@ class _AnchorLayer(nn.Module):
         gt_max_overlaps, argmax_gt_max_overlaps = torch.max(overlaps, 1)
         print("GT_MAX:", gt_max_overlaps, argmax_gt_max_overlaps)
 
-        # print("OVERLAPS:", overlaps)
-        print("OVERLAPS SHAPE:", overlaps.shape)
-        print("OVERLAPS MAX SHAPE:", max_overlaps.shape)
-        print("OVERLAPS ARGS SHAPE:", argmax_overlaps.shape)
-        print("OVERLAPS ARGS:", argmax_overlaps)
+        if flag_verbose:
+            # print("OVERLAPS:", overlaps)
+            print("OVERLAPS SHAPE:", overlaps.shape)
+            print("OVERLAPS MAX SHAPE:", max_overlaps.shape)
+            print("OVERLAPS ARGS SHAPE:", argmax_overlaps.shape)
+            print("OVERLAPS ARGS:", argmax_overlaps)
 
         # 4. Create labels for all anchors generated and set them as -1.
         labels = overlaps.new(batch_size, clipped_boxes.shape[0]).fill_(-1)
@@ -129,7 +136,7 @@ class _AnchorLayer(nn.Module):
 
         if flag_demo:
 
-            print((max_overlaps > cfg.RPN_POSITIVE_OVERLAP).view(-1))
+            # print((max_overlaps > cfg.RPN_POSITIVE_OVERLAP).view(-1))
 
             pos_anc = clipped_boxes[(labels == 1).view(-1), :]
             neg_anc = clipped_boxes[(labels == 0).view(-1), :]
@@ -141,18 +148,21 @@ class _AnchorLayer(nn.Module):
 
             for anc in neg_anc[:100, :]:
                 anc_ = anc * scale
-                ax.add_patch(
-                    Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3], linewidth=2, edgecolor='r', facecolor='none'))
+                ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
+                                       linewidth=2, edgecolor='r',
+                                       facecolor='none'))
 
             for anc in pos_anc:
                 anc_ = anc * scale
-                ax.add_patch(
-                    Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3], linewidth=2, edgecolor='g', facecolor='none'))
+                ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
+                                       linewidth=2, edgecolor='g',
+                                       facecolor='none'))
 
             for anc in gt_boxes[0]:
                 anc_ = anc
-                ax.add_patch(
-                    Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3], linewidth=2, edgecolor='b', facecolor='none'))
+                ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
+                                       linewidth=2, edgecolor='b',
+                                       facecolor='none'))
 
             plt.show()
 
@@ -163,12 +173,16 @@ class _AnchorLayer(nn.Module):
         label_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 1).fill_(-1)
         target_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 4).fill_(0)
 
-        print("LABEL_ip:", labels.shape)
-        print("LABEL_OP:", label_op.shape)
+        if flag_verbose:
+            print("LABEL_ip:", labels.shape)
+            print("LABEL_OP:", label_op.shape)
+            print("TARGET_IP:", targets.shape)
+            print("TARGET_OP:", target_op.shape)
         # print("INDICES:", indices)
 
-        for lab, ind in zip(labels[0], indices):
+        for lab, target, ind in zip(labels[0], targets[0], indices):
             label_op[ind] = lab
+            target_op[ind] = target
         # label_op[:, indices] = labels
 
         return labels, targets
@@ -204,28 +218,6 @@ class _AnchorLayer(nn.Module):
                             op2.append(y.numpy())
                             inds.append((i, ch, x_n, y_n))
 
-        #                 Check if the entry exceeds the bounds, else clip
-        #                 y[2] = y[0] + y[2]
-        #                 y[3] = y[1] + y[3]
-        #
-        #                 y[0] = np.clip(y[0], 0, length - 1)
-        #                 y[1] = np.clip(y[1], 0, length - 1)
-        #                 y[2] = np.clip(y[2], 0, length - 1)
-        #                 y[3] = np.clip(y[3], 0, length - 1)
-        #
-        #                 y[2] = y[2] - y[0]
-        #                 y[3] = y[3] - y[1]
-        #
-        #
-        #                 new_x.append(y.numpy())
-        #             new_channel.append(new_x)
-        #         new_batch.append(new_channel)
-        #     output.append(new_batch)
-        # output = np.array(output)
-        # print("CLIPPING OUTPUT:", output.shape)
-
-        # return torch.from_numpy(np.array(output))
-        # return torch.from_numpy(np.array(op2)), torch.from_numpy(np.array(inds))
         return torch.from_numpy(np.array(op2)), inds
         # return boxes
 
