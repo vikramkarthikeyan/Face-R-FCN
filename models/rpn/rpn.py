@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from ..config import rfcn_config as cfg
 from torch.autograd import Variable
 import numpy as np
 import math
@@ -80,8 +81,50 @@ class RPN(nn.Module):
             # Get anchor targets
             labels, targets = self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
 
+            # rpn_classification_prob.unsqueeze(5)
+            rpn_classification_prob = torch.unsqueeze(rpn_classification_prob, 5).view(-1)
+
             # TODO: Compute cross-entropy classification loss
 
-            # Compute smooth l1 bbox regression loss
+            valid_indices = labels.ne(-1).nonzero()
+            print("VALID_INDICES:", valid_indices.shape)
+
+            pred = rpn_classification_prob[valid_indices].view(-1)
+            actual = labels[valid_indices].view(-1)
+
+            self.rpn_loss_cls = F.cross_entropy(pred, actual)
+
+            # TODO: Compute smooth l1 bbox regression loss
+
+            self.rpn_loss_box = self.smooth_l1_loss(rpn_bbox_predictions, targets, labels,
+                                                    delta=cfg.RPN_L1_DELTA, dim=[1, 2, 3])
 
         return rois, self.rpn_loss_cls, self.rpn_loss_box
+
+    def smooth_l1_loss(self, bb_prediction, bb_target, bb_labels, delta=1.0, dim=[1]):
+
+        delta_sq = delta ** 2
+
+        difference = torch.abs(bb_prediction - bb_target)
+
+        mask = (bb_labels == 1).float()
+        weight = 1.0
+        """
+        Normalizing factor
+        """
+
+        if cfg.UNIFORM_EXAMPLE_WEIGHTING:
+            weight = 1.0 / torch.sum(bb_labels >= 0).float()
+
+        l1_apply_mask = difference <= delta
+
+        losses = (l1_apply_mask * (difference * difference * 0.5)) * (
+                    (1 - l1_apply_mask) * (delta * difference - 0.5 * delta_sq))
+
+        losses = (losses * weight) * mask
+
+        for i in sorted(dim, reverse=True):
+            losses = losses.sum(i)
+        losses = losses.mean()
+
+        return losses
