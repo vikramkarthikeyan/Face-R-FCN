@@ -129,9 +129,21 @@ class RPN(nn.Module):
 
         delta_sq = delta ** 2
 
-        difference = torch.abs(bb_prediction - bb_target)
+        # print("PRED:", bb_prediction.shape)
+        # print("TARGET:", bb_target.shape)
+
+        bb_prediction = bb_prediction.view(bb_prediction.shape[0], bb_prediction.shape[1] // 4,
+                                           bb_prediction.shape[2], bb_prediction.shape[3], 4)
+
+        difference = torch.abs(bb_prediction - bb_target).float()
+
+        # print("DIFF:", difference.shape, type(difference))
 
         mask = (bb_labels == 1).float()
+        """
+        Mask to take only positive anchors into consideration
+        """
+
         weight = 1.0
         """
         Normalizing factor
@@ -141,6 +153,7 @@ class RPN(nn.Module):
             weight = 1.0 / torch.sum(bb_labels >= 0).float()
 
         l1_apply_mask = difference <= delta
+        l1_apply_mask = l1_apply_mask.float()
 
         losses = (l1_apply_mask * (difference * difference * 0.5)) * (
                     (1 - l1_apply_mask) * (delta * difference - 0.5 * delta_sq))
