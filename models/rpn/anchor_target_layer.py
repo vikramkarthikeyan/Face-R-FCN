@@ -118,8 +118,8 @@ class _AnchorLayer(nn.Module):
         # max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
         # gt_max_overlaps, arggt_max_overlaps = torch.max(overlaps, 1)
 
-        labels[max_overlaps > cfg.RPN_POSITIVE_OVERLAP] = 1
-        labels[max_overlaps < cfg.RPN_NEGATIVE_OVERLAP] = 0
+        labels[max_overlaps >= cfg.RPN_POSITIVE_OVERLAP] = 1
+        labels[max_overlaps <= cfg.RPN_NEGATIVE_OVERLAP] = 0
         # labels[max_overlaps > cfg.FACE_THRESH] = 1
         # labels[max_overlaps < cfg.FACE_THRESH] = 0
 
@@ -185,7 +185,7 @@ class _AnchorLayer(nn.Module):
             target_op[ind] = target
         # label_op[:, indices] = labels
 
-        return labels, targets
+        return label_op, target_op
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""

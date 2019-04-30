@@ -82,15 +82,30 @@ class RPN(nn.Module):
             labels, targets = self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
 
             # rpn_classification_prob.unsqueeze(5)
-            rpn_classification_prob = torch.unsqueeze(rpn_classification_prob, 5).view(-1)
+            rpn_classification_prob = torch.unsqueeze(rpn_classification_prob, 4)
 
             # TODO: Compute cross-entropy classification loss
 
-            valid_indices = labels.ne(-1).nonzero()
+            valid_indices = labels.view(-1).ne(-1).nonzero()
+            # valid_mask = labels.ne(-1).float()
             print("VALID_INDICES:", valid_indices.shape)
+            print("CLS_SCORE:", rpn_classification_prob.shape)
+            print("LABELS:", labels.shape)
 
-            pred = rpn_classification_prob[valid_indices].view(-1)
-            actual = labels[valid_indices].view(-1)
+            # pred = (rpn_classification_prob * valid_mask).view(-1)
+            pred = rpn_classification_prob.view(-1)[valid_indices].squeeze()
+            # actual = (labels * valid_mask).view(-1)
+            actual = labels.view(-1)[valid_indices].long().squeeze()
+            # print(pred)
+            # print(actual)
+            # pred = pred[pred.nonzero()]
+            # actual = actual[actual.nonzero()]
+
+            # pred = rpn_classification_prob[valid_indices].view(-1)
+            # actual = labels[valid_indices].view(-1)
+
+            print("PRED:", pred.shape, pred)
+            print("ACTUAL:", actual.shape, actual)
 
             self.rpn_loss_cls = F.cross_entropy(pred, actual)
 
@@ -102,6 +117,15 @@ class RPN(nn.Module):
         return rois, self.rpn_loss_cls, self.rpn_loss_box
 
     def smooth_l1_loss(self, bb_prediction, bb_target, bb_labels, delta=1.0, dim=[1]):
+        """
+        Loss function for Smooth L1 taken from Wiki: https://en.wikipedia.org/wiki/Huber_loss
+        :param bb_prediction:
+        :param bb_target:
+        :param bb_labels:
+        :param delta:
+        :param dim:
+        :return:
+        """
 
         delta_sq = delta ** 2
 
