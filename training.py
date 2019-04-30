@@ -45,7 +45,6 @@ if __name__ == "__main__":
     # Initialize R-FCN model
     model = RFCN_resnet(pretrained=True)
     model.create_architecture()
-    # model = rfcn._RFCN()
 
     # -------------------------------------------------
     print("\nChecking if a GPU is available...")
