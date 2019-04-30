@@ -112,6 +112,8 @@ class _RFCN(nn.Module):
         cls_prob = cls_prob.view(1, rois.size(1), -1)
         bbox_pred = bbox_pred.view(1, rois.size(1), -1)
 
+        return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label
+
     
     def ohem_detect_loss(self, cls_score, rois_label, bbox_pred, rois_target, rois_inside_ws, rois_outside_ws):
 

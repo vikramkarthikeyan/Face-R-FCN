@@ -81,25 +81,18 @@ class RPN(nn.Module):
             # Get anchor targets
             labels, targets = self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
 
-            rpn_classification_prob = torch.unsqueeze(rpn_classification_prob, 4)
             # Unsqueezing to match dimensions
-
-            # TODO: Compute cross-entropy classification loss
-
+            rpn_classification_prob = torch.unsqueeze(rpn_classification_prob, 4)
+            
+            # Compute cross-entropy classification loss
             valid_indices = labels.view(-1).ne(-1).nonzero()
-            # valid_mask = labels.ne(-1).float()
-
-            # pred = (rpn_classification_prob * valid_mask).view(-1)
             pred = rpn_classification_prob.view(-1)[valid_indices].squeeze()
-            # actual = (labels * valid_mask).view(-1)
             actual = labels.view(-1)[valid_indices].float().squeeze()
 
             # self.rpn_loss_cls = F.cross_entropy(pred, actual)
             self.rpn_loss_cls = F.binary_cross_entropy(pred, actual)
-            print("Loss:", self.rpn_loss_cls)
 
-            # TODO: Compute smooth l1 bbox regression loss
-
+            # Compute smooth l1 bbox regression loss
             self.rpn_loss_box = self.smooth_l1_loss(rpn_bbox_predictions, targets, labels,
                                                     delta=cfg.RPN_L1_DELTA, dim=[1, 2, 3])
 
