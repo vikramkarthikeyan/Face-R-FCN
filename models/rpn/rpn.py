@@ -81,33 +81,22 @@ class RPN(nn.Module):
             # Get anchor targets
             labels, targets = self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
 
-            # rpn_classification_prob.unsqueeze(5)
             rpn_classification_prob = torch.unsqueeze(rpn_classification_prob, 4)
+            # Unsqueezing to match dimensions
 
             # TODO: Compute cross-entropy classification loss
 
             valid_indices = labels.view(-1).ne(-1).nonzero()
             # valid_mask = labels.ne(-1).float()
-            print("VALID_INDICES:", valid_indices.shape)
-            print("CLS_SCORE:", rpn_classification_prob.shape)
-            print("LABELS:", labels.shape)
 
             # pred = (rpn_classification_prob * valid_mask).view(-1)
             pred = rpn_classification_prob.view(-1)[valid_indices].squeeze()
             # actual = (labels * valid_mask).view(-1)
-            actual = labels.view(-1)[valid_indices].long().squeeze()
-            # print(pred)
-            # print(actual)
-            # pred = pred[pred.nonzero()]
-            # actual = actual[actual.nonzero()]
+            actual = labels.view(-1)[valid_indices].float().squeeze()
 
-            # pred = rpn_classification_prob[valid_indices].view(-1)
-            # actual = labels[valid_indices].view(-1)
-
-            print("PRED:", pred.shape, pred)
-            print("ACTUAL:", actual.shape, actual)
-
-            self.rpn_loss_cls = F.cross_entropy(pred, actual)
+            # self.rpn_loss_cls = F.cross_entropy(pred, actual)
+            self.rpn_loss_cls = F.binary_cross_entropy(pred, actual)
+            print("Loss:", self.rpn_loss_cls)
 
             # TODO: Compute smooth l1 bbox regression loss
 
@@ -118,7 +107,9 @@ class RPN(nn.Module):
 
     def smooth_l1_loss(self, bb_prediction, bb_target, bb_labels, delta=1.0, dim=[1]):
         """
-        Loss function for Smooth L1 taken from Wiki: https://en.wikipedia.org/wiki/Huber_loss
+        Loss function for Smooth L1 taken from Wikipedia (https://en.wikipedia.org/wiki/Huber_loss) and
+            reference code.
+
         :param bb_prediction:
         :param bb_target:
         :param bb_labels:
@@ -128,9 +119,6 @@ class RPN(nn.Module):
         """
 
         delta_sq = delta ** 2
-
-        # print("PRED:", bb_prediction.shape)
-        # print("TARGET:", bb_target.shape)
 
         bb_prediction = bb_prediction.view(bb_prediction.shape[0], bb_prediction.shape[1] // 4,
                                            bb_prediction.shape[2], bb_prediction.shape[3], 4)
@@ -156,7 +144,7 @@ class RPN(nn.Module):
         l1_apply_mask = l1_apply_mask.float()
 
         losses = (l1_apply_mask * (difference * difference * 0.5)) * (
-                    (1 - l1_apply_mask) * (delta * difference - 0.5 * delta_sq))
+                (1 - l1_apply_mask) * (delta * difference - 0.5 * delta_sq))
 
         losses = (losses * weight) * mask
 
