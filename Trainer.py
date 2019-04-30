@@ -55,6 +55,8 @@ class Trainer:
         # switch to train mode
         model.train()
 
+        loss_temp = 0
+
         start = time.time()
 
         torch.cuda.empty_cache()
@@ -71,32 +73,33 @@ class Trainer:
                 
                 target = np.array(target)
                 target = np.reshape(target, (1, target.shape[0], target.shape[1]))
-                model([data], [image_paths[j]], target)
 
-                # # Compute Model output
-                # output = model(data)
+                model.zero_grad()
 
-                # # Compute Loss
-                # loss = criterion(output, target)
+                # Compute Model output and loss
+                rois, cls_prob, bbox_pred, \
+                rpn_loss_cls, rpn_loss_box, \
+                RCNN_loss_cls, RCNN_loss_bbox, \
+                rois_label = model([data], [image_paths[j]], target)
 
-                # # measure accuracy and record loss
-                # acc1, acc5 = self.accuracy(output, target, topk=(1, 5))
-                # losses.update(loss.item(), data.size(0))
-                # top1.update(acc1[0], data.size(0))
-                # top5.update(acc5[0], data.size(0))
+                loss = rpn_loss_cls.mean() + rpn_loss_box.mean() \
+                   + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
 
-                # # Clear(zero) Gradients for theta
-                # optimizer.zero_grad()
+                loss_temp = 0
+                start = time.time()
 
-                # # Perform BackProp wrt theta
-                # loss.backward()
+                # Clear(zero) Gradients for theta
+                optimizer.zero_grad()
 
-                # # Update theta
-                # optimizer.step()
+                # Perform BackProp wrt theta
+                loss.backward()
 
-                # # measure elapsed time
-                # batch_time.update(time.time() - start)
-                # start = time.time()
+                # Update theta
+                optimizer.step()
+
+                # measure elapsed time
+                batch_time.update(time.time() - start)
+                start = time.time()
 
                 # print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
                 #         'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
