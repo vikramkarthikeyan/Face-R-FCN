@@ -31,4 +31,10 @@ ffi = CppExtension(
 )
 
 if __name__ == '__main__':
-    ffi.build()
+
+    setup(
+        name='psroi_pooling',
+        ext_modules = [ffi],
+        cmdclass={'build_ext': BuildExtension}
+    )
+    # ffi.build()
