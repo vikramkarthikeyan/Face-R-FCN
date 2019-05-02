@@ -28,7 +28,8 @@ ffi = CppExtension(
     define_macros=defines,
     relative_to=__file__,
     with_cuda=with_cuda,
-    extra_objects=extra_objects
+    extra_objects=extra_objects,
+    include_dirs=torch.utils.cpp_extension.include_paths()
 )
 
 print("compiled!",ffi)
@@ -38,6 +39,7 @@ if __name__ == '__main__':
     setup(
         name='psroi_pooling',
         ext_modules = [ffi],
-        cmdclass={'build_ext': BuildExtension}
+        cmdclass={'build_ext': BuildExtension},
+        include_dirs=torch.utils.cpp_extension.include_paths()
     )
     # ffi.build()

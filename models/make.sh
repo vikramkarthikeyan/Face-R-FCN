@@ -18,4 +18,4 @@ echo "Compiling psroi pooling kernels by nvcc..."
 nvcc -c -o psroi_pooling.cu.o psroi_pooling_kernel.cu \
 	 -D GOOGLE_CUDA=1 -x cu -Xcompiler -fPIC $CUDA_ARCH
 cd ../../
-python3 build.py
+python3 build.py install
