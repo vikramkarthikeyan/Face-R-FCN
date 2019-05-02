@@ -1,6 +1,7 @@
 import os
 import torch
-from torch.utils.ffi import create_extension
+# from torch.utils.ffi import create_extension
+import torch.utils.cpp_extension
 
 sources = []
 headers = []
