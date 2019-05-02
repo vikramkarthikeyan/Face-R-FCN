@@ -15,6 +15,7 @@ import numpy as np
 import numpy.random as npr
 from ..config import rfcn_config
 from ..utils import anchors as anchor_ops
+from ..utils.image_plotting import plot_boxes
 
 
 BBOX_INSIDE_WEIGHTS = torch.FloatTensor(rfcn_config.BBOX_INSIDE_WEIGHTS)
@@ -29,7 +30,7 @@ class _ProposalTargetLayer(nn.Module):
         super(_ProposalTargetLayer, self).__init__()
         self.num_classes = n_classes
         
-    def forward(self, rois, gt_boxes):
+    def forward(self, rois, gt_boxes, features):
 
         batch_size = rois.shape[0]
 
@@ -46,7 +47,7 @@ class _ProposalTargetLayer(nn.Module):
         fg_rois_per_image = 1 if fg_rois_per_image == 0 else fg_rois_per_image
 
         # Generate examples based on Regions generated for the upcoming PSROI layers
-        labels, rois, bbox_targets, bbox_inside_weights = _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, self.num_classes)
+        labels, rois, bbox_targets, bbox_inside_weights = _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, self.num_classes, features)
 
         bbox_outside_weights = (bbox_inside_weights > 0).float()
 
@@ -61,7 +62,7 @@ class _ProposalTargetLayer(nn.Module):
         """Reshaping happens during the call to forward."""
         pass
 
-def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_classes):
+def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_classes, features):
         """Generate a random sample of RoIs comprising foreground and background
         examples.
         """
@@ -69,6 +70,7 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
         print("GT BOXES:", gt_boxes)
         # calculate all combinations of overlaps (rois x gt_boxes)
         overlaps = bbox_overlaps(all_rois, gt_boxes)
+        print(overlaps)
 
         max_overlaps, gt_assignment = torch.max(overlaps, 1)
 
@@ -133,6 +135,10 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
                 fg_rois_per_this_image = 0
             else:
                 raise ValueError("bg_num_rois = 0 and num_fg_rois = 0, this should not happen!")
+
+            # Visualize ROIS with GT boxes first
+            img = features[0,0,:,:]
+            # plot_boxes(img, gt_boxes[0].tolist(), [], all_rois[0].tolist())
                 
             # The indices that we're selecting (both fg and bg)
             keep_inds = torch.cat([fg_inds, bg_inds], 0)

@@ -101,7 +101,7 @@ class Trainer:
                 optimizer.zero_grad()
 
                 # Perform BackProp wrt theta
-                loss.backward()
+                # loss.backward()
 
                 # Update theta
                 optimizer.step()

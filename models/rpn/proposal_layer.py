@@ -12,6 +12,7 @@ from ..utils import anchors
 from ..utils import image_plotting
 from ..utils import image_processing
 from ..config import rpn_config
+from ..config import rfcn_config
 
 class _ProposalLayer(nn.Module):
     """
@@ -53,8 +54,8 @@ class _ProposalLayer(nn.Module):
         # Step 1.b - Transform bbox_deltas shape to match the anchor 
         bbox_deltas_shape = bbox_deltas.shape
         # Changed 16 to 18: VEDHARIS
-        split_deltas = bbox_deltas.view(bbox_deltas_shape[0], 18, 4, bbox_deltas_shape[2], bbox_deltas_shape[3])
-        split_deltas = split_deltas.view(bbox_deltas_shape[0], 18, bbox_deltas_shape[2], bbox_deltas_shape[3], 4)
+        split_deltas = bbox_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, 4, bbox_deltas_shape[2], bbox_deltas_shape[3])
+        split_deltas = split_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, bbox_deltas_shape[2], bbox_deltas_shape[3], 4)
 
         # Step 2 - Apply bounding box transformations
         adjusted_boxes = np.add(boxes.numpy(), split_deltas.numpy())

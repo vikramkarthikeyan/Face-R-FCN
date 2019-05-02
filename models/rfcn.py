@@ -7,6 +7,7 @@ from torch.autograd import Variable
 
 # from .resnets import resnet50
 from .utils.image_processing import scale_boxes_batch
+from .utils.image_plotting import plot_boxes
 from .config import rfcn_config, resnet_config
 from .rpn import rpn
 from .rpn import proposal_target_layer
@@ -65,7 +66,7 @@ class _RFCN(nn.Module):
 
         # if it is training phrase, then use ground truth bboxes for refining proposals
         if self.training:
-            rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = self.RCNN_proposal_target(rois, gt_boxes)
+            rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = self.RCNN_proposal_target(rois, gt_boxes, base_features)
             rois_label = Variable(rois_label.view(-1).long())
             rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
             rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
