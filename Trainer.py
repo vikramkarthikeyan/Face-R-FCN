@@ -65,6 +65,8 @@ class Trainer:
 
             for j in range(len(targets)):
 
+                print("\n\n\n\n................ Batch run ................\n\n\n\n")
+
                 data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
 
                 if usegpu:
@@ -82,8 +84,15 @@ class Trainer:
                 RCNN_loss_cls, RCNN_loss_bbox, \
                 rois_label = model([data], [image_paths[j]], target)
 
-                loss = rpn_loss_cls.mean() + rpn_loss_box.mean() \
-                   + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
+                loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean()
+                #    + RCNN_loss_bbox.mean()
+                
+                print(rpn_loss_cls.mean())
+                print(rpn_loss_box.mean())
+                print(RCNN_loss_cls.mean())
+                print(RCNN_loss_bbox.mean())
+                print(loss)
+
 
                 loss_temp = 0
                 start = time.time()

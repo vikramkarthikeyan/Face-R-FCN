@@ -9,7 +9,9 @@ from torch.autograd import Variable
 from .config import rfcn_config, resnet_config
 from .rpn import rpn
 from .rpn import proposal_target_layer
-from .psroi import psroi_pooling
+# from .psroi_pooling import psroi_pooling
+from .psroi_pooling.modules.psroi_pool import PSRoIPool
+    
 
 class _RFCN(nn.Module):
     """ R-FCN """
@@ -28,10 +30,10 @@ class _RFCN(nn.Module):
         self.RCNN_proposal_target = proposal_target_layer._ProposalTargetLayer(self.n_classes)
 
         # Define the pooling layers
-        self.RCNN_psroi_pool_cls = psroi_pooling.PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
+        self.RCNN_psroi_pool_cls = PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
                                           spatial_scale=1/16.0, group_size=resnet_config.POOLING_SIZE,
                                           output_dim=self.n_classes)
-        self.RCNN_psroi_pool_loc = psroi_pooling.PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
+        self.RCNN_psroi_pool_loc = PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
                                           spatial_scale=1/16.0, group_size=resnet_config.POOLING_SIZE,
                                           output_dim=4)
 
