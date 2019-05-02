@@ -65,6 +65,8 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
         """Generate a random sample of RoIs comprising foreground and background
         examples.
         """
+        print("ROIS GENERATED DURING INFERENCE: ", all_rois)
+        print("GT BOXES:", gt_boxes)
         # calculate all combinations of overlaps (rois x gt_boxes)
         overlaps = bbox_overlaps(all_rois, gt_boxes)
 

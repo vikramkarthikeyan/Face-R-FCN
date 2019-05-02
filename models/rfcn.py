@@ -6,11 +6,12 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 # from .resnets import resnet50
+from .utils.image_processing import scale_boxes_batch
 from .config import rfcn_config, resnet_config
 from .rpn import rpn
 from .rpn import proposal_target_layer
-# from .psroi_pooling import psroi_pooling
-from .psroi_pooling.modules.psroi_pool import PSRoIPool
+from .psroi import psroi_pooling
+# from .psroi_pooling.modules.psroi_pool import PSRoIPool
     
 
 class _RFCN(nn.Module):
@@ -30,10 +31,10 @@ class _RFCN(nn.Module):
         self.RCNN_proposal_target = proposal_target_layer._ProposalTargetLayer(self.n_classes)
 
         # Define the pooling layers
-        self.RCNN_psroi_pool_cls = PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
+        self.RCNN_psroi_pool_cls = psroi_pooling.PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
                                           spatial_scale=1/16.0, group_size=resnet_config.POOLING_SIZE,
                                           output_dim=self.n_classes)
-        self.RCNN_psroi_pool_loc = PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
+        self.RCNN_psroi_pool_loc = psroi_pooling.PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
                                           spatial_scale=1/16.0, group_size=resnet_config.POOLING_SIZE,
                                           output_dim=4)
 
@@ -48,6 +49,14 @@ class _RFCN(nn.Module):
         
         # Pass the image onto the feature extractor
         base_features = self.RCNN_base(reshaped_image)
+
+        # Calculate scale of features vs image 
+        base_feature_dimension = base_features.shape[-1]
+        image_dimension = reshaped_image.shape[-1]
+        resize_scale = image_dimension / base_feature_dimension
+
+        # Resize GT anchors to size of base features
+        gt_boxes = scale_boxes_batch(gt_boxes, resize_scale, 'down')
 
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.RCNN_rpn(base_features, image_metadata, gt_boxes)
