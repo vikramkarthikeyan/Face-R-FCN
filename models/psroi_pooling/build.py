@@ -2,6 +2,7 @@ import os
 import torch
 # from torch.utils.ffi import create_extension
 from torch.utils.cpp_extension import BuildExtension, CppExtension
+from setuptools import setup
 
 sources = []
 headers = []
@@ -29,6 +30,8 @@ ffi = CppExtension(
     with_cuda=with_cuda,
     extra_objects=extra_objects
 )
+
+print("compiled!",ffi)
 
 if __name__ == '__main__':
 
