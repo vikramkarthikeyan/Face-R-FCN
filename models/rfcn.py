@@ -55,6 +55,8 @@ class _RFCN(nn.Module):
         image_dimension = reshaped_image.shape[-1]
         resize_scale = image_dimension / base_feature_dimension
 
+        print("Image dimensions: {}. Feature dimensions: {}, scale: {}".format(reshaped_image.shape, base_features.shape, resize_scale))
+
         # Resize GT anchors to size of base features
         gt_boxes = scale_boxes_batch(gt_boxes, resize_scale, 'down')
 

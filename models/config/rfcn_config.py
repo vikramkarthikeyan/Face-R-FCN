@@ -13,7 +13,9 @@ FG_FRACTION = 0.33
 PSROI_TRAINING_BATCH_SIZE = 32
 
 
-IMAGE_INPUT_DIMS = 512
+IMAGE_INPUT_DIMS = 1024
+
+
 ################################################
 # Config for Proposal Target Layer
 

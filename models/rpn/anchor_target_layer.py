@@ -284,7 +284,7 @@ class _AnchorLayer(nn.Module):
 
         return overlaps
 
-    def resize_image(self, im, dimension=512):
+    def resize_image(self, im, dimension=cfg.IMAGE_INPUT_DIMS):
         old_size = im.size
         ratio = float(dimension) / max(old_size)
         new_size = tuple([int(x * ratio) for x in old_size])
