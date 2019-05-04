@@ -39,7 +39,9 @@ class _ProposalTargetLayer(nn.Module):
         # Include ground-truth boxes in the set of candidate rois
         all_rois = torch.cat([rois, gt_boxes], 1)
 
-        print("\n----Proposal Target Layer----\n\nTotal ROIs with GT boxes:", all_rois.shape)
+        print("\n----Proposal Target Layer----\n\n")
+        print("ROIs generated:", rois.shape)
+        print("Total ROIs with GT boxes:", all_rois.shape)
 
         rois_per_image = rfcn_config.ROI_BATCH_SIZE
 
@@ -66,17 +68,15 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
         """Generate a random sample of RoIs comprising foreground and background
         examples.
         """
-        print("ROIS GENERATED DURING INFERENCE: ", all_rois)
-        print("GT BOXES:", gt_boxes)
+        # print("ROIS GENERATED DURING INFERENCE: ", all_rois)
+        # print("GT BOXES:", gt_boxes)
         # calculate all combinations of overlaps (rois x gt_boxes)
         overlaps = bbox_overlaps(all_rois, gt_boxes)
-        print(overlaps)
 
-        max_overlaps, gt_assignment = torch.max(overlaps, 1)
+        # Get max overlaps across the different GT boxes
+        max_overlaps, gt_assignment = torch.max(overlaps, 2)
 
         batch_size = overlaps.size(0)
-        num_proposal = overlaps.size(1)
-        num_boxes_per_img = overlaps.size(2)
 
         # TODO: Check if these useless two lines make sense for a batch atleast 
         offset = torch.arange(0, batch_size)*gt_boxes.size(1)
@@ -100,6 +100,8 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
             # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
             bg_inds = torch.nonzero((max_overlaps[i] < rfcn_config.BG_THRESH_HI) &
                                     (max_overlaps[i] >= rfcn_config.BG_THRESH_LO)).view(-1)
+
+            # print(bg_inds)
 
             bg_num_rois = bg_inds.numel()
 
@@ -137,7 +139,7 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
                 raise ValueError("bg_num_rois = 0 and num_fg_rois = 0, this should not happen!")
 
             # Visualize ROIS with GT boxes first
-            img = features[0,0,:,:]
+            # img = features[0,0,:,:]
             # plot_boxes(img, gt_boxes[0].tolist(), [], all_rois[0].tolist())
                 
             # The indices that we're selecting (both fg and bg)
@@ -147,7 +149,6 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
             labels_batch[i][:fg_rois_per_this_image] = 1
 
             rois_batch[i] = all_rois[i][keep_inds]
-
             # TODO: Check why
             # rois_batch[i,:,0] = i
 
@@ -211,20 +212,10 @@ def bbox_transform_batch(ex_rois, gt_rois):
         targets_dh = torch.log(gt_heights / ex_heights.view(1,-1).expand_as(gt_heights))
 
     elif ex_rois.dim() == 3:
-        ex_widths = ex_rois[:, :, 2] - ex_rois[:, :, 0] + 1.0
-        ex_heights = ex_rois[:,:, 3] - ex_rois[:,:, 1] + 1.0
-        ex_ctr_x = ex_rois[:, :, 0] + 0.5 * ex_widths
-        ex_ctr_y = ex_rois[:, :, 1] + 0.5 * ex_heights
-
-        gt_widths = gt_rois[:, :, 2] - gt_rois[:, :, 0] + 1.0
-        gt_heights = gt_rois[:, :, 3] - gt_rois[:, :, 1] + 1.0
-        gt_ctr_x = gt_rois[:, :, 0] + 0.5 * gt_widths
-        gt_ctr_y = gt_rois[:, :, 1] + 0.5 * gt_heights
-
-        targets_dx = (gt_ctr_x - ex_ctr_x) / ex_widths
-        targets_dy = (gt_ctr_y - ex_ctr_y) / ex_heights
-        targets_dw = torch.log(gt_widths / ex_widths)
-        targets_dh = torch.log(gt_heights / ex_heights)
+        targets_dx = (gt_rois[:, :, 0] - ex_rois[:, :, 0])
+        targets_dy = (gt_rois[:, :, 1] - ex_rois[:, :, 1])
+        targets_dw = (gt_rois[:, :, 2] - ex_rois[:, :, 2])
+        targets_dh = (gt_rois[:, :, 3] - ex_rois[:, :, 3])
     else:
         raise ValueError('ex_roi input dimension is not correct.')
 
