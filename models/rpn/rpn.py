@@ -115,12 +115,14 @@ class RPN(nn.Module):
 
         bb_prediction = bb_prediction.view(bb_prediction.shape[0], bb_prediction.shape[1] // 4,
                                            bb_prediction.shape[2], bb_prediction.shape[3], 4)
+        
 
         difference = torch.abs(bb_prediction - bb_target).float()
 
-        # print("DIFF:", difference.shape, type(difference))
 
         mask = (bb_labels == 1).float()
+
+        print("MASK:", mask.shape, mask)
         """
         Mask to take only positive anchors into consideration
         """
@@ -134,15 +136,16 @@ class RPN(nn.Module):
             weight = 1.0 / torch.sum(bb_labels >= 0).float()
 
         l1_apply_mask = difference <= delta
+        #print("L1 MASK", l1_apply_mask)
         l1_apply_mask = l1_apply_mask.float()
 
-        losses = (l1_apply_mask * (difference * difference * 0.5)) * (
+        losses = (l1_apply_mask * (torch.pow(difference, 2)  * 0.5)) + (
                 (1 - l1_apply_mask) * (delta * difference - 0.5 * delta_sq))
-
+        #print("Losses before mask:", losses)
         losses = (losses * weight.cuda()) * mask.cuda()
-
+        print("Losses after mask:", losses)
         for i in sorted(dim, reverse=True):
             losses = losses.sum(i)
         losses = losses.mean()
-
+        print(losses)
         return losses
