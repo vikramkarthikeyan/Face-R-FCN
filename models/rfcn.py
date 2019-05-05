@@ -83,7 +83,8 @@ class _RFCN(nn.Module):
         
         print("\n\n----ROIS generated, moving onto PSROI----\n")
 
-        rois = Variable(rois)
+        rois = Variable(rois.cuda())
+        base_features = Variable(base_features.cuda())
 
         base_features = self.RCNN_conv_new(base_features)
         
