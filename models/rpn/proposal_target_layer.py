@@ -101,8 +101,6 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
             bg_inds = torch.nonzero((max_overlaps[i] < rfcn_config.BG_THRESH_HI) &
                                     (max_overlaps[i] >= rfcn_config.BG_THRESH_LO)).view(-1)
 
-            # print(bg_inds)
-
             bg_num_rois = bg_inds.numel()
 
             print("\nFace and BG ROIs:", num_fg_rois, bg_num_rois)
