@@ -1,8 +1,6 @@
 import os
 import torch
-# from torch.utils.ffi import create_extension
-from torch.utils.cpp_extension import BuildExtension, CppExtension
-from setuptools import setup
+from torch.utils.ffi import create_extension
 
 sources = []
 headers = []
@@ -21,25 +19,15 @@ print(this_file)
 extra_objects = ['src/cuda/psroi_pooling.cu.o']
 extra_objects = [os.path.join(this_file, fname) for fname in extra_objects]
 
-ffi = CppExtension(
+ffi = create_extension(
     '_ext.psroi_pooling',
     headers=headers,
     sources=sources,
     define_macros=defines,
     relative_to=__file__,
     with_cuda=with_cuda,
-    extra_objects=extra_objects,
-    include_dirs=torch.utils.cpp_extension.include_paths()
+    extra_objects=extra_objects
 )
 
-print("compiled!",ffi)
-
 if __name__ == '__main__':
-
-    setup(
-        name='psroi_pooling',
-        ext_modules = [ffi],
-        cmdclass={'build_ext': BuildExtension},
-        include_dirs=torch.utils.cpp_extension.include_paths()
-    )
-    # ffi.build()
+    ffi.build()
