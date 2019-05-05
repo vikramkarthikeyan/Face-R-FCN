@@ -90,10 +90,10 @@ class RPN(nn.Module):
             actual = labels.view(-1)[valid_indices].float().squeeze()
 
             # self.rpn_loss_cls = F.cross_entropy(pred, actual)
-            self.rpn_loss_cls = F.binary_cross_entropy(pred, actual)
+            self.rpn_loss_cls = F.binary_cross_entropy(pred, actual.cuda())
 
             # Compute smooth l1 bbox regression loss
-            self.rpn_loss_box = self.smooth_l1_loss(rpn_bbox_predictions, targets, labels,
+            self.rpn_loss_box = self.smooth_l1_loss(rpn_bbox_predictions, targets.cuda(), labels,
                                                     delta=cfg.RPN_L1_DELTA, dim=[1, 2, 3])
 
         return rois, self.rpn_loss_cls, self.rpn_loss_box
@@ -139,7 +139,7 @@ class RPN(nn.Module):
         losses = (l1_apply_mask * (difference * difference * 0.5)) * (
                 (1 - l1_apply_mask) * (delta * difference - 0.5 * delta_sq))
 
-        losses = (losses * weight) * mask
+        losses = (losses * weight.cuda()) * mask.cuda()
 
         for i in sorted(dim, reverse=True):
             losses = losses.sum(i)

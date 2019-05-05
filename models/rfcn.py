@@ -155,18 +155,24 @@ class _RFCN(nn.Module):
         conf_p = cls_score.detach()
         conf_t = rois_label.detach()
 
+        conf_p = conf_p.cuda()
+        conf_t = conf_t.cuda()
+
         # rank on cross_entropy loss
         loss_c = log_sum_exp(conf_p) - conf_p.gather(1, conf_t.view(-1,1))
         loss_c[pos_idx] = 100. # include all positive samples
         print(loss_c)
         _, topk_idx = torch.topk(loss_c.view(-1), num_hard)
+
+        cls_score = cls_score.cuda()
+        rois_label = rois_label.cuda()
         loss_cls = F.cross_entropy(cls_score[topk_idx], rois_label[topk_idx], weight=weight)
 
         # bounding box regression L1 loss
         pos_idx = pos_idx.unsqueeze(1).expand_as(bbox_pred)
         loc_p = bbox_pred[pos_idx].view(-1, 4)
         loc_t = rois_target[pos_idx].view(-1, 4)
-        loss_box = F.smooth_l1_loss(loc_p, loc_t)
+        loss_box = F.smooth_l1_loss(loc_p.cuda(), loc_t.cuda())
 
         return loss_cls, loss_box
 

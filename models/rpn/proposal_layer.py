@@ -58,7 +58,7 @@ class _ProposalLayer(nn.Module):
         split_deltas = split_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, bbox_deltas_shape[2], bbox_deltas_shape[3], 4)
 
         # Step 2 - Apply bounding box transformations
-        adjusted_boxes = np.add(boxes.numpy(), split_deltas.numpy())
+        adjusted_boxes = np.add(boxes.cpu().numpy(), split_deltas.cpu().numpy())
 
         # Step 3 - Clip boxes so that they are within the feature dimensions
         clipped_boxes = clip_boxes(adjusted_boxes, height, width, batch_size)
@@ -69,7 +69,7 @@ class _ProposalLayer(nn.Module):
         # Step 4.a - Flatten and get only boxes and scores that passed the filter
         keep = np.reshape(keep, (batch_size, -1))
         clipped_boxes = np.reshape(clipped_boxes, (batch_size, -1, 4))
-        scores = np.reshape(scores.numpy(), (batch_size, -1))
+        scores = np.reshape(scores.cpu().numpy(), (batch_size, -1))
 
         filtered_boxes = clipped_boxes[keep]
         filtered_scores = scores[keep]
