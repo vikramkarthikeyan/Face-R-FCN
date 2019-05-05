@@ -1,7 +1,7 @@
 from torch.nn.modules.module import Module
 import sys
 from ..functions.psroi_pooling import PSRoIPoolingFunction
-
+from torch.autograd import Variable
 
 class PSRoIPool(Module):
     def __init__(self, pooled_height, pooled_width, spatial_scale, group_size, output_dim):
@@ -14,6 +14,8 @@ class PSRoIPool(Module):
         self.output_dim = int(output_dim)
 
     def forward(self, features, rois):
+        rois = Variable(rois.cuda())
+        features = Variable(features.cuda())
         return PSRoIPoolingFunction(self.pooled_height, self.pooled_width, self.spatial_scale, self.group_size, self.output_dim)(features, rois)
 
 if __name__ == '__main__':
