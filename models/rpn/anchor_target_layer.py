@@ -45,10 +45,10 @@ class _AnchorLayer(nn.Module):
         _, _, height, width = cls_scores.shape
         scale = cfg.IMAGE_INPUT_DIMS // height
 
-        # flag_verbose = True
-        flag_verbose = False
-        # flag_demo = True
-        flag_demo = False
+        flag_verbose = True
+        # flag_verbose = False
+        flag_demo = True
+        # flag_demo = False
 
         batch_size = gt_boxes_old.shape[0]
         # batch_size = 1
@@ -71,34 +71,17 @@ class _AnchorLayer(nn.Module):
 
         # 2. Clipping anchors which are not necessary
         clipped_boxes, indices = self.clip_boxes(all_anchors, height, width, batch_size)
-        # clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size).view(-1, 4)
-        # keep = ((all_anchors[:, 0] >= 0) &
-        #         (all_anchors[:, 1] >= 0) &
-        #         (all_anchors[:, 2] < height) &
-        #         (all_anchors[:, 3] < width))
-        #
-        # inds_inside = torch.nonzero(keep).view(-1)
-
-        # for clip in clipped_boxes:
-        #     print(clip)
-
-        # clipped_boxes = self.clip_boxes(all_anchors, height, width, batch_size).view(-1, 4)
-        # clipped_boxes = clipped_boxes.view(-1)
-        # np_clipped = clipped_boxes.numpy()
 
         if flag_verbose:
             print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
 
         # 3. Get all area overlap for the kept anchors
-        # overlaps = self.bbox_overlaps_batch(torch.tensor(clipped_boxes), torch.tensor(gt_boxes))
-        # overlaps = self.bbox_overlaps(clipped_boxes.float(), gt_boxes)
         overlaps = self.bbox_overlaps(clipped_boxes, gt_boxes)
-        overlaps[overlaps == 0] = 1e-5
+        overlaps[overlaps == 0] = 1e-10
         if flag_verbose:
+            print("MAX OF OVERLAPS", overlaps.max())
             print(overlaps[overlaps > 1], "empty is good")
             print(overlaps[overlaps > cfg.RPN_POSITIVE_OVERLAP], "empty is not good")
-        # print(overlaps)
-        # print(overlaps[overlaps > 0.01])
 
         max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
         gt_max_overlaps, argmax_gt_max_overlaps = torch.max(overlaps, 1)
@@ -115,13 +98,9 @@ class _AnchorLayer(nn.Module):
         labels = overlaps.new(batch_size, clipped_boxes.shape[0]).fill_(-1)
 
         # 5. Calculate best possible over lap w. r. t. all GT boxes. Choose the best GT box for this match
-        # max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
-        # gt_max_overlaps, arggt_max_overlaps = torch.max(overlaps, 1)
 
         labels[max_overlaps >= cfg.RPN_POSITIVE_OVERLAP] = 1
         labels[max_overlaps <= cfg.RPN_NEGATIVE_OVERLAP] = 0
-        # labels[max_overlaps > cfg.FACE_THRESH] = 1
-        # labels[max_overlaps < cfg.FACE_THRESH] = 0
 
         pos_anc_cnt = torch.sum(max_overlaps > cfg.RPN_POSITIVE_OVERLAP)
 
@@ -136,15 +115,12 @@ class _AnchorLayer(nn.Module):
 
         if flag_demo:
 
-            # print((max_overlaps > cfg.RPN_POSITIVE_OVERLAP).view(-1))
-
             pos_anc = clipped_boxes[(labels == 1).view(-1), :]
             neg_anc = clipped_boxes[(labels == 0).view(-1), :]
 
             img = Image.open(image_info[0])
             plt.imshow(self.resize_image(img))
             ax = plt.gca()
-            # rect = Rectangle((50, 100), 40, 30, linewidth=1, edgecolor='g', facecolor='none')
 
             for anc in neg_anc[:100, :]:
                 anc_ = anc * scale
@@ -168,7 +144,6 @@ class _AnchorLayer(nn.Module):
 
         targets = clipped_boxes.view(-1, 4).float() - (gt_boxes.view(-1, 4)[argmax_overlaps, :].float() / scale)
 
-        # targets = targets.view(batch_size, -1, 4)
 
         label_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 1).fill_(-1)
         target_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 4).fill_(0)
@@ -178,12 +153,11 @@ class _AnchorLayer(nn.Module):
             print("LABEL_OP:", label_op.shape)
             print("TARGET_IP:", targets.shape)
             print("TARGET_OP:", target_op.shape)
-        # print("INDICES:", indices)
 
         for lab, target, ind in zip(labels[0], targets[0], indices):
             label_op[ind] = lab
             target_op[ind] = target
-        # label_op[:, indices] = labels
+            # print(".", end="")
 
         return label_op, target_op
 

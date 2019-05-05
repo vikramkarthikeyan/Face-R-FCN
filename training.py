@@ -8,7 +8,7 @@ import imp
 
 from torchvision import models
 from tqdm import tqdm
-from torchsummary import summary
+# from torchsummary import summary
 from loaders import WiderfaceDataset
 from Trainer import Trainer
 # from models import rfcn

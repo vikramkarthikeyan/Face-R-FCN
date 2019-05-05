@@ -83,7 +83,7 @@ class RPN(nn.Module):
 
             # Unsqueezing to match dimensions
             rpn_classification_prob = torch.unsqueeze(rpn_classification_prob, 4)
-            
+
             # Compute cross-entropy classification loss
             valid_indices = labels.view(-1).ne(-1).nonzero()
             pred = rpn_classification_prob.view(-1)[valid_indices].squeeze()
@@ -115,14 +115,13 @@ class RPN(nn.Module):
 
         bb_prediction = bb_prediction.view(bb_prediction.shape[0], bb_prediction.shape[1] // 4,
                                            bb_prediction.shape[2], bb_prediction.shape[3], 4)
-        
 
         difference = torch.abs(bb_prediction - bb_target).float()
 
+        mask = (bb_labels == 1.0).float()
 
-        mask = (bb_labels == 1).float()
-
-        print("MASK:", mask.shape, mask)
+        print("LABEL:", bb_labels.shape, bb_labels.ge(0).float().sum())
+        print("MASK:", mask.shape, mask.sum())
         """
         Mask to take only positive anchors into consideration
         """
@@ -136,16 +135,35 @@ class RPN(nn.Module):
             weight = 1.0 / torch.sum(bb_labels >= 0).float()
 
         l1_apply_mask = difference <= delta
-        #print("L1 MASK", l1_apply_mask)
+
+        # print("L1 MASK", l1_apply_mask)
+
         l1_apply_mask = l1_apply_mask.float()
 
-        losses = (l1_apply_mask * (torch.pow(difference, 2)  * 0.5)) + (
-                (1 - l1_apply_mask) * (delta * difference - 0.5 * delta_sq))
-        #print("Losses before mask:", losses)
-        losses = (losses * weight.cuda()) * mask.cuda()
-        print("Losses after mask:", losses)
+        diff_sq = torch.pow(difference, 2)
+
+        # print("DIFF_SQ", diff_sq)
+
+        LHS = (l1_apply_mask * (diff_sq * 0.5))
+
+        # print("LHS:", LHS)
+
+        RHS = ((1 - l1_apply_mask) * ((delta * difference) - (0.5 * delta_sq)))
+
+        # print("RHS:", RHS)
+
+        losses = LHS + RHS
+
+        losses = (losses * weight.cuda())
+
+        # print("Losses BEFORE mask:", losses)
+
+        losses = losses * mask.cuda()
+        # print("Losses after mask:", losses)
         for i in sorted(dim, reverse=True):
             losses = losses.sum(i)
         losses = losses.mean()
-        print(losses)
+
+        print("LOSSES AFTER MEAN", losses)
+
         return losses

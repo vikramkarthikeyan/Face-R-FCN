@@ -11,7 +11,7 @@ import torch.nn as nn
 from torchvision import datasets, transforms
 from torchvision import models
 from torch.autograd import Variable
-from torchsummary import summary
+# from torchsummary import summary
 import EarlyStopping
 import AverageMeter
 from sklearn.metrics.pairwise import cosine_similarity
