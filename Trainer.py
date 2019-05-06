@@ -32,11 +32,11 @@ def custom_collate(batch):
 # https://github.com/pytorch/examples/blob/master/imagenet/main.py
 class Trainer:
 
-    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=5, validation_batch_size=5): 
+    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=1, validation_batch_size=5): 
 
         # Create training dataloader
         self.train_loader = torch.utils.data.DataLoader(training_data, batch_size=training_batch_size, shuffle=True,
-                                                             num_workers=1, collate_fn=custom_collate)
+                                                             num_workers=5, collate_fn=custom_collate)
 
         # Create validation dataloader
         self.validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=validation_batch_size, shuffle=False,
@@ -65,9 +65,6 @@ class Trainer:
 
             for j in range(len(targets)):
 
-                # print("\n\n\n\n................ Batch run ................\n\n\n\n")
-                
-
                 data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
 
                 if usegpu:
@@ -86,7 +83,6 @@ class Trainer:
                 rois_label = model([data], [image_paths[j]], target)
 
                 loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
-
 
                 # Clear(zero) Gradients for theta
                 optimizer.zero_grad()
