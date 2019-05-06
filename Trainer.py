@@ -61,9 +61,12 @@ class Trainer:
 
         for i, (images, targets, image_paths) in enumerate(self.train_loader):
 
+            start = time.time()
+
             for j in range(len(targets)):
 
                 # print("\n\n\n\n................ Batch run ................\n\n\n\n")
+                
 
                 data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
 
@@ -84,7 +87,6 @@ class Trainer:
 
                 loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
 
-                start = time.time()
 
                 # Clear(zero) Gradients for theta
                 optimizer.zero_grad()
@@ -95,13 +97,12 @@ class Trainer:
                 # Update theta
                 optimizer.step()
 
-                # measure elapsed time
-                batch_time.update(time.time() - start)
-                start = time.time()
-
                 losses.update(loss)
+            
+            # measure elapsed time
+            batch_time.update(time.time() - start)
 
-                print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
+            print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
                         'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                             'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
                             epoch, i, len(self.train_loader), batch_time=batch_time,
