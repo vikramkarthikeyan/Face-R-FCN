@@ -198,20 +198,38 @@ class _AnchorLayer(nn.Module):
         return torch.from_numpy(np.array(op2)), inds
         # return boxes
 
-    def bbox_overlaps(self, anchors, gt_boxes, factor=16):
-        batch_size = gt_boxes.shape[0]
+    # def bbox_overlaps(self, anchors, gt_boxes, factor=16):
+    #     batch_size = gt_boxes.shape[0]
+    #     overlaps = []
+
+    #     for i in range(batch_size):
+    #         overlaps_image = []
+    #         for anchor in anchors[i]:
+    #             IOU_anchor_vs_all_gt = [calc_IOU(anchor * factor, gt_box) for gt_box in gt_boxes[i]]
+
+    #             overlaps_image.append(IOU_anchor_vs_all_gt)
+
+    #         overlaps.append(overlaps_image)
+
+    #     return torch.tensor(overlaps)
+
+    def bbox_overlaps(self, anchors, gt_boxes):
+        batch_size = anchors.shape[0]
         overlaps = []
 
         for i in range(batch_size):
             overlaps_image = []
-            for anchor in anchors:
-                IOU_anchor_vs_all_gt = [calc_IOU(anchor * factor, gt_box) for gt_box in gt_boxes[i]]
+            for anchor in anchors[i]:
+                IOU_anchor_vs_all_gt = [calc_IOU(anchor, gt_box) for gt_box in gt_boxes[i]]
 
                 overlaps_image.append(IOU_anchor_vs_all_gt)
-
+        
             overlaps.append(overlaps_image)
 
         return torch.tensor(overlaps)
+    
+
+
 
     def bbox_overlaps_batch(self, anchors, gt_boxes):
         """
