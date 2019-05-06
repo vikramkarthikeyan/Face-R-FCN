@@ -63,7 +63,7 @@ class Trainer:
 
             for j in range(len(targets)):
 
-                print("\n\n\n\n................ Batch run ................\n\n\n\n")
+                # print("\n\n\n\n................ Batch run ................\n\n\n\n")
 
                 data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
 

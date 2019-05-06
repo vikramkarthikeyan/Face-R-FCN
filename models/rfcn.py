@@ -93,7 +93,7 @@ class _RFCN(nn.Module):
         cls_feat = self.RCNN_cls_base(base_features)
         bbox_base = self.RCNN_bbox_base(base_features)
 
-        if rcfn_config.verbose:
+        if rfcn_config.verbose:
             print("Features after conversion layer:",base_features.shape)
             print("PS Score maps for classification:", cls_feat.shape)
             print("PS Score maps for bounding boxes:", bbox_base.shape)
@@ -110,7 +110,7 @@ class _RFCN(nn.Module):
         pooled_feat_loc = self.pooling(pooled_feat_loc)
         bbox_pred = pooled_feat_loc.squeeze()
 
-        if rcfn_config.verbose:
+        if rfcn_config.verbose:
             print("\n\n----PSROI----")
             print("\nAfter PSROI on score maps for classification:",pooled_feat_cls.shape)
             print("After PSROI on score maps for bounding boxes:",pooled_feat_loc.shape)
@@ -179,7 +179,7 @@ class _RFCN(nn.Module):
 
         loss_cls = Variable(loss_cls, requires_grad=True)
         loss_box = Variable(loss_box, requires_grad=True)
-        
+
         return loss_cls, loss_box
 
 

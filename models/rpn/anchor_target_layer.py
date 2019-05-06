@@ -79,14 +79,11 @@ class _AnchorLayer(nn.Module):
 
         # 4. Create labels for all anchors generated and set them as -1.
         labels = overlaps.new(batch_size, clipped_boxes.shape[0]).fill_(-1)
-        print("LABELS NEWLY CREATED:", labels.shape)
 
         # 5. Calculate best possible over lap w. r. t. all GT boxes. Choose the best GT box for this match
         max_overlaps, gt_assignment = torch.max(overlaps, 2)
         max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
         gt_max_overlaps, argmax_gt_max_overlaps = torch.max(overlaps, 1)
-
-        print("GT_MAX:", gt_max_overlaps, argmax_gt_max_overlaps)
 
         if cfg.verbose:
             # print("OVERLAPS:", overlaps)
