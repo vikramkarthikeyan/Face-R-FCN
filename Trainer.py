@@ -85,7 +85,7 @@ class Trainer:
                 rois_label = model([data], [image_paths[j]], target)
 
                 loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean()
-                #    + RCNN_loss_bbox.mean()
+                   + RCNN_loss_bbox.mean()
                 
                 print(rpn_loss_cls.mean())
                 print(rpn_loss_box.mean())
