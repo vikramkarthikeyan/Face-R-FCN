@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from ..utils.anchors import generate_anchors, calc_IOU, calc_IOU2
+from ..utils.anchors import generate_anchors, calc_IOU, calc_IOU2, run
 from ..config import rfcn_config as cfg
 import numpy as np
 
@@ -69,7 +69,8 @@ class _AnchorLayer(nn.Module):
             print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
 
         # 3. Get all area overlap for the kept anchors
-        overlaps = self.bbox_overlaps(clipped_boxes, gt_boxes)
+        # overlaps = self.bbox_overlaps(clipped_boxes, gt_boxes)
+        overlaps = self.bbox_overlaps(clipped_boxes.numpy(), gt_boxes.numpy())
         overlaps[overlaps == 0] = 1e-10
 
         if cfg.verbose:
@@ -202,6 +203,20 @@ class _AnchorLayer(nn.Module):
             overlaps.append(overlaps_image)
 
         return torch.tensor(overlaps)
+    
+    def bbox_overlaps_vectorized(self, anchors, gt_boxes):
+        print("Anchors:",anchors.shape)
+        print("GT Boxes:",gt_boxes.shape)
+
+        batch_size = gt_boxes.shape[0]
+
+        overlaps = []
+
+        for i in range(batch_size):
+            IOUs = run(anchors, gt_boxes[i])
+            overlaps.append(IOUs)
+
+        return torch.tensor(overlaps)        
 
     def bbox_overlaps_batch(self, anchors, gt_boxes):
         """
