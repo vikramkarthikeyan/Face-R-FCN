@@ -212,9 +212,10 @@ class _AnchorLayer(nn.Module):
         for i in range(batch_size):
             IOUs = calc_IOU_vectorized(anchors, gt_boxes[i])
             overlaps.append(IOUs)
-        overlaps = np.array(overlaps)
+        
+        overlaps = torch.cat(overlaps, 0)
 
-        return torch.tensor(overlaps).float()        
+        return overlaps      
 
     def bbox_overlaps_batch(self, anchors, gt_boxes):
         """
