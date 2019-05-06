@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from ..utils.anchors import generate_anchors, calc_IOU, calc_IOU2, run
+from ..utils.anchors import generate_anchors, calc_IOU, calc_IOU2, calc_IOU_vectorized
 from ..config import rfcn_config as cfg
 import numpy as np
 
@@ -210,7 +210,7 @@ class _AnchorLayer(nn.Module):
         overlaps = []
 
         for i in range(batch_size):
-            IOUs = run(anchors, gt_boxes[i])
+            IOUs = calc_IOU_vectorized(anchors, gt_boxes[i])
             overlaps.append(IOUs)
         overlaps = np.array(overlaps)
 
