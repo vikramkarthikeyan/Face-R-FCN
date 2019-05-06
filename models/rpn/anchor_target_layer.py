@@ -78,13 +78,21 @@ class _AnchorLayer(nn.Module):
         # 3. Get all area overlap for the kept anchors
         overlaps = self.bbox_overlaps(clipped_boxes, gt_boxes)
         overlaps[overlaps == 0] = 1e-10
+
         if flag_verbose:
             print("MAX OF OVERLAPS", overlaps.max())
             print(overlaps[overlaps > 1], "empty is good")
             print(overlaps[overlaps > cfg.RPN_POSITIVE_OVERLAP], "empty is not good")
 
+        # 4. Create labels for all anchors generated and set them as -1.
+        labels = overlaps.new(batch_size, clipped_boxes.shape[0]).fill_(-1)
+        print("LABELS NEWLY CREATED:", labels.shape)
+
+        # 5. Calculate best possible over lap w. r. t. all GT boxes. Choose the best GT box for this match
+        max_overlaps, gt_assignment = torch.max(overlaps, 2)
         max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
         gt_max_overlaps, argmax_gt_max_overlaps = torch.max(overlaps, 1)
+
         print("GT_MAX:", gt_max_overlaps, argmax_gt_max_overlaps)
 
         if flag_verbose:
@@ -93,11 +101,6 @@ class _AnchorLayer(nn.Module):
             print("OVERLAPS MAX SHAPE:", max_overlaps.shape)
             print("OVERLAPS ARGS SHAPE:", argmax_overlaps.shape)
             print("OVERLAPS ARGS:", argmax_overlaps)
-
-        # 4. Create labels for all anchors generated and set them as -1.
-        labels = overlaps.new(batch_size, clipped_boxes.shape[0]).fill_(-1)
-
-        # 5. Calculate best possible over lap w. r. t. all GT boxes. Choose the best GT box for this match
 
         labels[max_overlaps >= cfg.RPN_POSITIVE_OVERLAP] = 1
         labels[max_overlaps <= cfg.RPN_NEGATIVE_OVERLAP] = 0
