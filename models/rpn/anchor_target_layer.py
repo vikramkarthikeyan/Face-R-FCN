@@ -211,7 +211,7 @@ class _AnchorLayer(nn.Module):
 
         for i in range(batch_size):
             IOUs = calc_IOU_vectorized(anchors, gt_boxes[i])
-            overlaps.append(IOUs)
+            overlaps.append(IOUs.unsqueeze(0))
         
         overlaps = torch.cat(overlaps, 0)
 
