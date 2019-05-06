@@ -214,8 +214,7 @@ class _AnchorLayer(nn.Module):
     #     return torch.tensor(overlaps)
 
     def bbox_overlaps(self, anchors, gt_boxes):
-        print("ANCHORS SIZE",anchors.shape)
-        batch_size = anchors.shape[0]
+        batch_size = gt_boxes.shape[0]
         overlaps = []
 
         for i in range(batch_size):
