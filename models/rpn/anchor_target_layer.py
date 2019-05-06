@@ -70,7 +70,7 @@ class _AnchorLayer(nn.Module):
 
         # 3. Get all area overlap for the kept anchors
         # overlaps = self.bbox_overlaps(clipped_boxes, gt_boxes)
-        overlaps = self.bbox_overlaps(clipped_boxes.numpy(), gt_boxes.numpy())
+        overlaps = self.bbox_overlaps_vectorized(clipped_boxes.numpy(), gt_boxes.numpy())
         overlaps[overlaps == 0] = 1e-10
 
         if cfg.verbose:
@@ -205,9 +205,6 @@ class _AnchorLayer(nn.Module):
         return torch.tensor(overlaps)
     
     def bbox_overlaps_vectorized(self, anchors, gt_boxes):
-        print("Anchors:",anchors.shape)
-        print("GT Boxes:",gt_boxes.shape)
-
         batch_size = gt_boxes.shape[0]
 
         overlaps = []
@@ -215,8 +212,9 @@ class _AnchorLayer(nn.Module):
         for i in range(batch_size):
             IOUs = run(anchors, gt_boxes[i])
             overlaps.append(IOUs)
+        overlaps = np.array(overlaps)
 
-        return torch.tensor(overlaps)        
+        return torch.tensor(overlaps).float()        
 
     def bbox_overlaps_batch(self, anchors, gt_boxes):
         """
