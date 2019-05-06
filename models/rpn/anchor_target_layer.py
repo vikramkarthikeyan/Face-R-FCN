@@ -41,17 +41,14 @@ class _AnchorLayer(nn.Module):
         _, _, height, width = cls_scores.shape
         scale = cfg.IMAGE_INPUT_DIMS // height
 
-        flag_verbose = True
-        # flag_verbose = False
         flag_demo = True
-        # flag_demo = False
 
         batch_size = gt_boxes_old.shape[0]
         # batch_size = 1
 
         gt_boxes = torch.tensor(gt_boxes_old)
 
-        if flag_verbose:
+        if cfg.verbose:
             print("\n\n----Anchor Target Layer----\n")
             print("CLS_SCORES:", cls_scores.shape)
             print("GT_BOXES:", gt_boxes.shape, gt_boxes)
@@ -62,20 +59,20 @@ class _AnchorLayer(nn.Module):
         all_anchors = all_anchors.view(batch_size, all_anchors.shape[0], all_anchors.shape[1],
                                        all_anchors.shape[2], all_anchors.shape[3])
 
-        if flag_verbose:
+        if cfg.verbose:
             print("ANCHORS:", all_anchors.shape)
 
         # 2. Clipping anchors which are not necessary
         clipped_boxes, indices = self.clip_boxes(all_anchors, height, width, batch_size)
 
-        if flag_verbose:
+        if cfg.verbose:
             print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
 
         # 3. Get all area overlap for the kept anchors
         overlaps = self.bbox_overlaps(clipped_boxes, gt_boxes)
         overlaps[overlaps == 0] = 1e-10
 
-        if flag_verbose:
+        if cfg.verbose:
             print("MAX OF OVERLAPS", overlaps.max())
             print(overlaps[overlaps > 1], "empty is good")
             print(overlaps[overlaps > cfg.RPN_POSITIVE_OVERLAP], "empty is not good")
@@ -91,7 +88,7 @@ class _AnchorLayer(nn.Module):
 
         print("GT_MAX:", gt_max_overlaps, argmax_gt_max_overlaps)
 
-        if flag_verbose:
+        if cfg.verbose:
             # print("OVERLAPS:", overlaps)
             print("OVERLAPS SHAPE:", overlaps.shape)
             print("OVERLAPS MAX SHAPE:", max_overlaps.shape)
@@ -147,7 +144,7 @@ class _AnchorLayer(nn.Module):
         label_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 1).fill_(-1)
         target_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 4).fill_(0)
 
-        if flag_verbose:
+        if cfg.verbose:
             print("LABEL_ip:", labels.shape)
             print("LABEL_OP:", label_op.shape)
             print("TARGET_IP:", targets.shape)

@@ -98,7 +98,8 @@ class _ProposalLayer(nn.Module):
             proposals = proposals[order, :]
             scores = scores[order].numpy()
 
-            print("\n----Proposal Layer----\n\nPRE NMS SIZE:",proposals.shape)
+            if rfcn_config.verbose:
+                print("\n----Proposal Layer----\n\nPRE NMS SIZE:",proposals.shape)
 
             # Step 7 - Combine anchors and scores
             scores = np.reshape(scores, (scores.shape[0], 1))
@@ -114,7 +115,8 @@ class _ProposalLayer(nn.Module):
             proposals = proposals[keep_anchors_postNMS, :]
             scores = scores[keep_anchors_postNMS, :]
 
-            print("\nPOST NMS SIZE:",proposals.shape)
+            if rfcn_config.verbose:
+                print("\nPOST NMS SIZE:",proposals.shape)
 
             # Step 10 - Return topN proposals as output
             num_proposal = proposals.shape[0]

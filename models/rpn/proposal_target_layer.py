@@ -39,9 +39,10 @@ class _ProposalTargetLayer(nn.Module):
         # Include ground-truth boxes in the set of candidate rois
         all_rois = torch.cat([rois, gt_boxes], 1)
 
-        print("\n----Proposal Target Layer----\n\n")
-        print("ROIs generated:", rois.shape)
-        print("Total ROIs with GT boxes:", all_rois.shape)
+        if rfcn_config.verbose:
+            print("\n----Proposal Target Layer----\n\n")
+            print("ROIs generated:", rois.shape)
+            print("Total ROIs with GT boxes:", all_rois.shape)
 
         rois_per_image = rfcn_config.ROI_BATCH_SIZE
 
@@ -103,7 +104,8 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
 
             bg_num_rois = bg_inds.numel()
 
-            print("\nFace and BG ROIs:", num_fg_rois, bg_num_rois)
+            if rfcn_config.verbose:
+                print("\nFace and BG ROIs:", num_fg_rois, bg_num_rois)
 
             if num_fg_rois > 0 and bg_num_rois > 0:
                 # sampling fg

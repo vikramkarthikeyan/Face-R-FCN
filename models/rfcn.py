@@ -56,7 +56,8 @@ class _RFCN(nn.Module):
         image_dimension = reshaped_image.shape[-1]
         resize_scale = image_dimension / base_feature_dimension
 
-        print("Image dimensions: {}. Feature dimensions: {}, scale: {}".format(reshaped_image.shape, base_features.shape, resize_scale))
+        if rfcn_config.verbose:
+            print("Image dimensions: {}. Feature dimensions: {}, scale: {}".format(reshaped_image.shape, base_features.shape, resize_scale))
 
         # Resize GT anchors to size of base features
         gt_boxes = scale_boxes_batch(gt_boxes, resize_scale, 'down')
@@ -79,23 +80,23 @@ class _RFCN(nn.Module):
             rpn_loss_cls = 0
             rpn_loss_bbox = 0
         
-        print("ROIS generated:",rois.shape)
-        
-        print("\n\n----ROIS generated, moving onto PSROI----\n")
+        if rfcn_config.verbose:
+            print("ROIS generated:",rois.shape)
+            print("\n\n----ROIS generated, moving onto PSROI----\n")
 
         rois = Variable(rois.cuda())
         base_features = Variable(base_features.cuda())
 
         base_features = self.RCNN_conv_new(base_features)
-        
-        print("Features after conversion layer:",base_features.shape)
 
         # Get position based score maps
         cls_feat = self.RCNN_cls_base(base_features)
         bbox_base = self.RCNN_bbox_base(base_features)
 
-        print("PS Score maps for classification:", cls_feat.shape)
-        print("PS Score maps for bounding boxes:", bbox_base.shape)
+        if rcfn_config.verbose:
+            print("Features after conversion layer:",base_features.shape)
+            print("PS Score maps for classification:", cls_feat.shape)
+            print("PS Score maps for bounding boxes:", bbox_base.shape)
 
         # Flatten the ROIs generated from all the images in the batch as a single array of ROIs
         flattened_rois = rois.view(-1, 4)
@@ -109,11 +110,12 @@ class _RFCN(nn.Module):
         pooled_feat_loc = self.pooling(pooled_feat_loc)
         bbox_pred = pooled_feat_loc.squeeze()
 
-        print("\n\n----PSROI----")
-        print("\nAfter PSROI on score maps for classification:",pooled_feat_cls.shape)
-        print("After PSROI on score maps for bounding boxes:",pooled_feat_loc.shape)
-        print("\nAfter averaging score maps:", cls_score.shape)
-        print("After averaging bbox_pred:", bbox_pred.shape)
+        if rcfn_config.verbose:
+            print("\n\n----PSROI----")
+            print("\nAfter PSROI on score maps for classification:",pooled_feat_cls.shape)
+            print("After PSROI on score maps for bounding boxes:",pooled_feat_loc.shape)
+            print("\nAfter averaging score maps:", cls_score.shape)
+            print("After averaging bbox_pred:", bbox_pred.shape)
 
         cls_prob = F.softmax(cls_score, dim=1)
 
@@ -132,7 +134,7 @@ class _RFCN(nn.Module):
     
     def ohem_detect_loss(self, cls_score, rois_label, bbox_pred, rois_target, rois_inside_ws, rois_outside_ws):
 
-        print("\n\n-----OHEM-----")
+        
 
         def log_sum_exp(x):
             x_max = x.data.max()
@@ -144,7 +146,9 @@ class _RFCN(nn.Module):
         pos_idx = rois_label > 0
         num_pos = pos_idx.int().sum()
 
-        print("Number of positive examples:",num_pos.data)
+        if rfcn_config.verbose:
+            print("\n\n-----OHEM-----")
+            print("Number of positive examples:",num_pos.data)
 
         # classification loss
         num_classes = cls_score.size(1)
@@ -175,9 +179,7 @@ class _RFCN(nn.Module):
 
         loss_cls = Variable(loss_cls, requires_grad=True)
         loss_box = Variable(loss_box, requires_grad=True)
-
-        print("Classification Cross Entropy Loss:", loss_cls, type(loss_cls))
-
+        
         return loss_cls, loss_box
 
 

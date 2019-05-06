@@ -55,8 +55,6 @@ class Trainer:
         # switch to train mode
         model.train()
 
-        loss_temp = 0
-
         start = time.time()
 
         torch.cuda.empty_cache()
@@ -85,15 +83,7 @@ class Trainer:
                 rois_label = model([data], [image_paths[j]], target)
 
                 loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
-                
-                print(rpn_loss_cls.mean())
-                print(rpn_loss_box.mean())
-                print(RCNN_loss_cls.mean())
-                print(RCNN_loss_bbox.mean())
-                print(loss)
 
-
-                loss_temp = 0
                 start = time.time()
 
                 # Clear(zero) Gradients for theta
@@ -109,11 +99,13 @@ class Trainer:
                 batch_time.update(time.time() - start)
                 start = time.time()
 
-                # print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
-                #         'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                #             'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
-                #             epoch, i, len(self.train_loader), batch_time=batch_time,
-                #             loss=losses), end="")
+                losses.update(loss)
+
+                print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
+                        'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                            'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
+                            epoch, i, len(self.train_loader), batch_time=batch_time,
+                            loss=losses), end="")
             
         print("\nTraining Accuracy: Acc@1: {top1.avg:.3f}%, Acc@5: {top5.avg:.3f}%".format(top1=top1, top5=top5))
 

@@ -43,3 +43,8 @@ RPN_L1_DELTA = 1.0
 RPN_MAX_BG = 200
 
 BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
+
+
+########################
+
+verbose = True

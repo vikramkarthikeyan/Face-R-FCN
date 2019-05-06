@@ -120,8 +120,8 @@ class RPN(nn.Module):
 
         mask = (bb_labels == 1.0).float()
 
-        print("LABEL:", bb_labels.shape, bb_labels.ge(0).float().sum())
-        print("MASK:", mask.shape, mask.sum())
+        # print("LABEL:", bb_labels.shape, bb_labels.ge(0).float().sum())
+        # print("MASK:", mask.shape, mask.sum())
         """
         Mask to take only positive anchors into consideration
         """
@@ -164,6 +164,6 @@ class RPN(nn.Module):
             losses = losses.sum(i)
         losses = losses.mean()
 
-        print("LOSSES AFTER MEAN", losses)
+        # print("LOSSES AFTER MEAN", losses)
 
         return losses
