@@ -214,12 +214,13 @@ class _AnchorLayer(nn.Module):
     #     return torch.tensor(overlaps)
 
     def bbox_overlaps(self, anchors, gt_boxes):
+        print("ANCHORS SIZE",anchors.shape)
         batch_size = anchors.shape[0]
         overlaps = []
 
         for i in range(batch_size):
             overlaps_image = []
-            for anchor in anchors[i]:
+            for anchor in anchors:
                 IOU_anchor_vs_all_gt = [calc_IOU(anchor, gt_box) for gt_box in gt_boxes[i]]
 
                 overlaps_image.append(IOU_anchor_vs_all_gt)
