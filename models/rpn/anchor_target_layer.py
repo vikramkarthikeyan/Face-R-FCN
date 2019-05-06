@@ -37,10 +37,6 @@ class _AnchorLayer(nn.Module):
         # DONE: If number of anchors is too much, subsample from these to get an acceptable number. Change label only.
         #
         # 8. generate the regression targets for the GT boxes for the best overlap from step 5.
-        #
-        # TODO: inside and outside weights.
-        #
-        # .
 
         _, _, height, width = cls_scores.shape
         scale = cfg.IMAGE_INPUT_DIMS // height
@@ -198,21 +194,6 @@ class _AnchorLayer(nn.Module):
         return torch.from_numpy(np.array(op2)), inds
         # return boxes
 
-    # def bbox_overlaps(self, anchors, gt_boxes, factor=16):
-    #     batch_size = gt_boxes.shape[0]
-    #     overlaps = []
-
-    #     for i in range(batch_size):
-    #         overlaps_image = []
-    #         for anchor in anchors[i]:
-    #             IOU_anchor_vs_all_gt = [calc_IOU(anchor * factor, gt_box) for gt_box in gt_boxes[i]]
-
-    #             overlaps_image.append(IOU_anchor_vs_all_gt)
-
-    #         overlaps.append(overlaps_image)
-
-    #     return torch.tensor(overlaps)
-
     def bbox_overlaps(self, anchors, gt_boxes):
         batch_size = gt_boxes.shape[0]
         overlaps = []
@@ -227,9 +208,6 @@ class _AnchorLayer(nn.Module):
             overlaps.append(overlaps_image)
 
         return torch.tensor(overlaps)
-    
-
-
 
     def bbox_overlaps_batch(self, anchors, gt_boxes):
         """
