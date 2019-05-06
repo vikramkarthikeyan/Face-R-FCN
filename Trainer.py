@@ -84,8 +84,7 @@ class Trainer:
                 RCNN_loss_cls, RCNN_loss_bbox, \
                 rois_label = model([data], [image_paths[j]], target)
 
-                loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean()
-                   + RCNN_loss_bbox.mean()
+                loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
                 
                 print(rpn_loss_cls.mean())
                 print(rpn_loss_box.mean())
@@ -101,7 +100,7 @@ class Trainer:
                 optimizer.zero_grad()
 
                 # Perform BackProp wrt theta
-                # loss.backward()
+                loss.backward()
 
                 # Update theta
                 optimizer.step()
