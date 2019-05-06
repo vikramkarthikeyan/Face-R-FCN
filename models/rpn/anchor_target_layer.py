@@ -70,7 +70,7 @@ class _AnchorLayer(nn.Module):
 
         # 3. Get all area overlap for the kept anchors
         # overlaps = self.bbox_overlaps(clipped_boxes, gt_boxes)
-        overlaps = self.bbox_overlaps_vectorized(clipped_boxes, gt_boxes)
+        overlaps = self.bbox_overlaps_vectorized(clipped_boxes.float(), gt_boxes.float())
         overlaps[overlaps == 0] = 1e-10
 
         if cfg.verbose:
