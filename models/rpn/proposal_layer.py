@@ -196,6 +196,70 @@ def filter_boxes(boxes, min_size):
     keep = ((widths >= min_sizes) & (heights >= min_sizes))
     return keep
 
+# https://www.pyimagesearch.com/2014/11/17/non-maximum-suppression-object-detection-python/
+def nms_old(entries, thresh):
+
+    x1 = entries[:, 0]
+    y1 = entries[:, 1]
+    l = entries[:, 2]
+    b = entries[:, 3]
+    scores = entries[:, 4]
+
+    x2 = x1 + l
+    y2 = y1 + b    
+
+    # Initialize list of picked indices
+    keep = []
+
+    # Calculate areas of all bounding boxes
+    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+
+    # Sort the bounding boxes by the bottom-right y-coordinate of the bounding box
+    idxs = np.argsort(y2)
+
+    # keep looping while some indexes still remain in the indexes list
+    while len(idxs) > 0:
+		# grab the last index in the indexes list, add the index
+		# value to the list of picked indexes, then initialize
+		# the suppression list (i.e. indexes that will be deleted)
+		# using the last index
+        last = len(idxs) - 1
+        i = idxs[last]
+        keep.append(i)
+        suppress = [last]
+        
+        # loop over all indexes in the indexes list
+        for pos in range(0, last):
+            # grab the current index
+            j = idxs[pos]
+
+            # find the largest (x, y) coordinates for the start of
+            # the bounding box and the smallest (x, y) coordinates
+            # for the end of the bounding box
+            xx1 = max(x1[i], x1[j])
+            yy1 = max(y1[i], y1[j])
+            xx2 = min(x2[i], x2[j])
+            yy2 = min(y2[i], y2[j])
+
+            # compute the width and height of the bounding box
+            w = max(0, xx2 - xx1 + 1)
+            h = max(0, yy2 - yy1 + 1)
+
+            # compute the ratio of overlap between the computed
+            # bounding box and the bounding box in the area list
+            overlap = float(w * h) / areas[j]
+
+            # if there is sufficient overlap, suppress the
+            # current bounding box
+            if overlap > rpn_config.NMS_THRESH:
+                suppress.append(pos)
+ 
+        # delete all indexes from the index list that are in the suppression list
+        idxs = np.delete(idxs, suppress)
+ 
+    # return only the bounding boxes that were picked
+    return keep
+
 
 # https://www.pyimagesearch.com/2014/11/17/non-maximum-suppression-object-detection-python/
 def nms(entries, thresh):
