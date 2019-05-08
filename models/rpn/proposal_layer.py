@@ -135,6 +135,22 @@ class _ProposalLayer(nn.Module):
         """Reshaping happens during the call to forward."""
         pass
 
+def clip_boxes_batch(boxes, length, width, batch_size):
+    """
+    Clip boxes to image boundaries.
+    """
+
+    boxes[boxes < 0] = 0
+
+    print(boxes[:,:,:,:,0])
+
+    boxes[:,:,0][boxes[:,:,0] > length] = length
+    boxes[:,:,1][boxes[:,:,1] > width] = width
+    boxes[:,:,2][boxes[:,:,2] > length] = length
+    boxes[:,:,3][boxes[:,:,3] > width] = width
+
+    return boxes
+
 def clip_boxes(boxes, length, width, batch_size):
 
     for i in range(batch_size):
