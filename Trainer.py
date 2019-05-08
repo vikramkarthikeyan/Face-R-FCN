@@ -73,8 +73,7 @@ class Trainer:
                 
                 target = torch.tensor(target).cuda()
                 target = target.unsqueeze(0)
-                print(target.shape)
-
+                
                 model.zero_grad()
 
                 # Compute Model output and loss

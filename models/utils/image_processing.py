@@ -16,20 +16,15 @@ def scale_boxes(boxes, scale, scale_type):
     return results
 
 def scale_boxes_batch(boxes, scale, scale_type):
-    batch_size = boxes.shape[0]
-    results = []
-
+    
     if scale_type == 'down':
         scale = 1/scale
-
-    for batch_number in range(batch_size):
-        batch = []
-        for box in boxes[batch_number,:,:]:
-            x = float(box[0]) * scale
-            y = float(box[1]) * scale
-            l = float(box[2]) * scale
-            b = float(box[3]) * scale
-            batch.append([x,y,l,b])
-        results.append(batch)
     
-    return np.array(results)
+    boxes_temp = boxes.float()
+
+    boxes_temp[:, :, 0] = boxes_temp[:, :, 0] * scale 
+    boxes_temp[:, :, 1] = boxes_temp[:, :, 1] * scale
+    boxes_temp[:, :, 2] = boxes_temp[:, :, 2] * scale
+    boxes_temp[:, :, 3] = boxes_temp[:, :, 3] * scale
+
+    return boxes_temp

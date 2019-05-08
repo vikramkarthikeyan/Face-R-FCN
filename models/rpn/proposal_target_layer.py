@@ -34,8 +34,6 @@ class _ProposalTargetLayer(nn.Module):
 
         batch_size = rois.shape[0]
 
-        gt_boxes = torch.from_numpy(gt_boxes).float().cuda()
-
         # Include ground-truth boxes in the set of candidate rois
         all_rois = torch.cat([rois, gt_boxes], 1)
         
