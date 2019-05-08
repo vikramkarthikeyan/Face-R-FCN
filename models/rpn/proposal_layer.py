@@ -14,6 +14,7 @@ from ..utils import image_processing
 from ..config import rpn_config
 from ..config import rfcn_config
 
+
 class _ProposalLayer(nn.Module):
     """
     Outputs object detection proposals by applying estimated bounding-box
@@ -54,8 +55,10 @@ class _ProposalLayer(nn.Module):
         # Step 1.b - Transform bbox_deltas shape to match the anchor 
         bbox_deltas_shape = bbox_deltas.shape
         # Changed 16 to 18: VEDHARIS
-        split_deltas = bbox_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, 4, bbox_deltas_shape[2], bbox_deltas_shape[3])
-        split_deltas = split_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, bbox_deltas_shape[2], bbox_deltas_shape[3], 4)
+        split_deltas = bbox_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, 4, bbox_deltas_shape[2],
+                                        bbox_deltas_shape[3])
+        split_deltas = split_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, bbox_deltas_shape[2],
+                                         bbox_deltas_shape[3], 4)
 
         # Step 2 - Apply bounding box transformations
         adjusted_boxes = np.add(boxes.cpu().numpy(), split_deltas.cpu().numpy())
@@ -81,7 +84,7 @@ class _ProposalLayer(nn.Module):
         # Steps 5 - Sort scores
         filtered_scores = torch.from_numpy(filtered_scores)
         _, orders = torch.sort(filtered_scores, 1, True)
-        
+
         # Create output array for RPN results
         output = filtered_scores.new(batch_size, rpn_config.POST_NMS_TOP_N, 4).zero_()
 
@@ -89,7 +92,7 @@ class _ProposalLayer(nn.Module):
             proposals = filtered_boxes[i]
             scores = filtered_scores[i]
             order = orders[i]
-            
+
             # Step 6 - Take top pre_nms_topN proposals before NMS
             if rpn_config.PRE_NMS_TOP_N > 0:
                 order = order[:rpn_config.PRE_NMS_TOP_N]
@@ -99,11 +102,11 @@ class _ProposalLayer(nn.Module):
             scores = scores[order].numpy()
 
             if rfcn_config.verbose:
-                print("\n----Proposal Layer----\n\nPRE NMS SIZE:",proposals.shape)
+                print("\n----Proposal Layer----\n\nPRE NMS SIZE:", proposals.shape)
 
             # Step 7 - Combine anchors and scores
             scores = np.reshape(scores, (scores.shape[0], 1))
-            combined = np.concatenate((proposals, scores),axis=1)
+            combined = np.concatenate((proposals, scores), axis=1)
 
             # Step 8 - Apply NMS with a specific threshold in config
             keep_anchors_postNMS = nms(combined, rpn_config.NMS_THRESH)
@@ -116,13 +119,13 @@ class _ProposalLayer(nn.Module):
             scores = scores[keep_anchors_postNMS, :]
 
             if rfcn_config.verbose:
-                print("\nPOST NMS SIZE:",proposals.shape)
+                print("\nPOST NMS SIZE:", proposals.shape)
 
             # Step 10 - Return topN proposals as output
             num_proposal = proposals.shape[0]
-            output[i,:,0] = i
+            output[i, :, 0] = i
             output[i, :num_proposal, 0:] = torch.from_numpy(proposals)
-            
+
         output = output[:, :num_proposal, ]
         return output
 
@@ -134,34 +137,33 @@ class _ProposalLayer(nn.Module):
         """Reshaping happens during the call to forward."""
         pass
 
-def clip_boxes(boxes, length, width, batch_size):
 
+def clip_boxes(boxes, length, width, batch_size):
     for i in range(batch_size):
         for channel in boxes[i]:
             for x in channel:
                 for y in x:
-
                     # Check if the entry exceeds the bounds, else clip
                     y[2] = y[0] + y[2]
                     y[3] = y[1] + y[3]
 
-                    y[0] = np.clip(y[0], 0, length-1)
-                    y[1] = np.clip(y[1], 0, length-1)
-                    y[2] = np.clip(y[2], 0, length-1)
-                    y[3] = np.clip(y[3], 0, length-1)
-
+                    y[0] = np.clip(y[0], 0, length - 1)
+                    y[1] = np.clip(y[1], 0, length - 1)
+                    y[2] = np.clip(y[2], 0, length - 1)
+                    y[3] = np.clip(y[3], 0, length - 1)
 
                     y[2] = y[2] - y[0]
                     y[3] = y[3] - y[1]
 
     return boxes
 
+
 def filter_boxes(boxes, min_size):
     """Remove all boxes with any side smaller than min_size."""
 
     widths = boxes[:, :, :, :, 2]
     heights = boxes[:, :, :, :, 3]
-    
+
     keep = np.zeros_like(widths)
     min_sizes = keep.copy()
     min_sizes.fill(min_size)
@@ -169,9 +171,9 @@ def filter_boxes(boxes, min_size):
     keep = ((widths >= min_sizes) & (heights >= min_sizes))
     return keep
 
+
 # https://www.pyimagesearch.com/2014/11/17/non-maximum-suppression-object-detection-python/
 def nms(entries, thresh):
-
     x1 = entries[:, 0]
     y1 = entries[:, 1]
     l = entries[:, 2]
@@ -179,57 +181,84 @@ def nms(entries, thresh):
     scores = entries[:, 4]
 
     x2 = x1 + l
-    y2 = y1 + b    
+    y2 = y1 + b
 
     # Initialize list of picked indices
-    keep = []
+    # keep = []
+    idx_keep = []
 
     # Calculate areas of all bounding boxes
-    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+    # areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+    areas = l * b
 
     # Sort the bounding boxes by the bottom-right y-coordinate of the bounding box
-    idxs = np.argsort(y2)
+    # idxs = np.argsort(y2)
+    _, idxs = torch.sort()
 
     # keep looping while some indexes still remain in the indexes list
-    while len(idxs) > 0:
-		# grab the last index in the indexes list, add the index
-		# value to the list of picked indexes, then initialize
-		# the suppression list (i.e. indexes that will be deleted)
-		# using the last index
-        last = len(idxs) - 1
-        i = idxs[last]
-        keep.append(i)
-        suppress = [last]
-        
-        # loop over all indexes in the indexes list
-        for pos in range(0, last):
-            # grab the current index
-            j = idxs[pos]
+    # while len(idxs) > 0:
+    while idxs.shape[0] > 0:
+        # grab the last index in the indexes list, add the index
+        # value to the list of picked indexes, then initialize
+        # the suppression list (i.e. indexes that will be deleted)
+        # using the last index
 
-            # find the largest (x, y) coordinates for the start of
-            # the bounding box and the smallest (x, y) coordinates
-            # for the end of the bounding box
-            xx1 = max(x1[i], x1[j])
-            yy1 = max(y1[i], y1[j])
-            xx2 = min(x2[i], x2[j])
-            yy2 = min(y2[i], y2[j])
+        ind = idxs[-1]
+        idx_keep.append(ind)
 
-            # compute the width and height of the bounding box
-            w = max(0, xx2 - xx1 + 1)
-            h = max(0, yy2 - yy1 + 1)
+        # XX1 = x1.clip(x1[ind])
+        # YY1 = y1.clip(y1[ind])
+        XX1 = torch.clamp(x1, min=x1[ind])
+        YY1 = torch.clamp(y1, min=y1[ind])
 
-            # compute the ratio of overlap between the computed
-            # bounding box and the bounding box in the area list
-            overlap = float(w * h) / areas[j]
+        XX2 = torch.clamp(x2, max=x2[ind])
+        YY2 = torch.clamp(y2, max=y2[ind])
+        # XX2 = x2.clip(None, x2[ind])
+        # YY2 = y2.clip(None, y2[ind])
 
-            # if there is sufficient overlap, suppress the
-            # current bounding box
-            if overlap > rpn_config.NMS_THRESH:
-                suppress.append(pos)
- 
-        # delete all indexes from the index list that are in the suppression list
-        idxs = np.delete(idxs, suppress)
- 
+        # W = (XX2 - XX1 + 1).clip(0)
+        # H = (YY2 - YY1 + 1).clip(0)
+        W = torch.clamp((XX2 - XX1 + 1), min=0)
+        H = torch.clamp((YY2 - YY1 + 1), min=0)
+
+        mask = ((W * H).float() / areas.float()).lt(rpn_config.NMS_THRESH)
+        # mask = ((W * H) / areas) < rpn_config.NMS_THRESH
+
+        idxs = idxs[mask]
+
+        # last = len(idxs) - 1
+        # i = idxs[last]
+        # keep.append(i)
+        # suppress = [last]
+        #
+        # # loop over all indexes in the indexes list
+        # for pos in range(0, last):
+        #     # grab the current index
+        #     j = idxs[pos]
+        #
+        #     # find the largest (x, y) coordinates for the start of
+        #     # the bounding box and the smallest (x, y) coordinates
+        #     # for the end of the bounding box
+        #     xx1 = max(x1[i], x1[j])
+        #     yy1 = max(y1[i], y1[j])
+        #     xx2 = min(x2[i], x2[j])
+        #     yy2 = min(y2[i], y2[j])
+        #
+        #     # compute the width and height of the bounding box
+        #     w = max(0, xx2 - xx1 + 1)
+        #     h = max(0, yy2 - yy1 + 1)
+        #
+        #     # compute the ratio of overlap between the computed
+        #     # bounding box and the bounding box in the area list
+        #     overlap = float(w * h) / areas[j]
+        #
+        #     # if there is sufficient overlap, suppress the
+        #     # current bounding box
+        #     if overlap > rpn_config.NMS_THRESH:
+        #         suppress.append(pos)
+        #
+        # # delete all indexes from the index list that are in the suppression list
+        # idxs = np.delete(idxs, suppress)
+
     # return only the bounding boxes that were picked
-    return keep
-
+    return torch.tensor(idx_keep)
