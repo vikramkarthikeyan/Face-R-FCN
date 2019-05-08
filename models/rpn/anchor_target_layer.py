@@ -42,9 +42,8 @@ class _AnchorLayer(nn.Module):
         scale = cfg.IMAGE_INPUT_DIMS // height
 
         batch_size = gt_boxes_old.shape[0]
-        # batch_size = 1
-
-        gt_boxes = torch.tensor(gt_boxes_old)
+        
+        gt_boxes = torch.tensor(gt_boxes_old).cuda()
 
         if cfg.verbose:
             print("\n\n----Anchor Target Layer----\n")
@@ -150,7 +149,7 @@ class _AnchorLayer(nn.Module):
                             op2.append(y.numpy())
                             inds.append((i, ch, x_n, y_n))
 
-        return torch.from_numpy(np.array(op2)), inds
+        return torch.from_numpy(np.array(op2)).cuda(), inds
 
     def bbox_overlaps(self, anchors, gt_boxes):
         batch_size = gt_boxes.shape[0]

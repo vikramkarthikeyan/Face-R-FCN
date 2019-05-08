@@ -34,11 +34,11 @@ class _ProposalTargetLayer(nn.Module):
 
         batch_size = rois.shape[0]
 
-        gt_boxes = torch.from_numpy(gt_boxes).float()
+        gt_boxes = torch.from_numpy(gt_boxes).float().cuda()
 
         # Include ground-truth boxes in the set of candidate rois
         all_rois = torch.cat([rois, gt_boxes], 1)
-
+        
         if rfcn_config.verbose:
             print("\n----Proposal Target Layer----\n\n")
             print("ROIs generated:", rois.shape)
@@ -69,11 +69,9 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
         """Generate a random sample of RoIs comprising foreground and background
         examples.
         """
-        # print("ROIS GENERATED DURING INFERENCE: ", all_rois)
-        # print("GT BOXES:", gt_boxes)
 
         # calculate all combinations of overlaps (rois x gt_boxes)
-        overlaps = bbox_overlaps_vectorized(all_rois.float(), gt_boxes.float())
+        overlaps = bbox_overlaps_vectorized(all_rois, gt_boxes)
 
         # Get max overlaps across the different GT boxes
         max_overlaps, gt_assignment = torch.max(overlaps, 2)

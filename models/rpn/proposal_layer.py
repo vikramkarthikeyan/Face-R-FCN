@@ -66,27 +66,23 @@ class _ProposalLayer(nn.Module):
 
         # Step 3 - Clip boxes so that they are within the feature dimensions
         clipped_boxes = clip_boxes_batch(adjusted_boxes, height, width, batch_size)
-        clipped_boxes_old = clipped_boxes.cpu().numpy()
-
-        keep = filter_boxes_new(clipped_boxes, rpn_config.MIN_SIZE)
 
         # Step 4 - Filter those boxes that have dimensions lesser than minimum
-        keep = filter_boxes(clipped_boxes_old, rpn_config.MIN_SIZE)
-
+        keep = filter_boxes_new(clipped_boxes, rpn_config.MIN_SIZE)
+        
         # Step 4.a - Flatten and get only boxes and scores that passed the filter
-        keep = np.reshape(keep, (batch_size, -1))
-        clipped_boxes = np.reshape(clipped_boxes, (batch_size, -1, 4))
-        scores = np.reshape(scores.cpu().numpy(), (batch_size, -1))
-
+        keep = keep.view(batch_size, -1)
+        clipped_boxes = clipped_boxes.view(batch_size, -1, 4)
+        scores = scores.view(batch_size, -1)
+        
         filtered_boxes = clipped_boxes[keep]
         filtered_scores = scores[keep]
-
+        
         # TODO: Check if this needs to be changed in case of a batch
-        filtered_boxes = np.reshape(filtered_boxes, (batch_size, filtered_boxes.shape[0], filtered_boxes.shape[1]))
-        filtered_scores = np.reshape(filtered_scores, (batch_size, filtered_scores.shape[0]))
+        filtered_boxes = filtered_boxes.view(batch_size, filtered_boxes.shape[0], filtered_boxes.shape[1])
+        filtered_scores = filtered_scores.view(batch_size, filtered_scores.shape[0])
 
         # Steps 5 - Sort scores
-        filtered_scores = torch.from_numpy(filtered_scores)
         _, orders = torch.sort(filtered_scores, 1, True)
 
         # Create output array for RPN results
@@ -103,7 +99,7 @@ class _ProposalLayer(nn.Module):
 
             # Step 6.a - Filter those topN anchors and scores based on sorted scores
             proposals = proposals[order, :]
-            scores = scores[order].numpy()
+            scores = scores[order].cpu().numpy()
 
             if rfcn_config.verbose:
                 print("\n----Proposal Layer----\n\nPRE NMS SIZE:", proposals.shape)
@@ -130,7 +126,7 @@ class _ProposalLayer(nn.Module):
             # Step 10 - Return topN proposals as output
             num_proposal = proposals.shape[0]
             output[i, :, 0] = i
-            output[i, :num_proposal, 0:] = torch.from_numpy(proposals)
+            output[i, :num_proposal, 0:] = proposals
 
         output = output[:, :num_proposal, ]
         return output
@@ -172,15 +168,10 @@ def filter_boxes_new(boxes, min_size):
     widths = boxes[:, :, :, :, 2]
     heights = boxes[:, :, :, :, 3]
 
-    # keep = np.zeros_like(widths)
     keep = torch.zeros_like(widths)
-
-    min_sizes = torch.tensor(keep)
-    min_sizes.fill(min_size)
 
     min_sizes = keep.new_full(keep.shape, min_size)
     
-
     keep = ((widths >= min_sizes) & (heights >= min_sizes))
     return keep
 

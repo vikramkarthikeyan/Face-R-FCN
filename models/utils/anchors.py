@@ -50,8 +50,10 @@ def calc_IOU_vectorized(bboxes1, bboxes2):
     xB = torch.min(x22, torch.t(x12.view(1,-1)))
     yB = torch.min(y22, torch.t(y12.view(1,-1)))
 
+    label_zero = torch.tensor(0.0).cuda()
+    
     # compute the area of intersection rectangle
-    interArea = torch.max((xB - xA + 1), torch.tensor(0.0)) * torch.max((yB - yA + 1), torch.tensor(0.0))
+    interArea = torch.max((xB - xA + 1), label_zero) * torch.max((yB - yA + 1), label_zero)
 
     boxAArea = (x12 - x11 + 1.0) * (y12 - y11 + 1.0)
     boxBArea = (x22 - x21 + 1.0) * (y22 - y21 + 1.0)
