@@ -63,6 +63,7 @@ class _ProposalLayer(nn.Module):
 
         # Step 3 - Clip boxes so that they are within the feature dimensions
         clipped_boxes = clip_boxes(adjusted_boxes, height, width, batch_size)
+        clipped_boxes_temp = clip_boxes_batch(adjusted_boxes, height, width, batch_size)
 
         # Step 4 - Filter those boxes that have dimensions lesser than minimum
         keep = filter_boxes(clipped_boxes, rpn_config.MIN_SIZE)
@@ -142,12 +143,18 @@ def clip_boxes_batch(boxes, length, width, batch_size):
 
     boxes[boxes < 0] = 0
 
-    print(boxes[:,:,:,:,0])
+    # print(boxes[:,:,:,:,0])
 
-    boxes[:,:,0][boxes[:,:,0] > length] = length
-    boxes[:,:,1][boxes[:,:,1] > width] = width
-    boxes[:,:,2][boxes[:,:,2] > length] = length
-    boxes[:,:,3][boxes[:,:,3] > width] = width
+    boxes[:,:,:,:,2] = boxes[:,:,:,:,0] + boxes[:,:,:,:,2]
+    boxes[:,:,:,:,3] = boxes[:,:,:,:,1] + boxes[:,:,:,:,3]
+
+    boxes[:,:,:,:,0][boxes[:,:,:,:,0] > length] = length
+    boxes[:,:,:,:,1][boxes[:,:,:,:,1] > width] = width
+    boxes[:,:,:,:,2][boxes[:,:,:,:,2] > length] = length
+    boxes[:,:,:,:,3][boxes[:,:,:,:,3] > width] = width
+
+    boxes[:,:,:,:,2] = boxes[:,:,:,:,2] - boxes[:,:,:,:,0]
+    boxes[:,:,:,:,3] = boxes[:,:,:,:,3] - boxes[:,:,:,:,1]
 
     return boxes
 
