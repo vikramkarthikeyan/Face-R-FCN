@@ -272,23 +272,19 @@ def nms(entries, thresh):
     b = entries[:, 3]
     scores = entries[:, 4]
 
-    x2 = x1 + l
-    y2 = y1 + b
+    x2 = x1 + l - 1
+    y2 = y1 + b - 1
 
     # Initialize list of picked indices
-    # keep = []
     idx_keep = []
 
     # Calculate areas of all bounding boxes
-    # areas = (x2 - x1 + 1) * (y2 - y1 + 1)
     areas = l * b
 
     # Sort the bounding boxes by the bottom-right y-coordinate of the bounding box
-    # idxs = np.argsort(y2)
     _, idxs = torch.sort(y2)
 
     # keep looping while some indexes still remain in the indexes list
-    # while len(idxs) > 0:
     while idxs.shape[0] > 0:
         # grab the last index in the indexes list, add the index
         # value to the list of picked indexes, then initialize
@@ -297,61 +293,20 @@ def nms(entries, thresh):
         ind = idxs[-1]
         idx_keep.append(ind)
 
-        # XX1 = x1.clip(x1[ind])
-        # YY1 = y1.clip(y1[ind])
         XX1 = torch.clamp(x1[idxs], min=x1[ind])
         YY1 = torch.clamp(y1[idxs], min=y1[ind])
 
         XX2 = torch.clamp(x2[idxs], max=x2[ind])
         YY2 = torch.clamp(y2[idxs], max=y2[ind])
-        # XX2 = x2.clip(None, x2[ind])
-        # YY2 = y2.clip(None, y2[ind])
-
-        # W = (XX2 - XX1 + 1).clip(0)
-        # H = (YY2 - YY1 + 1).clip(0)
+   
         W = torch.clamp((XX2 - XX1 + 1), min=0)
         H = torch.clamp((YY2 - YY1 + 1), min=0)
 
         mask = ((W * H).float() / areas.float()).lt(rpn_config.NMS_THRESH)
         mask[-1] = 0
-        # mask = ((W * H) / areas) < rpn_config.NMS_THRESH
 
         areas = areas[mask]
         idxs = idxs[mask]
-
-        # last = len(idxs) - 1
-        # i = idxs[last]
-        # keep.append(i)
-        # suppress = [last]
-        #
-        # # loop over all indexes in the indexes list
-        # for pos in range(0, last):
-        #     # grab the current index
-        #     j = idxs[pos]
-        #
-        #     # find the largest (x, y) coordinates for the start of
-        #     # the bounding box and the smallest (x, y) coordinates
-        #     # for the end of the bounding box
-        #     xx1 = max(x1[i], x1[j])
-        #     yy1 = max(y1[i], y1[j])
-        #     xx2 = min(x2[i], x2[j])
-        #     yy2 = min(y2[i], y2[j])
-        #
-        #     # compute the width and height of the bounding box
-        #     w = max(0, xx2 - xx1 + 1)
-        #     h = max(0, yy2 - yy1 + 1)
-        #
-        #     # compute the ratio of overlap between the computed
-        #     # bounding box and the bounding box in the area list
-        #     overlap = float(w * h) / areas[j]
-        #
-        #     # if there is sufficient overlap, suppress the
-        #     # current bounding box
-        #     if overlap > rpn_config.NMS_THRESH:
-        #         suppress.append(pos)
-        #
-        # # delete all indexes from the index list that are in the suppression list
-        # idxs = np.delete(idxs, suppress)
 
     # return only the bounding boxes that were picked
     return torch.tensor(idx_keep)
