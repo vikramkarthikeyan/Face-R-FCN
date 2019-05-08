@@ -113,7 +113,9 @@ class _ProposalLayer(nn.Module):
 
             # Step 8 - Apply NMS with a specific threshold in config
             keep_anchors_postNMS = nms(combined, rpn_config.NMS_THRESH)
-
+            print(keep_anchors_postNMS.shape)
+            keep_anchors_postNMS = nms_old(combined, rpn_config.NMS_THRESH)
+            print(len(keep_anchors_postNMS))
             # Step 9 - Take TopN post NMS proposals
             if rpn_config.POST_NMS_TOP_N > 0:
                 keep_anchors_postNMS = keep_anchors_postNMS[:rpn_config.POST_NMS_TOP_N]
@@ -205,8 +207,8 @@ def nms_old(entries, thresh):
     b = entries[:, 3]
     scores = entries[:, 4]
 
-    x2 = x1 + l
-    y2 = y1 + b    
+    x2 = x1 + l - 1
+    y2 = y1 + b - 1   
 
     # Initialize list of picked indices
     keep = []
@@ -311,14 +313,11 @@ def nms(entries, thresh):
         H = torch.clamp((YY2 - YY1 + 1), min=0)
 
         mask = ((W * H).float() / areas.float()).lt(rpn_config.NMS_THRESH)
+        mask[-1] = 0
         # mask = ((W * H) / areas) < rpn_config.NMS_THRESH
-        print(mask.shape)
-        print(idxs.shape)
-        print(areas.shape)
+
         areas = areas[mask]
         idxs = idxs[mask]
-        print(idxs.shape)
-        print(ind)
 
         # last = len(idxs) - 1
         # i = idxs[last]
