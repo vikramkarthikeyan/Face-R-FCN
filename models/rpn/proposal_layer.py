@@ -59,11 +59,11 @@ class _ProposalLayer(nn.Module):
 
         # Step 2 - Apply bounding box transformations
         adjusted_boxes = boxes + split_deltas
-        adjusted_boxes = adjusted_boxes.cpu().numpy()
 
         # Step 3 - Clip boxes so that they are within the feature dimensions
-        clipped_boxes = clip_boxes(adjusted_boxes, height, width, batch_size)
-        clipped_boxes_temp = clip_boxes_batch(adjusted_boxes, height, width, batch_size)
+        #clipped_boxes = clip_boxes(adjusted_boxes, height, width, batch_size)
+        clipped_boxes = clip_boxes_batch(adjusted_boxes, height, width, batch_size)
+        clipped_boxes = clipped_boxes.cpu().numpy()
 
         # Step 4 - Filter those boxes that have dimensions lesser than minimum
         keep = filter_boxes(clipped_boxes, rpn_config.MIN_SIZE)
