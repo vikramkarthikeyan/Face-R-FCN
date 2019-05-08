@@ -41,8 +41,6 @@ class _AnchorLayer(nn.Module):
         _, _, height, width = cls_scores.shape
         scale = cfg.IMAGE_INPUT_DIMS // height
 
-        flag_demo = True
-
         batch_size = gt_boxes_old.shape[0]
         # batch_size = 1
 
@@ -69,8 +67,9 @@ class _AnchorLayer(nn.Module):
             print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
 
         # 3. Get all area overlap for the kept anchors
-        # overlaps = self.bbox_overlaps(clipped_boxes, gt_boxes)
         overlaps = self.bbox_overlaps_vectorized(clipped_boxes.float(), gt_boxes.float())
+
+        # Set a minimum value to avoid a potential zero error
         overlaps[overlaps == 0] = 1e-10
 
         if cfg.verbose:
@@ -87,7 +86,7 @@ class _AnchorLayer(nn.Module):
         gt_max_overlaps, argmax_gt_max_overlaps = torch.max(overlaps, 1)
 
         if cfg.verbose:
-            # print("OVERLAPS:", overlaps)
+            print("OVERLAPS:", overlaps)
             print("OVERLAPS SHAPE:", overlaps.shape)
             print("OVERLAPS MAX SHAPE:", max_overlaps.shape)
             print("OVERLAPS ARGS SHAPE:", argmax_overlaps.shape)
@@ -107,37 +106,10 @@ class _AnchorLayer(nn.Module):
                 disable_inds = bg_inds[rand_num[:bg_inds.size(0) - cutoff_cnt]]
                 labels[i][disable_inds] = -1
 
-        if flag_demo:
-
-            pos_anc = clipped_boxes[(labels == 1).view(-1), :]
-            neg_anc = clipped_boxes[(labels == 0).view(-1), :]
-
-            img = Image.open(image_info[0])
-            plt.imshow(self.resize_image(img))
-            ax = plt.gca()
-
-            for anc in neg_anc[:100, :]:
-                anc_ = anc * scale
-                ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
-                                       linewidth=2, edgecolor='r',
-                                       facecolor='none'))
-
-            for anc in pos_anc:
-                anc_ = anc * scale
-                ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
-                                       linewidth=2, edgecolor='g',
-                                       facecolor='none'))
-
-            for anc in gt_boxes[0]:
-                anc_ = anc
-                ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
-                                       linewidth=2, edgecolor='b',
-                                       facecolor='none'))
-
-            plt.show()
-
+        if cfg.demo:
+            plot_layer_outputs(clipped_boxes, labels, scale, image_info)
+            
         targets = clipped_boxes.view(-1, 4).float() - (gt_boxes.view(-1, 4)[argmax_overlaps, :].float() / scale)
-
 
         label_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 1).fill_(-1)
         target_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 4).fill_(0)
@@ -151,7 +123,6 @@ class _AnchorLayer(nn.Module):
         for lab, target, ind in zip(labels[0], targets[0], indices):
             label_op[ind] = lab
             target_op[ind] = target
-            # print(".", end="")
 
         return label_op, target_op
 
@@ -163,8 +134,6 @@ class _AnchorLayer(nn.Module):
         """Reshaping happens during the call to forward."""
         pass
 
-    # def bbox_transform_batch(self, ex_rois, gt_rois):
-    # # from bbox_transform.py
     def plot_boxes(self, anchors, color='r'):
         pass
 
@@ -187,7 +156,6 @@ class _AnchorLayer(nn.Module):
                             inds.append((i, ch, x_n, y_n))
 
         return torch.from_numpy(np.array(op2)), inds
-        # return boxes
 
     def bbox_overlaps(self, anchors, gt_boxes):
         batch_size = gt_boxes.shape[0]
@@ -217,18 +185,47 @@ class _AnchorLayer(nn.Module):
 
         return overlaps      
 
-    def resize_image(self, im, dimension=cfg.IMAGE_INPUT_DIMS):
-        old_size = im.size
-        ratio = float(dimension) / max(old_size)
-        new_size = tuple([int(x * ratio) for x in old_size])
+def resize_image(self, im, dimension=cfg.IMAGE_INPUT_DIMS):
+    old_size = im.size
+    ratio = float(dimension) / max(old_size)
+    new_size = tuple([int(x * ratio) for x in old_size])
+    
+    im = im.resize(new_size, Image.ANTIALIAS)
+    
+    offset_x = (dimension - new_size[0]) // 2
+    offset_y = (dimension - new_size[1]) // 2
+    
+    # create a new image and paste the resized on it
+    new_im = Image.new("RGB", (dimension, dimension))
+    new_im.paste(im, (offset_x, offset_y))
 
-        im = im.resize(new_size, Image.ANTIALIAS)
+    return new_im
 
-        offset_x = (dimension - new_size[0]) // 2
-        offset_y = (dimension - new_size[1]) // 2
+def plot_layer_outputs(clipped_boxes, labels, scale, image_info):
+    pos_anc = clipped_boxes[(labels == 1).view(-1), :]
+    neg_anc = clipped_boxes[(labels == 0).view(-1), :]
 
-        # create a new image and paste the resized on it
-        new_im = Image.new("RGB", (dimension, dimension))
-        new_im.paste(im, (offset_x, offset_y))
+    img = Image.open(image_info[0])
+    plt.imshow(resize_image(img))
+    
+    ax = plt.gca()
 
-        return new_im
+    for anc in neg_anc[:100, :]:
+        anc_ = anc * scale
+        ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
+                                       linewidth=2, edgecolor='r',
+                                       facecolor='none'))
+
+    for anc in pos_anc:
+        anc_ = anc * scale
+        ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
+                               linewidth=2, edgecolor='g',
+                               facecolor='none'))
+    
+    for anc in gt_boxes[0]:
+        anc_ = anc
+        ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
+                               linewidth=2, edgecolor='b',
+                               facecolor='none'))
+    
+    plt.show()
