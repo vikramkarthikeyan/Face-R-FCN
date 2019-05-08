@@ -46,6 +46,7 @@ class _ProposalLayer(nn.Module):
         # Step 1 - Generate Anchors
         _, _, height, width = scores.shape
         boxes = anchors.generate_anchors((height, width), self.box_sizes)
+        boxes = boxes.cuda()
 
         # Step 1.a - Transform anchors shape based on batch size
         boxes_shape = boxes.shape
@@ -53,12 +54,12 @@ class _ProposalLayer(nn.Module):
 
         # Step 1.b - Transform bbox_deltas shape to match the anchor 
         bbox_deltas_shape = bbox_deltas.shape
-        # Changed 16 to 18: VEDHARIS
         split_deltas = bbox_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, 4, bbox_deltas_shape[2], bbox_deltas_shape[3])
         split_deltas = split_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, bbox_deltas_shape[2], bbox_deltas_shape[3], 4)
 
         # Step 2 - Apply bounding box transformations
-        adjusted_boxes = np.add(boxes.cpu().numpy(), split_deltas.cpu().numpy())
+        adjusted_boxes = boxes + split_deltas
+        adjusted_boxes = adjusted_boxes.cpu().numpy()
 
         # Step 3 - Clip boxes so that they are within the feature dimensions
         clipped_boxes = clip_boxes(adjusted_boxes, height, width, batch_size)
