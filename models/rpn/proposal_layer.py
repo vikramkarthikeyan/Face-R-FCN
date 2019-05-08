@@ -208,13 +208,13 @@ def nms_old(entries, thresh):
     scores = entries[:, 4]
 
     x2 = x1 + l - 1
-    y2 = y1 + b - 1   
+    y2 = y1 + b - 1
 
     # Initialize list of picked indices
     keep = []
 
     # Calculate areas of all bounding boxes
-    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+    areas = l * b
 
     # Sort the bounding boxes by the bottom-right y-coordinate of the bounding box
     idxs = np.argsort(y2)
