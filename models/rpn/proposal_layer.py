@@ -47,6 +47,7 @@ class _ProposalLayer(nn.Module):
         # Step 1 - Generate Anchors
         _, _, height, width = scores.shape
         boxes = anchors.generate_anchors((height, width), self.box_sizes)
+        boxes = boxes.cuda()
 
         # Step 1.a - Transform anchors shape based on batch size
         boxes_shape = boxes.shape
@@ -61,7 +62,8 @@ class _ProposalLayer(nn.Module):
                                          bbox_deltas_shape[3], 4)
 
         # Step 2 - Apply bounding box transformations
-        adjusted_boxes = np.add(boxes.cpu().numpy(), split_deltas.cpu().numpy())
+        adjusted_boxes = boxes + split_deltas
+        adjusted_boxes = adjusted_boxes.cpu().numpy()
 
         # Step 3 - Clip boxes so that they are within the feature dimensions
         clipped_boxes = clip_boxes(adjusted_boxes, height, width, batch_size)
@@ -137,6 +139,22 @@ class _ProposalLayer(nn.Module):
         """Reshaping happens during the call to forward."""
         pass
 
+
+def clip_boxes_batch(boxes, length, width, batch_size):
+    """
+    Clip boxes to image boundaries.
+    """
+
+    boxes[boxes < 0] = 0
+
+    print(boxes[:,:,:,:,0])
+
+    boxes[:,:,0][boxes[:,:,0] > length] = length
+    boxes[:,:,1][boxes[:,:,1] > width] = width
+    boxes[:,:,2][boxes[:,:,2] > length] = length
+    boxes[:,:,3][boxes[:,:,3] > width] = width
+
+    return boxes
 
 def clip_boxes(boxes, length, width, batch_size):
     for i in range(batch_size):

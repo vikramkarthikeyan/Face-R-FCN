@@ -1,38 +1,6 @@
 import numpy as np
 import torch
 
-
-# def generate_anchors(dimensions, box_sizes):
-#     """
-#     Function to generate anchors.
-#     :param dimensions:  Dimensions of extracted features
-#     :return:         A*i Anchors (A anchors per location i)
-#     """
-#     # print("Input dimensions:", dimensions)
-#     feat_h, feat_w = dimensions
-
-#     anchors_list = []
-
-#     for bs in box_sizes:
-#         x_list = []
-#         for i in range(0, feat_h):
-#             y_list = []
-#             for j in range(0, feat_w):
-
-#                 x = (i - (bs[0] // 2))
-#                 y = (j - (bs[1] // 2))
-#                 l = x + bs[0]
-#                 w = y + bs[1]
-
-#                 y_list.append((x, y, l, w))
-            
-#             x_list.append(y_list)
-        
-#         anchors_list.append(x_list)
-
-#     return torch.from_numpy(np.array(anchors_list))
-
-
 def generate_anchors(dimensions, box_sizes):
     """
     Function to generate anchors.
@@ -62,23 +30,9 @@ def generate_anchors(dimensions, box_sizes):
 
         anchors_list.append(x_list)
 
-    return torch.from_numpy(np.array(anchors_list))
-
-def run(bboxes1, bboxes2):
-    x11, y11, x12, y12 = np.split(bboxes1, 4, axis=1)
-    x21, y21, x22, y22 = np.split(bboxes2, 4, axis=1)
-    xA = np.maximum(x11, np.transpose(x21))
-    yA = np.maximum(y11, np.transpose(y21))
-    xB = np.minimum(x12, np.transpose(x22))
-    yB = np.minimum(y12, np.transpose(y22))
-    interArea = np.maximum((xB - xA + 1), 0) * np.maximum((yB - yA + 1), 0)
-    boxAArea = (x12 - x11 + 1) * (y12 - y11 + 1)
-    boxBArea = (x22 - x21 + 1) * (y22 - y21 + 1)
-    iou = interArea / (boxAArea + np.transpose(boxBArea) - interArea)
-    return iou
+    return torch.tensor(anchors_list).float()
 
 def calc_IOU_vectorized(bboxes1, bboxes2):
-
 
     x11, y11, x12, y12 = bboxes1[:,0], bboxes1[:,1], bboxes1[:,2], bboxes1[:,3]
 

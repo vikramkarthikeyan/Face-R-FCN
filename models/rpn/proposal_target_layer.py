@@ -71,8 +71,9 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
         """
         # print("ROIS GENERATED DURING INFERENCE: ", all_rois)
         # print("GT BOXES:", gt_boxes)
+
         # calculate all combinations of overlaps (rois x gt_boxes)
-        overlaps = bbox_overlaps(all_rois, gt_boxes)
+        overlaps = bbox_overlaps_vectorized(all_rois.float(), gt_boxes.float())
 
         # Get max overlaps across the different GT boxes
         max_overlaps, gt_assignment = torch.max(overlaps, 2)
@@ -178,20 +179,18 @@ def _compute_targets_pytorch(ex_rois, gt_rois):
 
         return targets
 
-def bbox_overlaps(anchors, gt_boxes):
-    batch_size = anchors.shape[0]
+def bbox_overlaps_vectorized(anchors, gt_boxes):
+    batch_size = gt_boxes.shape[0]
+
     overlaps = []
 
     for i in range(batch_size):
-        overlaps_image = []
-        for anchor in anchors[i]:
-            IOU_anchor_vs_all_gt = [anchor_ops.calc_IOU(anchor, gt_box) for gt_box in gt_boxes[i]]
-
-            overlaps_image.append(IOU_anchor_vs_all_gt)
-    
-        overlaps.append(overlaps_image)
-
-    return torch.tensor(overlaps)
+        IOUs = anchor_ops.calc_IOU_vectorized(anchors[i], gt_boxes[i])
+        IOUs = IOUs.unsqueeze(0)
+        overlaps.append(IOUs)
+        
+    overlaps = torch.cat(overlaps, 0)
+    return overlaps 
 
 def bbox_transform_batch(ex_rois, gt_rois):
 
