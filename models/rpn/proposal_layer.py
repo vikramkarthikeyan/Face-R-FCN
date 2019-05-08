@@ -55,12 +55,12 @@ class _ProposalLayer(nn.Module):
 
         # Step 1.b - Transform bbox_deltas shape to match the anchor 
         bbox_deltas_shape = bbox_deltas.shape
-        # Changed 16 to 18: VEDHARIS
+        
         split_deltas = bbox_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, 4, bbox_deltas_shape[2],
                                         bbox_deltas_shape[3])
         split_deltas = split_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, bbox_deltas_shape[2],
                                          bbox_deltas_shape[3], 4)
-
+        
         # Step 2 - Apply bounding box transformations
         adjusted_boxes = boxes + split_deltas
 
@@ -68,7 +68,7 @@ class _ProposalLayer(nn.Module):
         clipped_boxes = clip_boxes_batch(adjusted_boxes, height, width, batch_size)
 
         # Step 4 - Filter those boxes that have dimensions lesser than minimum
-        keep = filter_boxes_new(clipped_boxes, rpn_config.MIN_SIZE)
+        keep = filter_boxes(clipped_boxes, rpn_config.MIN_SIZE)
         
         # Step 4.a - Flatten and get only boxes and scores that passed the filter
         keep = keep.view(batch_size, -1)
@@ -99,20 +99,20 @@ class _ProposalLayer(nn.Module):
 
             # Step 6.a - Filter those topN anchors and scores based on sorted scores
             proposals = proposals[order, :]
-            scores = scores[order].cpu().numpy()
+            scores = scores[order]
 
             if rfcn_config.verbose:
                 print("\n----Proposal Layer----\n\nPRE NMS SIZE:", proposals.shape)
 
             # Step 7 - Combine anchors and scores
-            scores = np.reshape(scores, (scores.shape[0], 1))
-            combined = np.concatenate((proposals, scores), axis=1)
-
+            scores = scores.view(scores.shape[0], 1)
+            combined = torch.cat((proposals, scores), dim=1)
+            
             # Step 8 - Apply NMS with a specific threshold in config
             keep_anchors_postNMS = nms(combined, rpn_config.NMS_THRESH)
-            #print("\n",keep_anchors_postNMS.shape)
+
             #keep_anchors_postNMS = nms_old(combined, rpn_config.NMS_THRESH)
-            #print(len(keep_anchors_postNMS))
+            
             # Step 9 - Take TopN post NMS proposals
             if rpn_config.POST_NMS_TOP_N > 0:
                 keep_anchors_postNMS = keep_anchors_postNMS[:rpn_config.POST_NMS_TOP_N]
@@ -162,7 +162,7 @@ def clip_boxes_batch(boxes, length, width, batch_size):
 
     return boxes
 
-def filter_boxes_new(boxes, min_size):
+def filter_boxes(boxes, min_size):
     """Remove all boxes with any side smaller than min_size."""
 
     widths = boxes[:, :, :, :, 2]
@@ -175,18 +175,6 @@ def filter_boxes_new(boxes, min_size):
     keep = ((widths >= min_sizes) & (heights >= min_sizes))
     return keep
 
-def filter_boxes(boxes, min_size):
-    """Remove all boxes with any side smaller than min_size."""
-
-    widths = boxes[:, :, :, :, 2]
-    heights = boxes[:, :, :, :, 3]
-
-    keep = np.zeros_like(widths)
-    min_sizes = keep.copy()
-    min_sizes.fill(min_size)
-
-    keep = ((widths >= min_sizes) & (heights >= min_sizes))
-    return keep
 
 # https://www.pyimagesearch.com/2014/11/17/non-maximum-suppression-object-detection-python/
 def nms_old(entries, thresh):
@@ -255,7 +243,6 @@ def nms_old(entries, thresh):
 
 # https://www.pyimagesearch.com/2014/11/17/non-maximum-suppression-object-detection-python/
 def nms(entries, thresh):
-    entries = torch.from_numpy(entries)
     x1 = entries[:, 0]
     y1 = entries[:, 1]
     l = entries[:, 2]
