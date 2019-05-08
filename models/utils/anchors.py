@@ -36,25 +36,29 @@ def calc_IOU_vectorized(bboxes1, bboxes2):
 
     x11, y11, x12, y12 = bboxes1[:,0], bboxes1[:,1], bboxes1[:,2], bboxes1[:,3]
 
-    x12 = x11 + x12
-    y12 = y11 + y12
+    x12 = x11 + x12 - 1
+    y12 = y11 + y12 - 1
 
     x21, y21, x22, y22 = bboxes2[:,0], bboxes2[:,1], bboxes2[:,2], bboxes2[:,3]
 
-    x22 = x21 + x22
-    y22 = y21 + y22
+    x22 = x21 + x22 - 1
+    y22 = y21 + y22 - 1
 
-
+    # determine the (x, y)-coordinates of the intersection rectangle
     xA = torch.max(x21, torch.t(x11.view(1,-1)))
     yA = torch.max(y21, torch.t(y11.view(1,-1)))
     xB = torch.min(x22, torch.t(x12.view(1,-1)))
     yB = torch.min(y22, torch.t(y12.view(1,-1)))
 
+    # compute the area of intersection rectangle
     interArea = torch.max((xB - xA + 1), torch.tensor(0.0)) * torch.max((yB - yA + 1), torch.tensor(0.0))
 
     boxAArea = (x12 - x11 + 1.0) * (y12 - y11 + 1.0)
     boxBArea = (x22 - x21 + 1.0) * (y22 - y21 + 1.0)
 
+    # compute the intersection over union by taking the intersection
+    # area and dividing it by the sum of prediction + ground-truth
+    # areas - the interesection area
     iou = interArea / (boxBArea + torch.t(boxAArea.view(1,-1)) - interArea)
 
     return torch.abs(iou)
