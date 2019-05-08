@@ -199,6 +199,7 @@ def filter_boxes(boxes, min_size):
 
 # https://www.pyimagesearch.com/2014/11/17/non-maximum-suppression-object-detection-python/
 def nms(entries, thresh):
+    entries = torch.from_numpy(entries)
     x1 = entries[:, 0]
     y1 = entries[:, 1]
     l = entries[:, 2]
@@ -218,7 +219,7 @@ def nms(entries, thresh):
 
     # Sort the bounding boxes by the bottom-right y-coordinate of the bounding box
     # idxs = np.argsort(y2)
-    _, idxs = torch.sort()
+    _, idxs = torch.sort(y2)
 
     # keep looping while some indexes still remain in the indexes list
     # while len(idxs) > 0:
@@ -227,17 +228,16 @@ def nms(entries, thresh):
         # value to the list of picked indexes, then initialize
         # the suppression list (i.e. indexes that will be deleted)
         # using the last index
-
         ind = idxs[-1]
         idx_keep.append(ind)
 
         # XX1 = x1.clip(x1[ind])
         # YY1 = y1.clip(y1[ind])
-        XX1 = torch.clamp(x1, min=x1[ind])
-        YY1 = torch.clamp(y1, min=y1[ind])
+        XX1 = torch.clamp(x1[idxs], min=x1[ind])
+        YY1 = torch.clamp(y1[idxs], min=y1[ind])
 
-        XX2 = torch.clamp(x2, max=x2[ind])
-        YY2 = torch.clamp(y2, max=y2[ind])
+        XX2 = torch.clamp(x2[idxs], max=x2[ind])
+        YY2 = torch.clamp(y2[idxs], max=y2[ind])
         # XX2 = x2.clip(None, x2[ind])
         # YY2 = y2.clip(None, y2[ind])
 
@@ -248,8 +248,13 @@ def nms(entries, thresh):
 
         mask = ((W * H).float() / areas.float()).lt(rpn_config.NMS_THRESH)
         # mask = ((W * H) / areas) < rpn_config.NMS_THRESH
-
+        print(mask.shape)
+        print(idxs.shape)
+        print(areas.shape)
+        areas = areas[mask]
         idxs = idxs[mask]
+        print(idxs.shape)
+        print(ind)
 
         # last = len(idxs) - 1
         # i = idxs[last]
