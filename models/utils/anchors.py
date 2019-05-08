@@ -62,7 +62,7 @@ def generate_anchors(dimensions, box_sizes):
 
         anchors_list.append(x_list)
 
-    return torch.from_numpy(np.array(anchors_list))
+    return torch.tensor(anchors_list).float()
 
 def run(bboxes1, bboxes2):
     x11, y11, x12, y12 = np.split(bboxes1, 4, axis=1)
