@@ -113,9 +113,9 @@ class _ProposalLayer(nn.Module):
 
             # Step 8 - Apply NMS with a specific threshold in config
             keep_anchors_postNMS = nms(combined, rpn_config.NMS_THRESH)
-            print(keep_anchors_postNMS.shape)
-            keep_anchors_postNMS = nms_old(combined, rpn_config.NMS_THRESH)
-            print(len(keep_anchors_postNMS))
+            #print("\n",keep_anchors_postNMS.shape)
+            #keep_anchors_postNMS = nms_old(combined, rpn_config.NMS_THRESH)
+            #print(len(keep_anchors_postNMS))
             # Step 9 - Take TopN post NMS proposals
             if rpn_config.POST_NMS_TOP_N > 0:
                 keep_anchors_postNMS = keep_anchors_postNMS[:rpn_config.POST_NMS_TOP_N]
