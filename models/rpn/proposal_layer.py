@@ -65,12 +65,13 @@ class _ProposalLayer(nn.Module):
         adjusted_boxes = boxes + split_deltas
 
         # Step 3 - Clip boxes so that they are within the feature dimensions
-        #clipped_boxes = clip_boxes(adjusted_boxes, height, width, batch_size)
         clipped_boxes = clip_boxes_batch(adjusted_boxes, height, width, batch_size)
-        clipped_boxes = clipped_boxes.cpu().numpy()
+        clipped_boxes_old = clipped_boxes.cpu().numpy()
+
+        keep = filter_boxes_new(clipped_boxes, rpn_config.MIN_SIZE)
 
         # Step 4 - Filter those boxes that have dimensions lesser than minimum
-        keep = filter_boxes(clipped_boxes, rpn_config.MIN_SIZE)
+        keep = filter_boxes(clipped_boxes_old, rpn_config.MIN_SIZE)
 
         # Step 4.a - Flatten and get only boxes and scores that passed the filter
         keep = np.reshape(keep, (batch_size, -1))
@@ -165,25 +166,23 @@ def clip_boxes_batch(boxes, length, width, batch_size):
 
     return boxes
 
-def clip_boxes(boxes, length, width, batch_size):
-    for i in range(batch_size):
-        for channel in boxes[i]:
-            for x in channel:
-                for y in x:
-                    # Check if the entry exceeds the bounds, else clip
-                    y[2] = y[0] + y[2]
-                    y[3] = y[1] + y[3]
+def filter_boxes_new(boxes, min_size):
+    """Remove all boxes with any side smaller than min_size."""
 
-                    y[0] = np.clip(y[0], 0, length - 1)
-                    y[1] = np.clip(y[1], 0, length - 1)
-                    y[2] = np.clip(y[2], 0, length - 1)
-                    y[3] = np.clip(y[3], 0, length - 1)
+    widths = boxes[:, :, :, :, 2]
+    heights = boxes[:, :, :, :, 3]
 
-                    y[2] = y[2] - y[0]
-                    y[3] = y[3] - y[1]
+    # keep = np.zeros_like(widths)
+    keep = torch.zeros_like(widths)
 
-    return boxes
+    min_sizes = torch.tensor(keep)
+    min_sizes.fill(min_size)
 
+    min_sizes = keep.new_full(keep.shape, min_size)
+    
+
+    keep = ((widths >= min_sizes) & (heights >= min_sizes))
+    return keep
 
 def filter_boxes(boxes, min_size):
     """Remove all boxes with any side smaller than min_size."""
