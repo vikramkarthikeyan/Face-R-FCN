@@ -152,16 +152,16 @@ def clip_boxes_batch(boxes, length, width, batch_size):
 
     # print(boxes[:,:,:,:,0])
 
-    boxes[:,:,:,:,2] = boxes[:,:,:,:,0] + boxes[:,:,:,:,2]
-    boxes[:,:,:,:,3] = boxes[:,:,:,:,1] + boxes[:,:,:,:,3]
+    boxes[:,:,:,:,2] = boxes[:,:,:,:,0] + boxes[:,:,:,:,2] - 1
+    boxes[:,:,:,:,3] = boxes[:,:,:,:,1] + boxes[:,:,:,:,3] - 1
 
-    boxes[:,:,:,:,0][boxes[:,:,:,:,0] > length] = length
-    boxes[:,:,:,:,1][boxes[:,:,:,:,1] > width] = width
-    boxes[:,:,:,:,2][boxes[:,:,:,:,2] > length] = length
-    boxes[:,:,:,:,3][boxes[:,:,:,:,3] > width] = width
+    boxes[:,:,:,:,0][boxes[:,:,:,:,0] > length - 1] = length - 1
+    boxes[:,:,:,:,1][boxes[:,:,:,:,1] > width - 1] = width - 1
+    boxes[:,:,:,:,2][boxes[:,:,:,:,2] > length - 1] = length - 1
+    boxes[:,:,:,:,3][boxes[:,:,:,:,3] > width - 1] = width - 1
 
-    boxes[:,:,:,:,2] = boxes[:,:,:,:,2] - boxes[:,:,:,:,0]
-    boxes[:,:,:,:,3] = boxes[:,:,:,:,3] - boxes[:,:,:,:,1]
+    boxes[:,:,:,:,2] = boxes[:,:,:,:,2] - boxes[:,:,:,:,0] + 1
+    boxes[:,:,:,:,3] = boxes[:,:,:,:,3] - boxes[:,:,:,:,1] + 1
 
     return boxes
 
