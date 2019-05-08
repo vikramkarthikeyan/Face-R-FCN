@@ -71,8 +71,9 @@ class Trainer:
                     data = data.cuda(non_blocking=True)
                     target = target.cuda(non_blocking=True)
                 
-                target = np.array(target)
-                target = np.reshape(target, (1, target.shape[0], target.shape[1]))
+                target = torch.tensor(target).cuda()
+                target = target.unsqueeze(0)
+                print(target.shape)
 
                 model.zero_grad()
 

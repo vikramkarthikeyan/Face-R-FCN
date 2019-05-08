@@ -77,10 +77,10 @@ class RPN(nn.Module):
         # generating training labels and build the rpn loss
         if self.training:
             assert gt_boxes is not None
-
+            
             # Get anchor targets
             labels, targets = self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
-
+            
             # Unsqueezing to match dimensions
             rpn_classification_prob = torch.unsqueeze(rpn_classification_prob, 4)
 
