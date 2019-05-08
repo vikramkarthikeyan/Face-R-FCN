@@ -193,17 +193,17 @@ def bbox_overlaps(anchors, gt_boxes):
 
     return torch.tensor(overlaps)
 
-def bbox_overlaps_vectorized(self, anchors, gt_boxes):
+def bbox_overlaps_vectorized(anchors, gt_boxes):
     batch_size = gt_boxes.shape[0]
 
     overlaps = []
 
     for i in range(batch_size):
-        IOUs = anchor_ops.calc_IOU_vectorized(anchors, gt_boxes[i])
+        IOUs = anchor_ops.calc_IOU_vectorized(anchors[i], gt_boxes[i])
+        IOUs = IOUs.unsqueeze(0)
         overlaps.append(IOUs)
         
     overlaps = torch.cat(overlaps, 0)
-
     return overlaps 
 
 def bbox_transform_batch(ex_rois, gt_rois):
