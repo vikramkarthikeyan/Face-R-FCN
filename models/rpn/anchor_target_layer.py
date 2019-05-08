@@ -139,19 +139,14 @@ class _AnchorLayer(nn.Module):
 
     def clip_boxes(self, boxes, length, width, batch_size):
 
-        output = []
         op2 = []
         inds = []
 
         for i in range(batch_size):
-            new_batch = []
             for ch, channel in enumerate(boxes[i]):
-                new_channel = []
                 for x_n, x in enumerate(channel):
-                    new_x = []
                     for y_n, y in enumerate(x):
-
-                        if y[0] >= 0 and y[1] >= 0 and (y[0] + y[2]) < length and (y[1] + y[3]) < width:
+                        if y[0] >= 0 and y[1] >= 0 and (y[0] + y[2] - 1) < length and (y[1] + y[3] - 1) < width:
                             op2.append(y.numpy())
                             inds.append((i, ch, x_n, y_n))
 
