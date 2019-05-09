@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import time
 import torch
 import numpy as np
+import pandas as pd
 
 from torch.autograd import Variable
 import EarlyStopping
@@ -40,6 +41,8 @@ class Trainer:
         top1 = AverageMeter.AverageMeter()
         top5 = AverageMeter.AverageMeter()
 
+        file_ip = []
+
         # switch to train mode
         model.train()
 
@@ -69,6 +72,8 @@ class Trainer:
 
                 loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
 
+                file_ip.append([i, loss.item(), rpn_loss_cls.mean().item(), rpn_loss_box.mean().item(), RCNN_loss_cls.mean().item(), RCNN_loss_bbox.mean().item()])
+
                 # Clear(zero) Gradients for theta
                 optimizer.zero_grad()
 
@@ -89,6 +94,10 @@ class Trainer:
                                                                   batch_time=batch_time, loss=losses), end="")
 
         print("\nTraining Accuracy: Acc@1: {top1.avg:.3f}%, Acc@5: {top5.avg:.3f}%".format(top1=top1, top5=top5))
+
+        pd.DataFrame(data=file_ip, columns=["Batch", "Loss", "RPN Classification Loss", "RPN Regression Loss",
+                                            "RCNN Classification Loss", "RCNN Regression Loss"]
+                     ).to_csv(path_or_buf="losses.csv")
 
     def save_checkpoint(self, state, filename='./saved_models/checkpoint.pth.tar'):
         torch.save(state, filename)

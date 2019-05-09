@@ -295,3 +295,54 @@ def nms(entries, thresh):
 
     # return only the bounding boxes that were picked
     return torch.tensor(idx_keep)
+
+
+def nms_numpy(entries, thresh):
+    x1 = entries[:, 0]
+    y1 = entries[:, 1]
+    l = entries[:, 2]
+    b = entries[:, 3]
+    # COMMENTED FOR SPEED
+    # TODO: check why it is needed
+    # scores = entries[:, 4]
+
+    x2 = x1 + l - 1
+    y2 = y1 + b - 1
+
+    # Initialize list of picked indices
+    idx_keep = []
+
+    # Calculate areas of all bounding boxes
+    areas = l * b
+
+    # Sort the bounding boxes by the bottom-right y-coordinate of the bounding box
+    # _, idxs = torch.sort(y2)
+    idxs = np.argsort(y2)
+
+    # keep looping while some indexes still remain in the indexes list
+    while idxs.shape[0] > 0:
+        # grab the last index in the indexes list, add the index
+        # value to the list of picked indexes, then initialize
+        # the suppression list (i.e. indexes that will be deleted)
+        # using the last index
+        ind = idxs[-1]
+        idx_keep.append(ind)
+
+        XX1 = np.clip(x1[idxs], min=x1[ind])
+        YY1 = np.clip(y1[idxs], min=y1[ind])
+
+        XX2 = np.clip(x2[idxs], max=x2[ind])
+        YY2 = np.clip(y2[idxs], max=y2[ind])
+
+        W = np.clip((XX2 - XX1 + 1), min=0)
+        H = np.clip((YY2 - YY1 + 1), min=0)
+
+        # mask = ((W * H).float() / areas.float()).lt(thresh)
+        mask = ((W * H) / areas) < thresh
+        mask[-1] = False
+
+        areas = areas[mask]
+        idxs = idxs[mask]
+
+    # return only the bounding boxes that were picked
+    return torch.tensor(idx_keep)

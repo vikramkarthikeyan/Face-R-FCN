@@ -1,17 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d9f2daa1-78d5-4613-92ef-2b321e0c04e0" name="Default Changelist" comment="Merge remote-tracking branch 'origin/master'&#10;&#10;# Conflicts:&#10;#&#9;models/rpn/proposal_layer.py">
+    <list default="true" id="d9f2daa1-78d5-4613-92ef-2b321e0c04e0" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Trainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Trainer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/resnets.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/resnets.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rfcn.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rfcn.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rpn/anchor_target_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rpn/anchor_target_layer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/rpn/proposal_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rpn/proposal_layer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rpn/proposal_target_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rpn/proposal_target_layer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rpn/rpn.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rpn/rpn.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/utils/anchors.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/utils/anchors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/training.py" beforeDir="false" afterPath="$PROJECT_DIR$/training.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -24,8 +17,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/training.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="499">
-              <caret line="86" column="20" selection-start-line="86" selection-start-column="20" selection-end-line="86" selection-end-column="20" />
+            <state relative-caret-position="330">
+              <caret line="22" column="73" selection-start-line="22" selection-start-column="73" selection-end-line="22" selection-end-column="73" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -33,11 +26,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/rpn/anchor_target_layer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="281">
-              <caret line="48" column="34" selection-start-line="48" selection-start-column="30" selection-end-line="48" selection-end-column="34" />
+            <state relative-caret-position="405">
+              <caret line="27" column="46" selection-start-line="27" selection-start-column="46" selection-end-line="27" selection-end-column="46" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -49,7 +42,7 @@
         <entry file="file://$PROJECT_DIR$/models/resnets.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="289">
-              <caret line="300" column="33" lean-forward="true" selection-start-line="300" selection-start-column="33" selection-end-line="300" selection-end-column="33" />
+              <caret line="300" column="33" selection-start-line="300" selection-start-column="33" selection-end-line="300" selection-end-column="33" />
               <folding>
                 <element signature="e#0#21#0" expanded="true" />
               </folding>
@@ -61,7 +54,7 @@
         <entry file="file://$PROJECT_DIR$/models/rpn/rpn.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="291">
-              <caret line="35" column="33" lean-forward="true" selection-start-line="35" selection-start-column="33" selection-end-line="35" selection-end-column="33" />
+              <caret line="35" column="33" selection-start-line="35" selection-start-column="33" selection-end-line="35" selection-end-column="33" />
             </state>
           </provider>
         </entry>
@@ -78,8 +71,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Trainer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="306">
-              <caret line="37" column="30" lean-forward="true" selection-start-line="37" selection-start-column="30" selection-end-line="37" selection-end-column="30" />
+            <state relative-caret-position="4">
+              <caret line="99" column="21" selection-start-line="99" selection-start-column="21" selection-end-line="99" selection-end-column="21" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
               </folding>
@@ -88,19 +81,28 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/models/rpn/proposal_target_layer.py">
+        <entry file="file://$PROJECT_DIR$/loaders/WiderfaceDataset.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="465">
-              <caret line="175" lean-forward="true" selection-start-line="175" selection-end-line="175" />
+            <state relative-caret-position="345">
+              <caret line="36" column="33" selection-start-line="36" selection-start-column="33" selection-end-line="36" selection-end-column="33" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/models/rpn/proposal_target_layer.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="799">
+              <caret line="175" selection-start-line="175" selection-end-line="175" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/models/rpn/proposal_layer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-744">
-              <caret line="50" column="28" lean-forward="true" selection-start-line="50" selection-start-column="28" selection-end-line="50" selection-end-column="28" />
+            <state relative-caret-position="769">
+              <caret line="347" column="24" selection-start-line="347" selection-start-column="24" selection-end-line="347" selection-end-column="24" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -112,7 +114,7 @@
         <entry file="file://$PROJECT_DIR$/models/utils/anchors.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="546">
-              <caret line="53" column="9" lean-forward="true" selection-start-line="53" selection-start-column="9" selection-end-line="53" selection-end-column="9" />
+              <caret line="53" column="9" selection-start-line="53" selection-start-column="9" selection-end-line="53" selection-end-column="9" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -143,9 +145,10 @@
       <find>empty</find>
       <find>NMS</find>
       <find>cuda()</find>
-      <find>use</find>
       <find>target</find>
       <find>cuda</find>
+      <find>top1</find>
+      <find>use</find>
     </findStrings>
     <replaceStrings>
       <replace>--------------------</replace>
@@ -178,14 +181,14 @@
         <option value="$PROJECT_DIR$/models/utils/net_utils.py" />
         <option value="$PROJECT_DIR$/models/config/rfcn_config.py" />
         <option value="$PROJECT_DIR$/models/resnets.py" />
-        <option value="$PROJECT_DIR$/models/rpn/proposal_layer.py" />
         <option value="$PROJECT_DIR$/models/rpn/rpn.py" />
         <option value="$PROJECT_DIR$/models/rfcn.py" />
-        <option value="$PROJECT_DIR$/Trainer.py" />
-        <option value="$PROJECT_DIR$/training.py" />
         <option value="$PROJECT_DIR$/models/utils/anchors.py" />
         <option value="$PROJECT_DIR$/models/rpn/proposal_target_layer.py" />
         <option value="$PROJECT_DIR$/models/rpn/anchor_target_layer.py" />
+        <option value="$PROJECT_DIR$/training.py" />
+        <option value="$PROJECT_DIR$/Trainer.py" />
+        <option value="$PROJECT_DIR$/models/rpn/proposal_layer.py" />
       </list>
     </option>
   </component>
@@ -377,7 +380,14 @@
       <option name="project" value="LOCAL" />
       <updated>1557280804821</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Speeding up on a CPU.">
+      <created>1557365939372</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1557365939372</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TodoView">
@@ -403,7 +413,7 @@
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32969433" />
-      <window_info anchor="bottom" id="Version Control" order="7" sideWeight="0.49815497" weight="0.3275862" />
+      <window_info anchor="bottom" id="Version Control" order="7" sideWeight="0.49815497" weight="0.32721382" />
       <window_info anchor="bottom" id="Terminal" order="8" />
       <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.501845" side_tool="true" weight="0.32829374" />
       <window_info anchor="bottom" id="Python Console" order="10" sideWeight="0.49868214" weight="0.33406115" />
@@ -465,14 +475,15 @@
     <MESSAGE value="code cleaning" />
     <MESSAGE value="nms method torched." />
     <MESSAGE value="Merge remote-tracking branch 'origin/master'&#10;&#10;# Conflicts:&#10;#&#9;models/rpn/proposal_layer.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="Merge remote-tracking branch 'origin/master'&#10;&#10;# Conflicts:&#10;#&#9;models/rpn/proposal_layer.py" />
+    <MESSAGE value="Speeding up on a CPU." />
+    <option name="LAST_COMMIT_MESSAGE" value="Speeding up on a CPU." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/loaders/WiderfaceDataset.py</url>
-          <line>173</line>
+          <line>172</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -625,13 +636,6 @@
     <entry file="file:///media/ved/DATA/University of Buffalo/SEM 2/Biometrics and Image Processing/R-FCN.rsna2018/lib/model/rpn/anchor_target_layer.py" />
     <entry file="file:///media/ved/DATA/University of Buffalo/SEM 2/Biometrics and Image Processing/R-FCN.rsna2018/lib/model/utils/config.py" />
     <entry file="file://$USER_HOME$/anaconda3/envs/pytorch3.7/lib/python3.7/site-packages/torch/nn/modules/module.py" />
-    <entry file="file://$PROJECT_DIR$/loaders/WiderfaceDataset.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="36" column="33" selection-start-line="36" selection-start-column="33" selection-end-line="36" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///media/ved/DATA/University of Buffalo/SEM 2/Biometrics and Image Processing/R-FCN.rsna2018/lib/model/rpn/rpn.py" />
     <entry file="file://$PROJECT_DIR$/models/config/rfcn_config.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -653,7 +657,7 @@
     <entry file="file://$PROJECT_DIR$/models/resnets.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="289">
-          <caret line="300" column="33" lean-forward="true" selection-start-line="300" selection-start-column="33" selection-end-line="300" selection-end-column="33" />
+          <caret line="300" column="33" selection-start-line="300" selection-start-column="33" selection-end-line="300" selection-end-column="33" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
           </folding>
@@ -663,7 +667,7 @@
     <entry file="file://$PROJECT_DIR$/models/rpn/rpn.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="291">
-          <caret line="35" column="33" lean-forward="true" selection-start-line="35" selection-start-column="33" selection-end-line="35" selection-end-column="33" />
+          <caret line="35" column="33" selection-start-line="35" selection-start-column="33" selection-end-line="35" selection-end-column="33" />
         </state>
       </provider>
     </entry>
@@ -674,47 +678,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/training.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="499">
-          <caret line="86" column="20" selection-start-line="86" selection-start-column="20" selection-end-line="86" selection-end-column="20" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Trainer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="37" column="30" lean-forward="true" selection-start-line="37" selection-start-column="30" selection-end-line="37" selection-end-column="30" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/rpn/proposal_layer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-744">
-          <caret line="50" column="28" lean-forward="true" selection-start-line="50" selection-start-column="28" selection-end-line="50" selection-end-column="28" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/rpn/proposal_target_layer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="465">
-          <caret line="175" lean-forward="true" selection-start-line="175" selection-end-line="175" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/models/utils/anchors.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="546">
-          <caret line="53" column="9" lean-forward="true" selection-start-line="53" selection-start-column="9" selection-end-line="53" selection-end-column="9" />
+          <caret line="53" column="9" selection-start-line="53" selection-start-column="9" selection-end-line="53" selection-end-column="9" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
@@ -723,8 +690,52 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/models/rpn/anchor_target_layer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="281">
-          <caret line="48" column="34" selection-start-line="48" selection-start-column="30" selection-end-line="48" selection-end-column="34" />
+        <state relative-caret-position="405">
+          <caret line="27" column="46" selection-start-line="27" selection-start-column="46" selection-end-line="27" selection-end-column="46" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loaders/WiderfaceDataset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="36" column="33" selection-start-line="36" selection-start-column="33" selection-end-line="36" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/training.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="330">
+          <caret line="22" column="73" selection-start-line="22" selection-start-column="73" selection-end-line="22" selection-end-column="73" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/rpn/proposal_target_layer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="799">
+          <caret line="175" selection-start-line="175" selection-end-line="175" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Trainer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4">
+          <caret line="99" column="21" selection-start-line="99" selection-start-column="21" selection-end-line="99" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/rpn/proposal_layer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="769">
+          <caret line="347" column="24" selection-start-line="347" selection-start-column="24" selection-end-line="347" selection-end-column="24" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>
