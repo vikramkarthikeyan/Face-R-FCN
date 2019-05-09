@@ -5,8 +5,16 @@ import numpy as np
 import pandas as pd
 
 from torch.autograd import Variable
+
+import torchvision
 import EarlyStopping
 import AverageMeter
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import numpy as np
+
+from PIL import Image
+
 
 
 def custom_collate(batch):
@@ -134,9 +142,15 @@ class Trainer:
                     RCNN_loss_cls, RCNN_loss_bbox, \
                     rois_label = model([data], [image_paths[j]], target)
 
-                    print(cls_prob, bbox_pred)
+                    print(cls_prob.shape, bbox_pred.shape)
 
                     # Write logic for comparing GT_boxes and ROIs
+                    image_location = image_paths[j]
+                    plot_boxes(image_location, bbox_pred, [], [])
+
+                    break
+
+
 
     # Used - https://github.com/pytorch/examples/blob/master/imagenet/main.py
     def accuracy(self, output, target, topk=(1,)):
@@ -154,3 +168,30 @@ class Trainer:
                 correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
                 res.append(correct_k.mul_(100.0 / batch_size))
             return res
+
+
+def plot_boxes(file, positive_anchors, negative_anchors, boxes):
+
+    im = np.array(Image.open(file).convert('RGB'), dtype=np.uint8)
+
+    # Create figure and axes
+    fig, ax = plt.subplots(1)
+
+    # Display the image
+    ax.imshow(im)
+
+    for i, box in enumerate(boxes):
+        rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='blue', facecolor='none')
+        ax.add_patch(rect)
+    
+    if positive_anchors:
+        for i, box in enumerate(positive_anchors):
+            rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='green',facecolor='none')
+            ax.add_patch(rect)
+    
+    if negative_anchors:
+        for i, box in enumerate(negative_anchors):
+            rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='red', facecolor='none')
+            ax.add_patch(rect)
+
+    plt.show()
