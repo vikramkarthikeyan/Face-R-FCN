@@ -1,47 +1,40 @@
 import matplotlib.pyplot as plt
 import time
-import numpy as np
-import shutil
-import os
-import argparse
 import torch
-import torch.nn as nn
+import numpy as np
 
-from torchvision import datasets, transforms
-from torchvision import models
 from torch.autograd import Variable
 import EarlyStopping
 import AverageMeter
 
-def custom_collate(batch):
 
-    #(images, ground_truth_boxes)
+def custom_collate(batch):
+    # (images, ground_truth_boxes)
     images = [item[0] for item in batch]
     ground_truth_boxes = [item[1] for item in batch]
     image_paths = [item[2] for item in batch]
     return [images, ground_truth_boxes, image_paths]
 
 
-
 # Followed PyTorch's ImageNet documentation
 # https://github.com/pytorch/examples/blob/master/imagenet/main.py
 class Trainer:
 
-    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=1, validation_batch_size=5): 
+    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=1, validation_batch_size=5):
 
         # Create training dataloader
         self.train_loader = torch.utils.data.DataLoader(training_data, batch_size=training_batch_size, shuffle=True,
-                                                             num_workers=5, collate_fn=custom_collate)
+                                                        num_workers=5, collate_fn=custom_collate)
 
         # Create validation dataloader
-        self.validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=validation_batch_size, shuffle=False,
+        self.validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=validation_batch_size,
+                                                             shuffle=False,
                                                              collate_fn=custom_collate, num_workers=5)
 
         self.num_classes = num_classes
         self.early_stopper = EarlyStopping.EarlyStopper()
 
-    
-    def train(self, model, criterion, optimizer, epoch, usegpu):
+    def train(self, model, criterion, optimizer, epoch):
         batch_time = AverageMeter.AverageMeter()
         losses = AverageMeter.AverageMeter()
         top1 = AverageMeter.AverageMeter()
@@ -62,13 +55,12 @@ class Trainer:
 
                 data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
 
-                if usegpu:
-                    data = data.cuda(non_blocking=True)
-                    target = target.cuda(non_blocking=True)
-                
-                target = torch.tensor(target).cuda()
+                data = data.cuda(non_blocking=True)
+                # target = target.cuda(non_blocking=True)
+
+                target = torch.tensor(target)
                 target = target.unsqueeze(0)
-                
+
                 model.zero_grad()
 
                 # Compute Model output and loss
@@ -89,21 +81,20 @@ class Trainer:
                 optimizer.step()
 
                 losses.update(loss)
-            
+
             # measure elapsed time
             batch_time.update(time.time() - start)
 
             print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
-                        'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                            'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
-                            epoch, i, len(self.train_loader), batch_time=batch_time,
-                            loss=losses), end="")
-            
+                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i, len(self.train_loader),
+                                                                  batch_time=batch_time, loss=losses), end="")
+
         print("\nTraining Accuracy: Acc@1: {top1.avg:.3f}%, Acc@5: {top5.avg:.3f}%".format(top1=top1, top5=top5))
 
     def save_checkpoint(self, state, filename='./saved_models/checkpoint.pth.tar'):
         torch.save(state, filename)
-    
+
     # Used - https://github.com/pytorch/examples/blob/master/imagenet/main.py
     def accuracy(self, output, target, topk=(1,)):
         """Computes the accuracy over the k top predictions for the specified values of k"""

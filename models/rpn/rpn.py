@@ -68,16 +68,18 @@ class RPN(nn.Module):
 
         rois = self.RPN_proposal(rpn_classification_prob.data, rpn_bbox_predictions.data, image_metadata)
 
+        # print("ROIS AND SHAPE:", rois, rois.shape)
+
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
 
         # generating training labels and build the rpn loss
         if self.training:
             assert gt_boxes is not None
-            
+
             # Get anchor targets
             labels, targets = self.RPN_anchor_target(rpn_classification_prob.data, gt_boxes, image_metadata)
-            
+
             # Unsqueezing to match dimensions
             rpn_classification_prob = torch.unsqueeze(rpn_classification_prob, 4)
 

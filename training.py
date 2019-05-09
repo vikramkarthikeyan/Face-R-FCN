@@ -45,16 +45,16 @@ if __name__ == "__main__":
     model.create_architecture()
 
     # -------------------------------------------------
-    print("\nChecking if a GPU is available...")
-    use_gpu = torch.cuda.is_available()
-
+    # print("\nChecking if a GPU is available...")
+    # use_gpu = torch.cuda.is_available()
+    #
     # Initialize new model
-    if use_gpu:
-        model = model.cuda()
-        print ("Using GPU")
-    else:
-        print ("GPU is unavailable")
-        exit() 
+    # if use_gpu:
+    model = model.cuda()
+    # print ("Using GPU")
+    # else:
+    #     print ("GPU is unavailable")
+    #     exit()
     
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=SGD_MOMENTUM)
@@ -67,10 +67,7 @@ if __name__ == "__main__":
 
         print("Found already trained model for this split...")
         
-        if use_gpu:
-            checkpoint = torch.load(model_name)
-        else:
-            checkpoint = torch.load(model_name, map_location='cpu')
+        checkpoint = torch.load(model_name)
 
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
@@ -87,7 +84,7 @@ if __name__ == "__main__":
     for epoch in range(start_epochs, end_epochs):
     
         # Train for one Epoch
-        trainer.train(model, criterion, optimizer, epoch, use_gpu)
+        trainer.train(model, criterion, optimizer, epoch)
 
         # Checkpointing the model after every epoch
         trainer.save_checkpoint({

@@ -14,7 +14,7 @@ class _AnchorLayer(nn.Module):
     def __init__(self):
         super(_AnchorLayer, self).__init__()
 
-    def forward(self, cls_scores, gt_boxes_old, image_info=None):
+    def forward(self, cls_scores, gt_boxes, image_info=None):
 
         # Algorithm to follow:
         #
@@ -41,9 +41,13 @@ class _AnchorLayer(nn.Module):
         _, _, height, width = cls_scores.shape
         scale = cfg.IMAGE_INPUT_DIMS // height
 
-        batch_size = gt_boxes_old.shape[0]
-        
-        gt_boxes = torch.tensor(gt_boxes_old).cuda()
+        batch_size = gt_boxes.shape[0]
+
+        # print("ANC_TAR_GT:", gt_boxes)
+
+        # #### SPEED CHANGE
+        # gt_boxes = gt_boxes.cuda()
+        cls_scores = cls_scores.cpu()
 
         if cfg.verbose:
             print("\n\n----Anchor Target Layer----\n")
@@ -149,7 +153,7 @@ class _AnchorLayer(nn.Module):
                             op2.append(y.numpy())
                             inds.append((i, ch, x_n, y_n))
 
-        return torch.from_numpy(np.array(op2)).cuda(), inds
+        return torch.from_numpy(np.array(op2)), inds
 
     def bbox_overlaps(self, anchors, gt_boxes):
         batch_size = gt_boxes.shape[0]

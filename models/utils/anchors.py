@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 
+
 def generate_anchors(dimensions, box_sizes):
     """
     Function to generate anchors.
@@ -32,26 +33,26 @@ def generate_anchors(dimensions, box_sizes):
 
     return torch.tensor(anchors_list).float()
 
-def calc_IOU_vectorized(bboxes1, bboxes2):
 
-    x11, y11, x12, y12 = bboxes1[:,0], bboxes1[:,1], bboxes1[:,2], bboxes1[:,3]
+def calc_IOU_vectorized(bboxes1, bboxes2):
+    x11, y11, x12, y12 = bboxes1[:, 0], bboxes1[:, 1], bboxes1[:, 2], bboxes1[:, 3]
 
     x12 = x11 + x12 - 1
     y12 = y11 + y12 - 1
 
-    x21, y21, x22, y22 = bboxes2[:,0], bboxes2[:,1], bboxes2[:,2], bboxes2[:,3]
+    x21, y21, x22, y22 = bboxes2[:, 0], bboxes2[:, 1], bboxes2[:, 2], bboxes2[:, 3]
 
     x22 = x21 + x22 - 1
     y22 = y21 + y22 - 1
 
     # determine the (x, y)-coordinates of the intersection rectangle
-    xA = torch.max(x21, torch.t(x11.view(1,-1)))
-    yA = torch.max(y21, torch.t(y11.view(1,-1)))
-    xB = torch.min(x22, torch.t(x12.view(1,-1)))
-    yB = torch.min(y22, torch.t(y12.view(1,-1)))
+    xA = torch.max(x21, torch.t(x11.view(1, -1)))
+    yA = torch.max(y21, torch.t(y11.view(1, -1)))
+    xB = torch.min(x22, torch.t(x12.view(1, -1)))
+    yB = torch.min(y22, torch.t(y12.view(1, -1)))
 
-    label_zero = torch.tensor(0.0).cuda()
-    
+    label_zero = torch.tensor(0.0)
+
     # compute the area of intersection rectangle
     interArea = torch.max((xB - xA + 1), label_zero) * torch.max((yB - yA + 1), label_zero)
 
@@ -61,9 +62,10 @@ def calc_IOU_vectorized(bboxes1, bboxes2):
     # compute the intersection over union by taking the intersection
     # area and dividing it by the sum of prediction + ground-truth
     # areas - the interesection area
-    iou = interArea / (boxBArea + torch.t(boxAArea.view(1,-1)) - interArea)
+    iou = interArea / (boxBArea + torch.t(boxAArea.view(1, -1)) - interArea)
 
     return torch.abs(iou)
+
 
 def calc_IOU(boxA, boxB):
     """
@@ -115,7 +117,6 @@ def calc_IOU2(boxA, boxB):
     :return: IOU area ratio.
     """
     # determine the (x, y)-coordinates of the intersection rectangle
-
 
     xA = max(boxA[0], boxB[0])
     yA = max(boxA[1], boxB[1])

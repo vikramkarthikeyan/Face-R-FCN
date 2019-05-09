@@ -4,10 +4,8 @@ import torch.utils.model_zoo as model_zoo
 from .rfcn import _RFCN
 from .config import resnet_config
 
-
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152', 'resnext50_32x4d', 'resnext101_32x8d']
-
 
 model_urls = {
     'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
@@ -249,6 +247,7 @@ def resnext101_32x8d(pretrained=False, **kwargs):
     #     model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
     return model
 
+
 class RFCN_resnet(_RFCN):
     def __init__(self, num_layers=101, pretrained=False):
         self.n_classes = 2
@@ -277,7 +276,7 @@ class RFCN_resnet(_RFCN):
 
         # Build the connector conv layer for reducing dimension and pass to PSROI
         self.RCNN_conv_1x1 = nn.Conv2d(in_channels=2048, out_channels=1024,
-                  kernel_size=1, stride=1, padding=0, bias=False)
+                                       kernel_size=1, stride=1, padding=0, bias=False)
 
         self.RCNN_conv_new = nn.Sequential(
             resnet.layer4,
@@ -286,25 +285,27 @@ class RFCN_resnet(_RFCN):
         )
 
         # Define the regression branch (Class agnostic)
-        self.RCNN_bbox_base = nn.Conv2d(in_channels=1024, out_channels=4 * resnet_config.POOLING_SIZE * resnet_config.POOLING_SIZE,
-                                            kernel_size=1, stride=1, padding=0, bias=False)
+        self.RCNN_bbox_base = nn.Conv2d(in_channels=1024,
+                                        out_channels=4 * resnet_config.POOLING_SIZE * resnet_config.POOLING_SIZE,
+                                        kernel_size=1, stride=1, padding=0, bias=False)
 
         # Define the box classification branch
-        self.RCNN_cls_base = nn.Conv2d(in_channels=1024, out_channels=self.n_classes * resnet_config.POOLING_SIZE * resnet_config.POOLING_SIZE,
+        self.RCNN_cls_base = nn.Conv2d(in_channels=1024,
+                                       out_channels=self.n_classes * resnet_config.POOLING_SIZE * resnet_config.POOLING_SIZE,
                                        kernel_size=1, stride=1, padding=0, bias=False)
 
         # Fix blocks
-        for p in self.RCNN_base[0].parameters(): p.requires_grad=False
-        for p in self.RCNN_base[1].parameters(): p.requires_grad=False
+        for p in self.RCNN_base[0].parameters(): p.requires_grad = False
+        for p in self.RCNN_base[1].parameters(): p.requires_grad = False
 
         assert (0 <= resnet_config.FIXED_BLOCKS < 4)
 
         if resnet_config.FIXED_BLOCKS >= 3:
-            for p in self.RCNN_base[6].parameters(): p.requires_grad=False
+            for p in self.RCNN_base[6].parameters(): p.requires_grad = False
         if resnet_config.FIXED_BLOCKS >= 2:
-            for p in self.RCNN_base[5].parameters(): p.requires_grad=False
+            for p in self.RCNN_base[5].parameters(): p.requires_grad = False
         if resnet_config.FIXED_BLOCKS >= 1:
-            for p in self.RCNN_base[4].parameters(): p.requires_grad=False
+            for p in self.RCNN_base[4].parameters(): p.requires_grad = False
 
         # def set_bn_fix(m):
         #     classname = m.__class__.__name__

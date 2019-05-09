@@ -44,7 +44,11 @@ class _ProposalLayer(nn.Module):
         # Step 1 - Generate Anchors
         _, _, height, width = scores.shape
         boxes = anchors.generate_anchors((height, width), self.box_sizes)
-        boxes = boxes.cuda()
+
+        # #### COMMENTED FOR SPEED
+        # boxes = boxes.cuda()
+        bbox_deltas = bbox_deltas.cpu()
+        scores = scores.cpu()
 
         # Step 1.a - Transform anchors shape based on batch size
         boxes_shape = boxes.shape
@@ -52,12 +56,12 @@ class _ProposalLayer(nn.Module):
 
         # Step 1.b - Transform bbox_deltas shape to match the anchor 
         bbox_deltas_shape = bbox_deltas.shape
-        
+
         split_deltas = bbox_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, 4, bbox_deltas_shape[2],
                                         bbox_deltas_shape[3])
         split_deltas = split_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, bbox_deltas_shape[2],
                                          bbox_deltas_shape[3], 4)
-        
+
         # Step 2 - Apply bounding box transformations
         adjusted_boxes = boxes + split_deltas
 
@@ -66,15 +70,15 @@ class _ProposalLayer(nn.Module):
 
         # Step 4 - Filter those boxes that have dimensions lesser than minimum
         keep = filter_boxes(clipped_boxes, rpn_config.MIN_SIZE)
-        
+
         # Step 4.a - Flatten and get only boxes and scores that passed the filter
         keep = keep.view(batch_size, -1)
         clipped_boxes = clipped_boxes.view(batch_size, -1, 4)
         scores = scores.view(batch_size, -1)
-        
+
         filtered_boxes = clipped_boxes[keep]
         filtered_scores = scores[keep]
-        
+
         # TODO: Check if this needs to be changed in case of a batch
         filtered_boxes = filtered_boxes.view(batch_size, filtered_boxes.shape[0], filtered_boxes.shape[1])
         filtered_scores = filtered_scores.view(batch_size, filtered_scores.shape[0])
@@ -104,18 +108,16 @@ class _ProposalLayer(nn.Module):
             # Step 7 - Combine anchors and scores
             scores = scores.view(scores.shape[0], 1)
             combined = torch.cat((proposals, scores), dim=1)
-            
+
             # Step 8 - Apply NMS with a specific threshold in config
             keep_anchors_postNMS = nms(combined, rpn_config.NMS_THRESH)
 
-            #keep_anchors_postNMS = nms_old(combined, rpn_config.NMS_THRESH)
-            
             # Step 9 - Take TopN post NMS proposals
             if rpn_config.POST_NMS_TOP_N > 0:
                 keep_anchors_postNMS = keep_anchors_postNMS[:rpn_config.POST_NMS_TOP_N]
 
             proposals = proposals[keep_anchors_postNMS, :]
-            scores = scores[keep_anchors_postNMS, :]
+            # scores = scores[keep_anchors_postNMS, :]
 
             if rfcn_config.verbose:
                 print("\nPOST NMS SIZE:", proposals.shape)
@@ -144,20 +146,19 @@ def clip_boxes_batch(boxes, length, width, batch_size):
 
     boxes[boxes < 0] = 0
 
-    # print(boxes[:,:,:,:,0])
+    boxes[:, :, :, :, 2] = boxes[:, :, :, :, 0] + boxes[:, :, :, :, 2] - 1
+    boxes[:, :, :, :, 3] = boxes[:, :, :, :, 1] + boxes[:, :, :, :, 3] - 1
 
-    boxes[:,:,:,:,2] = boxes[:,:,:,:,0] + boxes[:,:,:,:,2] - 1
-    boxes[:,:,:,:,3] = boxes[:,:,:,:,1] + boxes[:,:,:,:,3] - 1
+    boxes[:, :, :, :, 0][boxes[:, :, :, :, 0] > length - 1] = length - 1
+    boxes[:, :, :, :, 1][boxes[:, :, :, :, 1] > width - 1] = width - 1
+    boxes[:, :, :, :, 2][boxes[:, :, :, :, 2] > length - 1] = length - 1
+    boxes[:, :, :, :, 3][boxes[:, :, :, :, 3] > width - 1] = width - 1
 
-    boxes[:,:,:,:,0][boxes[:,:,:,:,0] > length - 1] = length - 1
-    boxes[:,:,:,:,1][boxes[:,:,:,:,1] > width - 1] = width - 1
-    boxes[:,:,:,:,2][boxes[:,:,:,:,2] > length - 1] = length - 1
-    boxes[:,:,:,:,3][boxes[:,:,:,:,3] > width - 1] = width - 1
-
-    boxes[:,:,:,:,2] = boxes[:,:,:,:,2] - boxes[:,:,:,:,0] + 1
-    boxes[:,:,:,:,3] = boxes[:,:,:,:,3] - boxes[:,:,:,:,1] + 1
+    boxes[:, :, :, :, 2] = boxes[:, :, :, :, 2] - boxes[:, :, :, :, 0] + 1
+    boxes[:, :, :, :, 3] = boxes[:, :, :, :, 3] - boxes[:, :, :, :, 1] + 1
 
     return boxes
+
 
 def filter_boxes(boxes, min_size):
     """Remove all boxes with any side smaller than min_size."""
@@ -168,14 +169,13 @@ def filter_boxes(boxes, min_size):
     keep = torch.zeros_like(widths)
 
     min_sizes = keep.new_full(keep.shape, min_size)
-    
+
     keep = ((widths >= min_sizes) & (heights >= min_sizes))
     return keep
 
 
 # https://www.pyimagesearch.com/2014/11/17/non-maximum-suppression-object-detection-python/
 def nms_old(entries, thresh):
-
     x1 = entries[:, 0]
     y1 = entries[:, 1]
     l = entries[:, 2]
@@ -196,15 +196,15 @@ def nms_old(entries, thresh):
 
     # keep looping while some indexes still remain in the indexes list
     while len(idxs) > 0:
-		# grab the last index in the indexes list, add the index
-		# value to the list of picked indexes, then initialize
-		# the suppression list (i.e. indexes that will be deleted)
-		# using the last index
+        # grab the last index in the indexes list, add the index
+        # value to the list of picked indexes, then initialize
+        # the suppression list (i.e. indexes that will be deleted)
+        # using the last index
         last = len(idxs) - 1
         i = idxs[last]
         keep.append(i)
         suppress = [last]
-        
+
         # loop over all indexes in the indexes list
         for pos in range(0, last):
             # grab the current index
@@ -230,10 +230,10 @@ def nms_old(entries, thresh):
             # current bounding box
             if overlap > rpn_config.NMS_THRESH:
                 suppress.append(pos)
- 
+
         # delete all indexes from the index list that are in the suppression list
         idxs = np.delete(idxs, suppress)
- 
+
     # return only the bounding boxes that were picked
     return keep
 
@@ -244,7 +244,9 @@ def nms(entries, thresh):
     y1 = entries[:, 1]
     l = entries[:, 2]
     b = entries[:, 3]
-    scores = entries[:, 4]
+    # COMMENTED FOR SPEED
+    # TODO: check why it is needed
+    # scores = entries[:, 4]
 
     x2 = x1 + l - 1
     y2 = y1 + b - 1
@@ -272,11 +274,11 @@ def nms(entries, thresh):
 
         XX2 = torch.clamp(x2[idxs], max=x2[ind])
         YY2 = torch.clamp(y2[idxs], max=y2[ind])
-   
+
         W = torch.clamp((XX2 - XX1 + 1), min=0)
         H = torch.clamp((YY2 - YY1 + 1), min=0)
 
-        mask = ((W * H).float() / areas.float()).lt(rpn_config.NMS_THRESH)
+        mask = ((W * H).float() / areas.float()).lt(thresh)
         mask[-1] = 0
 
         areas = areas[mask]
