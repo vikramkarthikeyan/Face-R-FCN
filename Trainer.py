@@ -95,7 +95,7 @@ class Trainer:
             # measure elapsed time
             batch_time.update(time.time() - start)
 
-            if i==2:
+            if i==200:
                 break
 
             print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
