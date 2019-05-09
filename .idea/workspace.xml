@@ -3,7 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="d9f2daa1-78d5-4613-92ef-2b321e0c04e0" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/rpn/proposal_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rpn/proposal_layer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Trainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Trainer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/rpn/proposal_target_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rpn/proposal_target_layer.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -28,11 +29,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/rpn/anchor_target_layer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="405">
-              <caret line="27" column="46" selection-start-line="27" selection-start-column="46" selection-end-line="27" selection-end-column="46" />
-              <folding>
-                <element signature="e#0#12#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="-3016">
+              <caret line="2" column="72" selection-start-line="2" selection-start-column="72" selection-end-line="2" selection-end-column="72" />
             </state>
           </provider>
         </entry>
@@ -70,8 +68,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Trainer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="679">
-              <caret line="99" column="21" selection-start-line="99" selection-start-column="21" selection-end-line="99" selection-end-column="21" />
+            <state relative-caret-position="345">
+              <caret line="23" column="91" selection-start-line="23" selection-start-column="91" selection-end-line="23" selection-end-column="91" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
               </folding>
@@ -88,16 +86,16 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/models/rpn/proposal_target_layer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="799">
-              <caret line="175" selection-start-line="175" selection-end-line="175" />
+            <state relative-caret-position="-361">
+              <caret line="97" selection-start-line="97" selection-end-line="97" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/rpn/proposal_layer.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="214">
@@ -112,8 +110,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/utils/anchors.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="546">
-              <caret line="53" column="9" selection-start-line="53" selection-start-column="9" selection-end-line="53" selection-end-column="9" />
+            <state relative-caret-position="1110">
+              <caret line="74" column="68" lean-forward="true" selection-start-line="74" selection-start-column="68" selection-end-line="74" selection-end-column="68" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -145,9 +143,9 @@
       <find>NMS</find>
       <find>cuda()</find>
       <find>target</find>
-      <find>cuda</find>
       <find>top1</find>
       <find>use</find>
+      <find>cuda</find>
     </findStrings>
     <replaceStrings>
       <replace>--------------------</replace>
@@ -182,12 +180,12 @@
         <option value="$PROJECT_DIR$/models/resnets.py" />
         <option value="$PROJECT_DIR$/models/rpn/rpn.py" />
         <option value="$PROJECT_DIR$/models/rfcn.py" />
-        <option value="$PROJECT_DIR$/models/utils/anchors.py" />
-        <option value="$PROJECT_DIR$/models/rpn/proposal_target_layer.py" />
-        <option value="$PROJECT_DIR$/models/rpn/anchor_target_layer.py" />
         <option value="$PROJECT_DIR$/training.py" />
-        <option value="$PROJECT_DIR$/Trainer.py" />
         <option value="$PROJECT_DIR$/models/rpn/proposal_layer.py" />
+        <option value="$PROJECT_DIR$/models/rpn/anchor_target_layer.py" />
+        <option value="$PROJECT_DIR$/models/utils/anchors.py" />
+        <option value="$PROJECT_DIR$/Trainer.py" />
+        <option value="$PROJECT_DIR$/models/rpn/proposal_target_layer.py" />
       </list>
     </option>
   </component>
@@ -393,7 +391,21 @@
       <option name="project" value="LOCAL" />
       <updated>1557377798389</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="proposal layer numpified">
+      <created>1557380855774</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1557380855774</updated>
+    </task>
+    <task id="LOCAL-00016" summary="added periodic saving of csv">
+      <created>1557382782483</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1557382782483</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TodoView">
@@ -409,12 +421,12 @@
     <frame x="0" y="25" width="1920" height="1055" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.17923036" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.17923036" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.32969433" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32937366" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.3995633" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -422,7 +434,7 @@
       <window_info anchor="bottom" id="Version Control" order="7" sideWeight="0.49815497" weight="0.32721382" />
       <window_info anchor="bottom" id="Terminal" order="8" />
       <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.501845" side_tool="true" weight="0.32829374" />
-      <window_info anchor="bottom" id="Python Console" order="10" sideWeight="0.49868214" weight="0.33406115" />
+      <window_info anchor="bottom" id="Python Console" order="10" sideWeight="0.49868214" weight="0.3336933" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -483,7 +495,9 @@
     <MESSAGE value="Merge remote-tracking branch 'origin/master'&#10;&#10;# Conflicts:&#10;#&#9;models/rpn/proposal_layer.py" />
     <MESSAGE value="Speeding up on a CPU." />
     <MESSAGE value="loss logging and NMS numpy version." />
-    <option name="LAST_COMMIT_MESSAGE" value="loss logging and NMS numpy version." />
+    <MESSAGE value="proposal layer numpified" />
+    <MESSAGE value="added periodic saving of csv" />
+    <option name="LAST_COMMIT_MESSAGE" value="added periodic saving of csv" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -495,7 +509,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/models/utils/anchors.py</url>
-          <line>102</line>
+          <line>148</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
       </breakpoints>
@@ -685,26 +699,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/utils/anchors.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="546">
-          <caret line="53" column="9" selection-start-line="53" selection-start-column="9" selection-end-line="53" selection-end-column="9" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/rpn/anchor_target_layer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="27" column="46" selection-start-line="27" selection-start-column="46" selection-end-line="27" selection-end-column="46" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/loaders/WiderfaceDataset.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="345">
@@ -722,20 +716,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Trainer.py">
+    <entry file="file://$PROJECT_DIR$/models/rpn/anchor_target_layer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="679">
-          <caret line="99" column="21" selection-start-line="99" selection-start-column="21" selection-end-line="99" selection-end-column="21" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="-3016">
+          <caret line="2" column="72" selection-start-line="2" selection-start-column="72" selection-end-line="2" selection-end-column="72" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/rpn/proposal_target_layer.py">
+    <entry file="file://$PROJECT_DIR$/models/utils/anchors.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="799">
-          <caret line="175" selection-start-line="175" selection-end-line="175" />
+        <state relative-caret-position="1110">
+          <caret line="74" column="68" lean-forward="true" selection-start-line="74" selection-start-column="68" selection-end-line="74" selection-end-column="68" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -746,6 +740,23 @@
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Trainer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="23" column="91" selection-start-line="23" selection-start-column="91" selection-end-line="23" selection-end-column="91" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/rpn/proposal_target_layer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-361">
+          <caret line="97" selection-start-line="97" selection-end-line="97" />
         </state>
       </provider>
     </entry>

@@ -125,7 +125,13 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
             bg_rois_per_this_image = rois_per_image
             fg_rois_per_this_image = 0
         else:
-            raise ValueError("bg_num_rois = 0 and num_fg_rois = 0, this should not happen!")
+            # raise ValueError("bg_num_rois = 0 and num_fg_rois = 0, this should not happen!")
+            rand_num = torch.floor(torch.rand(rois_per_image) * 1)
+            rand_num = rand_num.type_as(gt_boxes).long()
+            fg_inds = fg_inds[rand_num]
+
+            fg_rois_per_this_image = rois_per_image
+            bg_rois_per_this_image = 0
 
         # Visualize ROIS with GT boxes first
         # img = features[0,0,:,:]
