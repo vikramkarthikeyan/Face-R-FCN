@@ -110,7 +110,15 @@ class _ProposalLayer(nn.Module):
             combined = torch.cat((proposals, scores), dim=1)
 
             # Step 8 - Apply NMS with a specific threshold in config
+            combined_test = combined.numpy()
+
+            start = time.time()
+            keep_anchors_postNMS = nms_old(combined_test, rpn_config.NMS_THRESH)
+            print("NUMPY:", (time.time() - start))
+
+            start = time.time()
             keep_anchors_postNMS = nms(combined, rpn_config.NMS_THRESH)
+            print("PYTORCH:", (time.time() - start))
 
             # Step 9 - Take TopN post NMS proposals
             if rpn_config.POST_NMS_TOP_N > 0:
