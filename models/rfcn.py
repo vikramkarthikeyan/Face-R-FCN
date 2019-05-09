@@ -39,10 +39,10 @@ class _RFCN(nn.Module):
         self.RCNN_psroi_pool_loc = PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
                                              spatial_scale=1 / 16.0, group_size=resnet_config.POOLING_SIZE,
                                              output_dim=4)
-
-        # Finally define the average pooling layer based on the grid size
-        self.pooling = nn.AvgPool2d(kernel_size=resnet_config.POOLING_SIZE, stride=resnet_config.POOLING_SIZE)
-
+                
+        self.ps_average_pool_cls = nn.Conv2d(in_channels=2, out_channels= 2, kernel_size=3, stride=1, padding=0, bias=False)
+        self.ps_average_pool_bbox = nn.Conv2d(in_channels=4, out_channels=4, kernel_size=3, stride=1, padding=0, bias=False)
+    
     def forward(self, image, image_metadata, gt_boxes):
 
         # Add an extra dimension to the image tensor to handle batches in the future
@@ -108,12 +108,12 @@ class _RFCN(nn.Module):
 
         # Do PSROI average pooling on the position based score maps
         pooled_feat_cls = self.RCNN_psroi_pool_cls(cls_feat, flattened_rois)
-        cls_score = self.pooling(pooled_feat_cls)
+        cls_score = self.ps_average_pool_cls(pooled_feat_cls)
         cls_score = cls_score.squeeze()
 
         pooled_feat_loc = self.RCNN_psroi_pool_loc(bbox_base, flattened_rois)
-        pooled_feat_loc = self.pooling(pooled_feat_loc)
-        bbox_pred = pooled_feat_loc.squeeze()
+        bbox_pred = self.ps_average_pool_bbox(pooled_feat_loc)
+        bbox_pred = bbox_pred.squeeze()
 
         if rfcn_config.verbose:
             print("\n\n----PSROI----")
