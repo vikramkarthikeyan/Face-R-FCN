@@ -145,6 +145,8 @@ class Trainer:
                     image_location = image_paths[j]
                     plot_boxes(image_location, bbox_pred, [], [])
 
+                    break
+
 
 
     # Used - https://github.com/pytorch/examples/blob/master/imagenet/main.py
