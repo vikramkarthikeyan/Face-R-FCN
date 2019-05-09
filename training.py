@@ -53,13 +53,14 @@ if __name__ == "__main__":
         model = model.cuda()
         print ("Using GPU")
     else:
-        print ("Using CPU as GPU is unavailable")  
+        print ("GPU is unavailable")
+        exit() 
     
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=SGD_MOMENTUM)
 
     start_epochs = 0 
-    model_name = './models/checkpoint.pth.tar'
+    model_name = './saved_models/checkpoint.pth.tar'
 
     # Get checkpoint if available
     if args.retrain and os.path.isfile(model_name):
@@ -89,12 +90,12 @@ if __name__ == "__main__":
         trainer.train(model, criterion, optimizer, epoch, use_gpu)
 
         # Checkpointing the model after every epoch
-        # trainer.save_checkpoint({
-        #                 'epoch': epoch + 1,
-        #                 'state_dict': model.state_dict(),
-        #                 'best_accuracy': 0,
-        #                 'optimizer' : optimizer.state_dict(),
-        # }, model_name)
+        trainer.save_checkpoint({
+                        'epoch': epoch + 1,
+                        'state_dict': model.state_dict(),
+                        'best_accuracy': 0,
+                        'optimizer' : optimizer.state_dict(),
+        }, model_name)
 
 
 

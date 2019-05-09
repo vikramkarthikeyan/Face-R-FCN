@@ -101,7 +101,7 @@ class Trainer:
             
         print("\nTraining Accuracy: Acc@1: {top1.avg:.3f}%, Acc@5: {top5.avg:.3f}%".format(top1=top1, top5=top5))
 
-    def save_checkpoint(self, state, filename='./models/checkpoint.pth.tar'):
+    def save_checkpoint(self, state, filename='./saved_models/checkpoint.pth.tar'):
         torch.save(state, filename)
     
     # Used - https://github.com/pytorch/examples/blob/master/imagenet/main.py
