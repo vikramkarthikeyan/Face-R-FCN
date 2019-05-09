@@ -27,7 +27,7 @@ validation_metadata_path = os.path.abspath("data/widerface/wider_face_split/wide
 # Hyperparameters
 LR = 0.01
 SGD_MOMENTUM = 0.9
-EPOCHS = 50
+EPOCHS = 1
 
 if __name__ == "__main__":
 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         trainer.train(model, criterion, optimizer, epoch)
 
         # Validate the model
-        trainer.validate(model, epoch)
+        #trainer.validate(model, epoch)
 
         # Checkpointing the model after every epoch
         trainer.save_checkpoint({

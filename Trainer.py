@@ -95,6 +95,9 @@ class Trainer:
             # measure elapsed time
             batch_time.update(time.time() - start)
 
+            if i==2:
+                break
+
             print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i, len(self.train_loader),
