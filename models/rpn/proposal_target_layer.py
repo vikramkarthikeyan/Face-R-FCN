@@ -112,22 +112,22 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
 
                 # sampling bg
                 bg_rois_per_this_image = rois_per_image - fg_rois_per_this_image
-                rand_num = np.floor(np.random.rand(bg_rois_per_this_image) * bg_num_rois)
-                rand_num = torch.from_numpy(rand_num).type_as(gt_boxes).long()
+                rand_num = torch.floor(torch.rand(bg_rois_per_this_image) * bg_num_rois)
+                rand_num = rand_num.type_as(gt_boxes).long()
                 bg_inds = bg_inds[rand_num]
 
             elif num_fg_rois > 0 and bg_num_rois == 0:
                 # sampling fg
-                rand_num = np.floor(np.random.rand(rois_per_image) * num_fg_rois)
-                rand_num = torch.from_numpy(rand_num).type_as(gt_boxes).long()
+                rand_num = torch.floor(torch.rand(rois_per_image) * num_fg_rois)
+                rand_num = rand_num.type_as(gt_boxes).long()
                 fg_inds = fg_inds[rand_num]
 
                 fg_rois_per_this_image = rois_per_image
                 bg_rois_per_this_image = 0
             elif bg_num_rois > 0 and num_fg_rois == 0:
                 # sampling bg
-                rand_num = np.floor(np.random.rand(rois_per_image) * bg_num_rois)
-                rand_num = torch.from_numpy(rand_num).type_as(gt_boxes).long()
+                rand_num = torch.floor(torch.rand(rois_per_image) * bg_num_rois)
+                rand_num = rand_num.type_as(gt_boxes).long()
                 bg_inds = bg_inds[rand_num]
 
                 bg_rois_per_this_image = rois_per_image
@@ -146,6 +146,7 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
             labels_batch[i][:fg_rois_per_this_image] = 1
 
             rois_batch[i] = all_rois[i][keep_inds]
+
             # TODO: Check why
             # rois_batch[i,:,0] = i
 
@@ -190,32 +191,12 @@ def bbox_overlaps_vectorized(anchors, gt_boxes):
 
 def bbox_transform_batch(ex_rois, gt_rois):
 
-    if ex_rois.dim() == 2:
-        ex_widths = ex_rois[:, 2] - ex_rois[:, 0] + 1.0
-        ex_heights = ex_rois[:, 3] - ex_rois[:, 1] + 1.0
-        ex_ctr_x = ex_rois[:, 0] + 0.5 * ex_widths
-        ex_ctr_y = ex_rois[:, 1] + 0.5 * ex_heights
+    targets_dx = (gt_rois[:, :, 0] - ex_rois[:, :, 0])
+    targets_dy = (gt_rois[:, :, 1] - ex_rois[:, :, 1])
+    targets_dw = (gt_rois[:, :, 2] - ex_rois[:, :, 2])
+    targets_dh = (gt_rois[:, :, 3] - ex_rois[:, :, 3])
 
-        gt_widths = gt_rois[:, :, 2] - gt_rois[:, :, 0] + 1.0
-        gt_heights = gt_rois[:, :, 3] - gt_rois[:, :, 1] + 1.0
-        gt_ctr_x = gt_rois[:, :, 0] + 0.5 * gt_widths
-        gt_ctr_y = gt_rois[:, :, 1] + 0.5 * gt_heights
-
-        targets_dx = (gt_ctr_x - ex_ctr_x.view(1,-1).expand_as(gt_ctr_x)) / ex_widths
-        targets_dy = (gt_ctr_y - ex_ctr_y.view(1,-1).expand_as(gt_ctr_y)) / ex_heights
-        targets_dw = torch.log(gt_widths / ex_widths.view(1,-1).expand_as(gt_widths))
-        targets_dh = torch.log(gt_heights / ex_heights.view(1,-1).expand_as(gt_heights))
-
-    elif ex_rois.dim() == 3:
-        targets_dx = (gt_rois[:, :, 0] - ex_rois[:, :, 0])
-        targets_dy = (gt_rois[:, :, 1] - ex_rois[:, :, 1])
-        targets_dw = (gt_rois[:, :, 2] - ex_rois[:, :, 2])
-        targets_dh = (gt_rois[:, :, 3] - ex_rois[:, :, 3])
-    else:
-        raise ValueError('ex_roi input dimension is not correct.')
-
-    targets = torch.stack(
-        (targets_dx, targets_dy, targets_dw, targets_dh),2)
+    targets = torch.stack((targets_dx, targets_dy, targets_dw, targets_dh),2)
 
     return targets
 
