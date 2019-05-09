@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import torchvision
+import time
 
 from ..utils import anchors
 from ..utils import image_plotting
