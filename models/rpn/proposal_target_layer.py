@@ -126,16 +126,21 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
             fg_rois_per_this_image = 0
         else:
             # raise ValueError("bg_num_rois = 0 and num_fg_rois = 0, this should not happen!")
-            rand_num = torch.floor(torch.rand(rois_per_image) * 1)
-            rand_num = rand_num.type_as(gt_boxes).long()
-            print("ALL ROIS SHAPE:",all_rois.shape)
-            print("FG INDS:", fg_inds)
-            fg_inds = torch.tensor([100])
-            print(fg_inds)
-            fg_inds = fg_inds[rand_num]
+            fg_rois_per_this_image = min(fg_rois_per_image, 1)
+            rand_num = torch.from_numpy(np.random.permutation(1)).type_as(gt_boxes).long()
+            print(rand_num)
 
-            fg_rois_per_this_image = rois_per_image
-            bg_rois_per_this_image = 0
+            fg_inds = torch.tensor([all_rois.shape[1] - 1])
+            fg_inds = fg_inds[rand_num[:fg_rois_per_this_image]]
+
+            # sampling bg
+            bg_rois_per_this_image = rois_per_image - fg_rois_per_this_image
+            rand_num = torch.floor(torch.rand(bg_rois_per_this_image))
+            rand_num = rand_num.type_as(gt_boxes).long()
+            print(rand_num)
+            bg_inds = torch.tensor([0])
+            bg_inds = bg_inds[rand_num]
+  
 
         # Visualize ROIS with GT boxes first
         # img = features[0,0,:,:]
