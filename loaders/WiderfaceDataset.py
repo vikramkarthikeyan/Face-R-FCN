@@ -44,7 +44,7 @@ class WiderFaceDataset(Dataset):
             for file_idx, file_path in enumerate(self.file_list[idx][0]):
                 file_name = file_path[0][0] + '.jpg'
                 file_name = event + '/' + file_name
-                file_path = os.path.abspath('data/widerface/WIDER_train/images/' + file_name)
+                file_path = os.path.abspath(self.image_path + file_name)
 
                 bounding_boxes = self.face_bbx_list[idx][0][file_idx][0]
                 occlusions = self.occlusion_label_list[idx][0][file_idx][0]

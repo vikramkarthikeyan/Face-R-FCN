@@ -56,8 +56,6 @@ class Trainer:
                 data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
 
                 data = data.cuda(non_blocking=True)
-                # target = target.cuda(non_blocking=True)
-
                 target = torch.tensor(target)
                 target = target.unsqueeze(0)
 
@@ -94,6 +92,37 @@ class Trainer:
 
     def save_checkpoint(self, state, filename='./saved_models/checkpoint.pth.tar'):
         torch.save(state, filename)
+
+    def validate(self, model, epoch):
+
+        # Inference mode
+        model.eval()
+
+        with torch.no_grad():
+
+             for i, (images, targets, image_paths) in enumerate(self.validation_loader):
+
+                start = time.time()
+
+                for j in range(len(targets)):
+
+                    data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
+                    data = data.cuda(non_blocking=True)
+                    target = torch.tensor(target)
+                    target = target.unsqueeze(0)
+
+                    rois, cls_prob, bbox_pred, \
+                    rpn_loss_cls, rpn_loss_box, \
+                    RCNN_loss_cls, RCNN_loss_bbox, \
+                    rois_label = model([data], [image_paths[j]], target)
+
+                    print(cls_prob, bbox_pred)
+
+                    # Write logic for comparing GT_boxes and ROIs
+
+
+
+
 
     # Used - https://github.com/pytorch/examples/blob/master/imagenet/main.py
     def accuracy(self, output, target, topk=(1,)):

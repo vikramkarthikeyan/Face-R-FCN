@@ -75,6 +75,9 @@ if __name__ == "__main__":
         # Train for one Epoch
         trainer.train(model, criterion, optimizer, epoch)
 
+        # Validate the model
+        trainer.validate(model, epoch)
+
         # Checkpointing the model after every epoch
         trainer.save_checkpoint({
                         'epoch': epoch + 1,
