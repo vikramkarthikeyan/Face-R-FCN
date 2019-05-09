@@ -5,6 +5,8 @@ import numpy as np
 
 from PIL import Image
 
+i=0
+
 def plot_boxes(im, positive_anchors, negative_anchors, boxes):
 
     image = torchvision.transforms.ToPILImage()(im)
@@ -30,3 +32,6 @@ def plot_boxes(im, positive_anchors, negative_anchors, boxes):
             ax.add_patch(rect)
 
     plt.show()
+    i += 1
+    plt.savefig('proposal_target_layer' + str(i) + '.png')
+

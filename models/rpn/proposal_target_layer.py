@@ -142,8 +142,8 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
   
 
         # Visualize ROIS with GT boxes first
-        # img = features[0,0,:,:]
-        # plot_boxes(img, gt_boxes[0].tolist(), [], all_rois[0].tolist())
+        img = features[0,0,:,:]
+        plot_boxes(img, gt_boxes[0].tolist(), [], all_rois[0].tolist())
 
         # The indices that we're selecting (both fg and bg)
         keep_inds = torch.cat([fg_inds, bg_inds], 0)
