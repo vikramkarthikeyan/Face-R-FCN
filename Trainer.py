@@ -72,7 +72,14 @@ class Trainer:
 
                 loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
 
-                file_ip.append([i, loss.item(), rpn_loss_cls.mean().item(), rpn_loss_box.mean().item(), RCNN_loss_cls.mean().item(), RCNN_loss_bbox.mean().item()])
+                file_ip.append([i, loss.item(), rpn_loss_cls.mean().item(), rpn_loss_box.mean().item(),
+                                RCNN_loss_cls.mean().item(), RCNN_loss_bbox.mean().item()])
+
+                if i % 200 == 0:
+                    pd.DataFrame(data=file_ip,
+                                 columns=["Batch", "Loss", "RPN Classification Loss", "RPN Regression Loss",
+                                          "RCNN Classification Loss", "RCNN Regression Loss"]
+                                 ).to_csv(path_or_buf="losses.csv")
 
                 # Clear(zero) Gradients for theta
                 optimizer.zero_grad()
@@ -109,12 +116,11 @@ class Trainer:
 
         with torch.no_grad():
 
-             for i, (images, targets, image_paths) in enumerate(self.validation_loader):
+            for i, (images, targets, image_paths) in enumerate(self.validation_loader):
 
                 start = time.time()
 
                 for j in range(len(targets)):
-
                     data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
                     data = data.cuda(non_blocking=True)
                     target = torch.tensor(target)
@@ -128,10 +134,6 @@ class Trainer:
                     print(cls_prob, bbox_pred)
 
                     # Write logic for comparing GT_boxes and ROIs
-
-
-
-
 
     # Used - https://github.com/pytorch/examples/blob/master/imagenet/main.py
     def accuracy(self, output, target, topk=(1,)):

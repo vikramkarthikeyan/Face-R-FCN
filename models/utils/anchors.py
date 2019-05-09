@@ -34,6 +34,52 @@ def generate_anchors(dimensions, box_sizes):
     return torch.tensor(anchors_list).float()
 
 
+def calc_IOU_vectorized_(bboxes1, bboxes2):
+    bboxes1 = bboxes1.numpy()
+    bboxes2 = bboxes2.numpy()
+
+    x11, y11, x12, y12 = bboxes1[:, 0], bboxes1[:, 1], bboxes1[:, 2], bboxes1[:, 3]
+
+    x12 = x11 + x12 - 1
+    y12 = y11 + y12 - 1
+
+    x21, y21, x22, y22 = bboxes2[:, 0], bboxes2[:, 1], bboxes2[:, 2], bboxes2[:, 3]
+
+    x22 = x21 + x22 - 1
+    y22 = y21 + y22 - 1
+
+    # determine the (x, y)-coordinates of the intersection rectangle
+    xA = np.maximum(x21, np.expand_dims(x11, axis=0))
+    yA = np.maximum(y21, np.expand_dims(y11, axis=0).T)
+    xB = np.maximum(x22, np.expand_dims(x12, axis=0).T)
+    yB = np.maximum(y22, np.expand_dims(y12, axis=0).T)
+    # yA = torch.max(y21, torch.t(y11.view(1, -1)))
+    # xB = torch.min(x22, torch.t(x12.view(1, -1)))
+    # yB = torch.min(y22, torch.t(y12.view(1, -1)))
+
+    print("XA:", xA.shape)
+
+    # label_zero = torch.tensor(0.0)
+
+    # compute the area of intersection rectangle
+    # interArea = torch.max((xB - xA + 1), label_zero) * torch.max((yB - yA + 1), label_zero)
+    interArea = np.max((xB - xA + 1), 0) * np.max((yB - yA + 1), 0)
+
+    boxAArea = (x12 - x11 + 1.0) * (y12 - y11 + 1.0)
+    boxBArea = (x22 - x21 + 1.0) * (y22 - y21 + 1.0)
+
+    print("boxAArea:", boxAArea.shape)
+    print("boxBArea:", boxBArea.shape)
+    print("interArea:", interArea.shape)
+
+    # compute the intersection over union by taking the intersection
+    # area and dividing it by the sum of prediction + ground-truth
+    # areas - the interesection area
+    iou = interArea / (boxBArea + boxAArea.T - interArea)
+
+    return torch.abs(iou)
+
+
 def calc_IOU_vectorized(bboxes1, bboxes2):
     x11, y11, x12, y12 = bboxes1[:, 0], bboxes1[:, 1], bboxes1[:, 2], bboxes1[:, 3]
 

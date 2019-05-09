@@ -12,6 +12,9 @@ from PIL import Image
 class _AnchorLayer(nn.Module):
 
     def __init__(self):
+
+        self.anchors = None
+
         super(_AnchorLayer, self).__init__()
 
     def forward(self, cls_scores, gt_boxes, image_info=None):
@@ -55,7 +58,10 @@ class _AnchorLayer(nn.Module):
             print("GT_BOXES:", gt_boxes.shape, gt_boxes)
 
         # 1. Generating anchors
-        all_anchors = generate_anchors((height, width), cfg.ANCHOR_SIZES)
+        if self.anchors is None:
+            self.anchors = generate_anchors((height, width), cfg.ANCHOR_SIZES)
+
+        all_anchors = self.anchors
 
         all_anchors = all_anchors.view(batch_size, all_anchors.shape[0], all_anchors.shape[1],
                                        all_anchors.shape[2], all_anchors.shape[3])
@@ -111,7 +117,7 @@ class _AnchorLayer(nn.Module):
 
         if cfg.demo:
             plot_layer_outputs(clipped_boxes, labels, scale, image_info)
-            
+
         targets = clipped_boxes.view(-1, 4).float() - (gt_boxes.view(-1, 4)[argmax_overlaps, :].float() / scale)
 
         label_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 1).fill_(-1)
@@ -165,11 +171,11 @@ class _AnchorLayer(nn.Module):
                 IOU_anchor_vs_all_gt = [calc_IOU(anchor, gt_box) for gt_box in gt_boxes[i]]
 
                 overlaps_image.append(IOU_anchor_vs_all_gt)
-        
+
             overlaps.append(overlaps_image)
 
         return torch.tensor(overlaps)
-    
+
     def bbox_overlaps_vectorized(self, anchors, gt_boxes):
         batch_size = gt_boxes.shape[0]
 
@@ -178,26 +184,28 @@ class _AnchorLayer(nn.Module):
         for i in range(batch_size):
             IOUs = calc_IOU_vectorized(anchors, gt_boxes[i])
             overlaps.append(IOUs.unsqueeze(0))
-        
+
         overlaps = torch.cat(overlaps, 0)
 
-        return overlaps      
+        return overlaps
+
 
 def resize_image(self, im, dimension=cfg.IMAGE_INPUT_DIMS):
     old_size = im.size
     ratio = float(dimension) / max(old_size)
     new_size = tuple([int(x * ratio) for x in old_size])
-    
+
     im = im.resize(new_size, Image.ANTIALIAS)
-    
+
     offset_x = (dimension - new_size[0]) // 2
     offset_y = (dimension - new_size[1]) // 2
-    
+
     # create a new image and paste the resized on it
     new_im = Image.new("RGB", (dimension, dimension))
     new_im.paste(im, (offset_x, offset_y))
 
     return new_im
+
 
 def plot_layer_outputs(clipped_boxes, labels, scale, image_info):
     pos_anc = clipped_boxes[(labels == 1).view(-1), :]
@@ -205,25 +213,25 @@ def plot_layer_outputs(clipped_boxes, labels, scale, image_info):
 
     img = Image.open(image_info[0])
     plt.imshow(resize_image(img))
-    
+
     ax = plt.gca()
 
     for anc in neg_anc[:100, :]:
         anc_ = anc * scale
         ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
-                                       linewidth=2, edgecolor='r',
-                                       facecolor='none'))
+                               linewidth=2, edgecolor='r',
+                               facecolor='none'))
 
     for anc in pos_anc:
         anc_ = anc * scale
         ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
                                linewidth=2, edgecolor='g',
                                facecolor='none'))
-    
+
     for anc in gt_boxes[0]:
         anc_ = anc
         ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
                                linewidth=2, edgecolor='b',
                                facecolor='none'))
-    
+
     plt.show()
