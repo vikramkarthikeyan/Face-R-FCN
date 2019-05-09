@@ -17,10 +17,10 @@ parser.add_argument('--retrain', dest='retrain', action='store_true', default=Fa
 args = parser.parse_args()
 
 # Paths
-training_image_path = os.path.abspath("data/widerface/WIDER_train/images")
+training_image_path = os.path.abspath("data/widerface/WIDER_train/images/")
 training_metadata_path = os.path.abspath("data/widerface/wider_face_split/wider_face_train.mat")
 
-validation_image_path = os.path.abspath("data/widerface/WIDER_val/images")
+validation_image_path = os.path.abspath("data/widerface/WIDER_val/images/")
 validation_metadata_path = os.path.abspath("data/widerface/wider_face_split/wider_face_val.mat")
 
 
