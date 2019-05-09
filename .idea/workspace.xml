@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d9f2daa1-78d5-4613-92ef-2b321e0c04e0" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Trainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Trainer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/rpn/proposal_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/rpn/proposal_layer.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -71,7 +70,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Trainer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4">
+            <state relative-caret-position="679">
               <caret line="99" column="21" selection-start-line="99" selection-start-column="21" selection-end-line="99" selection-end-column="21" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
@@ -101,8 +100,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/models/rpn/proposal_layer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="769">
-              <caret line="347" column="24" selection-start-line="347" selection-start-column="24" selection-end-line="347" selection-end-column="24" />
+            <state relative-caret-position="214">
+              <caret line="116" lean-forward="true" selection-start-line="116" selection-end-line="116" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -387,7 +386,14 @@
       <option name="project" value="LOCAL" />
       <updated>1557365939372</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="loss logging and NMS numpy version.">
+      <created>1557377798389</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1557377798389</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TodoView">
@@ -476,7 +482,8 @@
     <MESSAGE value="nms method torched." />
     <MESSAGE value="Merge remote-tracking branch 'origin/master'&#10;&#10;# Conflicts:&#10;#&#9;models/rpn/proposal_layer.py" />
     <MESSAGE value="Speeding up on a CPU." />
-    <option name="LAST_COMMIT_MESSAGE" value="Speeding up on a CPU." />
+    <MESSAGE value="loss logging and NMS numpy version." />
+    <option name="LAST_COMMIT_MESSAGE" value="loss logging and NMS numpy version." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -715,16 +722,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/rpn/proposal_target_layer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="799">
-          <caret line="175" selection-start-line="175" selection-end-line="175" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Trainer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4">
+        <state relative-caret-position="679">
           <caret line="99" column="21" selection-start-line="99" selection-start-column="21" selection-end-line="99" selection-end-column="21" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
@@ -732,10 +732,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/models/rpn/proposal_target_layer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="799">
+          <caret line="175" selection-start-line="175" selection-end-line="175" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/models/rpn/proposal_layer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="769">
-          <caret line="347" column="24" selection-start-line="347" selection-start-column="24" selection-end-line="347" selection-end-column="24" />
+        <state relative-caret-position="214">
+          <caret line="116" lean-forward="true" selection-start-line="116" selection-end-line="116" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>

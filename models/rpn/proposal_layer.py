@@ -24,6 +24,8 @@ class _ProposalLayer(nn.Module):
 
         self.feat_stride = feat_stride
         self.box_sizes = box_sizes
+        # self.anchors = anchors.generate_anchors((height, width), self.box_sizes)
+        self.anchors = None
         self.scale = scale
 
     def forward(self, scores, bbox_deltas, image_metadata):
@@ -44,24 +46,24 @@ class _ProposalLayer(nn.Module):
 
         # Step 1 - Generate Anchors
         _, _, height, width = scores.shape
-        boxes = anchors.generate_anchors((height, width), self.box_sizes)
+        if self.anchors is None:
+            self.anchors = anchors.generate_anchors((height, width), self.box_sizes).numpy()
+        boxes = self.anchors
 
-        # #### COMMENTED FOR SPEED
-        # boxes = boxes.cuda()
-        bbox_deltas = bbox_deltas.cpu()
-        scores = scores.cpu()
+        bbox_deltas = bbox_deltas.cpu().numpy()
+        scores = scores.cpu().numpy()
 
         # Step 1.a - Transform anchors shape based on batch size
         boxes_shape = boxes.shape
-        boxes = boxes.view(batch_size, boxes_shape[0], boxes_shape[1], boxes_shape[2], boxes_shape[3])
+        boxes = np.reshape(boxes, (batch_size, boxes_shape[0], boxes_shape[1], boxes_shape[2], boxes_shape[3]))
 
         # Step 1.b - Transform bbox_deltas shape to match the anchor 
         bbox_deltas_shape = bbox_deltas.shape
 
-        split_deltas = bbox_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, 4, bbox_deltas_shape[2],
-                                        bbox_deltas_shape[3])
-        split_deltas = split_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, bbox_deltas_shape[2],
-                                         bbox_deltas_shape[3], 4)
+        split_deltas = np.reshape(bbox_deltas, (bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, 4, bbox_deltas_shape[2],
+                                        bbox_deltas_shape[3]))
+        split_deltas = np.reshape(split_deltas, (bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, bbox_deltas_shape[2],
+                                         bbox_deltas_shape[3], 4))
 
         # Step 2 - Apply bounding box transformations
         adjusted_boxes = boxes + split_deltas
@@ -73,22 +75,21 @@ class _ProposalLayer(nn.Module):
         keep = filter_boxes(clipped_boxes, rpn_config.MIN_SIZE)
 
         # Step 4.a - Flatten and get only boxes and scores that passed the filter
-        keep = keep.view(batch_size, -1)
-        clipped_boxes = clipped_boxes.view(batch_size, -1, 4)
-        scores = scores.view(batch_size, -1)
+        keep = np.reshape(keep, (batch_size, -1))
+        clipped_boxes = np.reshape(clipped_boxes, (batch_size, -1, 4))
+        scores = np.reshape(scores, (batch_size, -1))
 
         filtered_boxes = clipped_boxes[keep]
         filtered_scores = scores[keep]
 
-        # TODO: Check if this needs to be changed in case of a batch
-        filtered_boxes = filtered_boxes.view(batch_size, filtered_boxes.shape[0], filtered_boxes.shape[1])
-        filtered_scores = filtered_scores.view(batch_size, filtered_scores.shape[0])
+        filtered_boxes = np.reshape(filtered_boxes, (batch_size, filtered_boxes.shape[0], filtered_boxes.shape[1]))
+        filtered_scores = np.reshape(filtered_scores, (batch_size, filtered_scores.shape[0]))
 
         # Steps 5 - Sort scores
-        _, orders = torch.sort(filtered_scores, 1, True)
+        orders = np.flip(np.argsort(filtered_scores, 1), 1)
 
         # Create output array for RPN results
-        output = filtered_scores.new(batch_size, rpn_config.POST_NMS_TOP_N, 4).zero_()
+        output = np.zeros((batch_size, rpn_config.POST_NMS_TOP_N, 4), np.float)
 
         for i in range(batch_size):
             proposals = filtered_boxes[i]
@@ -101,36 +102,18 @@ class _ProposalLayer(nn.Module):
 
             # Step 6.a - Filter those topN anchors and scores based on sorted scores
             proposals = proposals[order, :]
-            scores = scores[order]
 
             if rfcn_config.verbose:
                 print("\n----Proposal Layer----\n\nPRE NMS SIZE:", proposals.shape)
 
-            # Step 7 - Combine anchors and scores
-            scores = scores.view(scores.shape[0], 1)
-            combined = torch.cat((proposals, scores), dim=1)
-
             # Step 8 - Apply NMS with a specific threshold in config
-            combined_test = combined.numpy()
-
-            start = time.time()
-            keep_anchors_postNMS = nms_old(combined_test, rpn_config.NMS_THRESH)
-            print("NUMPY:", (time.time() - start))
-
-            start = time.time()
-            keep_anchors_postNMS = nms_numpy(combined_test, rpn_config.NMS_THRESH)
-            print("NUMPY optimized:", (time.time() - start))
-
-            start = time.time()
-            keep_anchors_postNMS = nms(combined, rpn_config.NMS_THRESH)
-            print("PYTORCH:", (time.time() - start))
+            keep_anchors_postNMS = nms_numpy(proposals, rpn_config.NMS_THRESH)
 
             # Step 9 - Take TopN post NMS proposals
             if rpn_config.POST_NMS_TOP_N > 0:
                 keep_anchors_postNMS = keep_anchors_postNMS[:rpn_config.POST_NMS_TOP_N]
 
             proposals = proposals[keep_anchors_postNMS, :]
-            # scores = scores[keep_anchors_postNMS, :]
 
             if rfcn_config.verbose:
                 print("\nPOST NMS SIZE:", proposals.shape)
@@ -141,7 +124,7 @@ class _ProposalLayer(nn.Module):
             output[i, :num_proposal, 0:] = proposals
 
         output = output[:, :num_proposal, ]
-        return output
+        return torch.from_numpy(output).float()
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""
@@ -173,7 +156,7 @@ def clip_boxes_batch(boxes, length, width, batch_size):
     return boxes
 
 
-def filter_boxes(boxes, min_size):
+def filter_boxes_torch(boxes, min_size):
     """Remove all boxes with any side smaller than min_size."""
 
     widths = boxes[:, :, :, :, 2]
@@ -182,6 +165,21 @@ def filter_boxes(boxes, min_size):
     keep = torch.zeros_like(widths)
 
     min_sizes = keep.new_full(keep.shape, min_size)
+
+    keep = ((widths >= min_sizes) & (heights >= min_sizes))
+    return keep
+
+
+def filter_boxes(boxes, min_size):
+    """Remove all boxes with any side smaller than min_size."""
+
+    widths = boxes[:, :, :, :, 2]
+    heights = boxes[:, :, :, :, 3]
+
+    keep = np.zeros_like(widths)
+
+    min_sizes = keep.copy()
+    min_sizes.fill(min_size)
 
     keep = ((widths >= min_sizes) & (heights >= min_sizes))
     return keep
@@ -332,14 +330,14 @@ def nms_numpy(entries, thresh):
         ind = idxs[-1]
         idx_keep.append(ind)
 
-        XX1 = np.clip(x1[idxs], min=x1[ind])
-        YY1 = np.clip(y1[idxs], min=y1[ind])
+        XX1 = np.clip(x1[idxs], x1[ind], None)
+        YY1 = np.clip(y1[idxs], y1[ind], None)
 
-        XX2 = np.clip(x2[idxs], max=x2[ind])
-        YY2 = np.clip(y2[idxs], max=y2[ind])
+        XX2 = np.clip(x2[idxs], None, x2[ind])
+        YY2 = np.clip(y2[idxs], None, y2[ind])
 
-        W = np.clip((XX2 - XX1 + 1), min=0)
-        H = np.clip((YY2 - YY1 + 1), min=0)
+        W = np.clip((XX2 - XX1 + 1), 0, None)
+        H = np.clip((YY2 - YY1 + 1), 0, None)
 
         # mask = ((W * H).float() / areas.float()).lt(thresh)
         mask = ((W * H) / areas) < thresh
@@ -349,4 +347,4 @@ def nms_numpy(entries, thresh):
         idxs = idxs[mask]
 
     # return only the bounding boxes that were picked
-    return torch.tensor(idx_keep)
+    return torch.from_numpy(np.array(idx_keep))
