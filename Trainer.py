@@ -4,19 +4,14 @@ import numpy as np
 import shutil
 import os
 import argparse
-import cv2
 import torch
 import torch.nn as nn
 
 from torchvision import datasets, transforms
 from torchvision import models
 from torch.autograd import Variable
-# from torchsummary import summary
 import EarlyStopping
 import AverageMeter
-from sklearn.metrics.pairwise import cosine_similarity
-from numpy import dot
-from numpy.linalg import norm
 
 def custom_collate(batch):
 
@@ -105,72 +100,6 @@ class Trainer:
                             loss=losses), end="")
             
         print("\nTraining Accuracy: Acc@1: {top1.avg:.3f}%, Acc@5: {top5.avg:.3f}%".format(top1=top1, top5=top5))
-
-    def normalize(self, features):
-        norm = np.linalg.norm(features)
-        if norm == 0: 
-            return features
-        return features/norm
-
-    def validate(self, model, epoch, usegpu):
-
-        # switch to evaluate mode
-        model.eval()
-
-        print("\nRunning Verification Protocol")
-
-        similarity_scores = []
-        actual_scores = []
-
-        
-
-        with torch.no_grad():
-            for i, (template_1, template_2, subject_1, subject_2, template_n1, template_n2) in enumerate(self.validation_loader):
-                
-                for j in range(len(template_1)):
-            
-                    template_left = Variable(template_1[j])
-                    template_right = Variable(template_2[j])
-
-                    if usegpu:
-                        template_left = template_left.cuda(non_blocking=True)
-                        template_right = template_right.cuda(non_blocking=True)
-
-                    outputs = []
-
-                    def hook(module, input, output):
-                        outputs.append(output)
-
-                    model.avgpool.register_forward_hook(hook)
-
-                    # Compute outputs of two templates
-                    output_1 = model(template_left)
-                    output_1 = outputs[0]
-
-                    outputs = []
-
-                    output_2 = model(template_right)
-                    output_2 = outputs[0]
-
-                    # Compute average of all the feature vectors into a single feature vector
-                    output_1 = np.average(output_1.cpu().numpy(), axis=0).flatten().reshape(1, -1)
-                    output_2 = np.average(output_2.cpu().numpy(), axis=0).flatten().reshape(1, -1)
-
-                    # Compute Cosine Similarity with normalization in the formula
-                    similarity = cosine_similarity(output_1, output_2)
-                    similarity = similarity[0][0]
-
-                    similarity_scores.append(similarity)
-
-                    if subject_1[j] == subject_2[j]:
-                        actual_scores.append(1)
-                    else:
-                        actual_scores.append(0)
-
-                print("\rPair Batch({:05d}/{:05d})".format(i, len(self.validation_loader)), end="")
-
-        return similarity_scores, actual_scores
-
 
     def save_checkpoint(self, state, filename='./models/checkpoint.pth.tar'):
         torch.save(state, filename)

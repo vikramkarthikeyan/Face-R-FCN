@@ -8,10 +8,8 @@ import imp
 
 from torchvision import models
 from tqdm import tqdm
-# from torchsummary import summary
 from loaders import WiderfaceDataset
 from Trainer import Trainer
-# from models import rfcn
 from models.resnets import RFCN_resnet
 
 parser = argparse.ArgumentParser()

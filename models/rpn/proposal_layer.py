@@ -3,9 +3,6 @@ import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import math
-import yaml
-import pdb
 import torchvision
 
 from ..utils import anchors
