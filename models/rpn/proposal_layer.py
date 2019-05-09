@@ -118,6 +118,10 @@ class _ProposalLayer(nn.Module):
             print("NUMPY:", (time.time() - start))
 
             start = time.time()
+            keep_anchors_postNMS = nms_numpy(combined_test, rpn_config.NMS_THRESH)
+            print("NUMPY optimized:", (time.time() - start))
+
+            start = time.time()
             keep_anchors_postNMS = nms(combined, rpn_config.NMS_THRESH)
             print("PYTORCH:", (time.time() - start))
 
