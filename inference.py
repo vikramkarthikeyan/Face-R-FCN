@@ -48,7 +48,7 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=SGD_MOMENTUM)
 
-    model_name = './saved_models/checkpoint_demo.pth.tar'    
+    model_name = './saved_models/checkpoint.pth.tar'    
     checkpoint = torch.load(model_name)
     model.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
