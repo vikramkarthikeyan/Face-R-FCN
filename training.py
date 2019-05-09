@@ -43,19 +43,8 @@ if __name__ == "__main__":
     # Initialize R-FCN model
     model = RFCN_resnet(pretrained=True)
     model.create_architecture()
-
-    # -------------------------------------------------
-    # print("\nChecking if a GPU is available...")
-    # use_gpu = torch.cuda.is_available()
-    #
-    # Initialize new model
-    # if use_gpu:
     model = model.cuda()
-    # print ("Using GPU")
-    # else:
-    #     print ("GPU is unavailable")
-    #     exit()
-    
+
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=SGD_MOMENTUM)
 

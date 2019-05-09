@@ -186,22 +186,22 @@ class _RFCN(nn.Module):
         return loss_cls, loss_box
 
     def _init_weights(self):
-        def normal_init(m, mean, stddev, truncated=False):
+        def normal_init(m, mean, stddev):
             """
             weight initalizer: truncated normal and random normal.
             """
-            # x is a parameter
-            if truncated:
-                m.weight.data.normal_().fmod_(2).mul_(stddev).add_(mean)  # not a perfect approximation
-            else:
-                m.weight.data.normal_(mean, stddev)
-                if m.bias is not None:
-                    m.bias.data.zero_()
+            m.weight.data.normal_(mean, stddev)
+            if m.bias is not None:
+                m.bias.data.zero_()
 
-        normal_init(self.RCNN_rpn.RPN_Conv, 0, 0.01, cfg.TRAIN.TRUNCATED)
-        normal_init(self.RCNN_rpn.RPN_cls_score, 0, 0.01, cfg.TRAIN.TRUNCATED)
-        normal_init(self.RCNN_rpn.RPN_bbox_pred, 0, 0.01, cfg.TRAIN.TRUNCATED)
+        normal_init(self.RCNN_rpn.RPN_Conv, 0, 0.01)
+        normal_init(self.RCNN_rpn.RPN_cls_score, 0, 0.01)
+        normal_init(self.RCNN_rpn.RPN_bbox_pred, 0, 0.01)
+        normal_init(self.RCNN_bbox_base, 0, 0.01)
+        normal_init(self.RCNN_cls_base, 0, 0.01)
+        normal_init(self.ps_average_pool_cls, 0, 0.01)
+        normal_init(self.ps_average_pool_bbox, 0, 0.01)
 
     def create_architecture(self):
         self._init_modules()
-        # self._init_weights()
+        self._init_weights()
