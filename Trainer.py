@@ -103,8 +103,8 @@ class Trainer:
             # measure elapsed time
             batch_time.update(time.time() - start)
 
-            if i==200:
-                break
+            #if i==200:
+            #    break
 
             print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
@@ -146,9 +146,9 @@ class Trainer:
 
                     # Write logic for comparing GT_boxes and ROIs
                     image_location = image_paths[j]
-                    plot_boxes(image_location, bbox_pred, [], [])
+                    #plot_boxes(image_location, bbox_pred, [], [])
 
-                    break
+                    #break
 
 
 
