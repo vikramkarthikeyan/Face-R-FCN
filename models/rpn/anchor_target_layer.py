@@ -46,10 +46,6 @@ class _AnchorLayer(nn.Module):
 
         batch_size = gt_boxes.shape[0]
 
-        # print("ANC_TAR_GT:", gt_boxes)
-
-        # #### SPEED CHANGE
-        # gt_boxes = gt_boxes.cuda()
         cls_scores = cls_scores.cpu()
 
         if cfg.verbose:
@@ -97,9 +93,6 @@ class _AnchorLayer(nn.Module):
         if cfg.verbose:
             print("OVERLAPS:", overlaps)
             print("OVERLAPS SHAPE:", overlaps.shape)
-            print("OVERLAPS MAX SHAPE:", max_overlaps.shape)
-            print("OVERLAPS ARGS SHAPE:", argmax_overlaps.shape)
-            print("OVERLAPS ARGS:", argmax_overlaps)
 
         labels[max_overlaps >= cfg.RPN_POSITIVE_OVERLAP] = 1
         labels[max_overlaps <= cfg.RPN_NEGATIVE_OVERLAP] = 0
@@ -124,8 +117,6 @@ class _AnchorLayer(nn.Module):
         target_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 4).fill_(0)
 
         if cfg.verbose:
-            print("LABEL_ip:", labels.shape)
-            print("LABEL_OP:", label_op.shape)
             print("TARGET_IP:", targets.shape)
             print("TARGET_OP:", target_op.shape)
 
