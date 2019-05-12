@@ -17,7 +17,7 @@ class _AnchorLayer(nn.Module):
 
         super(_AnchorLayer, self).__init__()
 
-    def forward(self, cls_scores, gt_boxes, image_info=None):
+    def forward(self, cls_scores, gt_boxes, image_info):
 
         # Algorithm to follow:
         #
@@ -59,14 +59,14 @@ class _AnchorLayer(nn.Module):
 
         all_anchors = self.anchors
 
-        all_anchors = all_anchors.view(batch_size, all_anchors.shape[0], all_anchors.shape[1],
-                                       all_anchors.shape[2], all_anchors.shape[3])
+        all_anchors = np.reshape(all_anchors, (batch_size, all_anchors.shape[0], all_anchors.shape[1],
+                                       all_anchors.shape[2], all_anchors.shape[3]))
 
         if cfg.verbose:
             print("ANCHORS:", all_anchors.shape)
 
-        # 2. Clipping anchors which are not necessary
-        clipped_boxes, indices = self.clip_boxes(all_anchors, height, width, batch_size)
+        # 2. Clipping anchors which exceed boundaries
+        clipped_boxes, indices = self.clip_boxes_batch(all_anchors, height, width, batch_size)
 
         if cfg.verbose:
             print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
@@ -151,6 +151,29 @@ class _AnchorLayer(nn.Module):
                             inds.append((i, ch, x_n, y_n))
 
         return torch.from_numpy(np.array(op2)), inds
+
+    def clip_boxes_batch(self, boxes, length, width, batch_size):
+        """
+        Clip boxes to image boundaries.
+        """
+        keep = boxes >= 0
+        print("Keep shape before individual:",keep.shape)
+
+        boxes[:, :, :, :, 2] = boxes[:, :, :, :, 0] + boxes[:, :, :, :, 2] - 1
+        boxes[:, :, :, :, 3] = boxes[:, :, :, :, 1] + boxes[:, :, :, :, 3] - 1
+
+        keep = keep & boxes < length - 1
+
+        keep = keep[:, :, :, :, 0] & keep[:, :, :, :, 1] & keep[:, :, :, :, 2] & keep[:, :, :, :, 3]
+
+        print("after",keep.shape)
+
+        boxes[:, :, :, :, 2] = boxes[:, :, :, :, 2] - boxes[:, :, :, :, 0] + 1
+        boxes[:, :, :, :, 3] = boxes[:, :, :, :, 3] - boxes[:, :, :, :, 1] + 1
+
+        # boxes[keep]
+
+        return boxes
 
     def bbox_overlaps(self, anchors, gt_boxes):
         batch_size = gt_boxes.shape[0]
