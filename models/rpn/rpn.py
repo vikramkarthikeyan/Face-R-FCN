@@ -69,7 +69,12 @@ class RPN(nn.Module):
         # rpn_classification_prob shape: 1 * 40 * 64 * 64
         # rpn_bbox_predictions shape: 1 * 80 * 64 * 64
 
-        rois = self.RPN_proposal(rpn_classification_prob.data, rpn_bbox_predictions.data, image_metadata)
+        scores = rpn_classification_prob.data.cpu().numpy()
+        bbox_proposals = rpn_bbox_predictions.data.cpu().numpy()
+
+        rois = self.RPN_proposal(scores, bbox_proposals, image_metadata)
+
+        rois = torch.from_numpy(rois).float() 
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0

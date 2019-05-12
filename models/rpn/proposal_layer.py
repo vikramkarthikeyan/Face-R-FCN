@@ -44,9 +44,6 @@ class _ProposalLayer(nn.Module):
         # 9. Take after_nms_topN proposals after NMS
         # 10. Return the top proposals (-> RoIs top, scores top)
 
-        bbox_deltas = bbox_deltas.cpu().numpy() 
-        scores = scores.cpu().numpy()
-
         # Step 1 - Generate Anchors
         _, _, height, width = scores.shape
         
@@ -76,7 +73,7 @@ class _ProposalLayer(nn.Module):
 
         # Step 2 - Apply bounding box transformations
         adjusted_boxes = boxes + split_deltas
-
+        
         # Step 3 - Clip boxes so that they are within the feature dimensions
         clipped_boxes = clip_boxes_batch(adjusted_boxes, height, width, batch_size)
 
@@ -131,7 +128,7 @@ class _ProposalLayer(nn.Module):
             num_proposal = proposals.shape[0]
             output[i, :num_proposal, 0:] = proposals
         
-        return torch.from_numpy(output).float()
+        return output
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""
@@ -187,7 +184,6 @@ def filter_boxes(boxes, min_size):
 
     min_sizes = keep.copy()
     min_sizes.fill(min_size)
-
     keep = ((widths >= min_sizes) & (heights >= min_sizes))
     return keep
 
