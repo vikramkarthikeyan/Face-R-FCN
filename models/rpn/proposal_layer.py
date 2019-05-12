@@ -44,26 +44,35 @@ class _ProposalLayer(nn.Module):
         # 9. Take after_nms_topN proposals after NMS
         # 10. Return the top proposals (-> RoIs top, scores top)
 
-        # Step 1 - Generate Anchors
-        _, _, height, width = scores.shape
-        if self.anchors is None:
-            self.anchors = anchors.generate_anchors((height, width), self.box_sizes).numpy()
-        boxes = self.anchors
-
-        bbox_deltas = bbox_deltas.cpu().numpy()
+        bbox_deltas = bbox_deltas.cpu().numpy() 
         scores = scores.cpu().numpy()
 
-        # Step 1.a - Transform anchors shape based on batch size
-        boxes_shape = boxes.shape
-        boxes = np.reshape(boxes, (batch_size, boxes_shape[0], boxes_shape[1], boxes_shape[2], boxes_shape[3]))
-
-        # Step 1.b - Transform bbox_deltas shape to match the anchor 
+        # Step 1 - Generate Anchors
+        _, _, height, width = scores.shape
+        
+        if self.anchors is None:
+            self.anchors = anchors.generate_anchors((height, width), self.box_sizes)
+            boxes = self.anchors
+            
+            # Step 1.a - Transform anchors shape to match the batch size
+            boxes_shape = boxes.shape
+            boxes = np.reshape(boxes, (batch_size, boxes_shape[0], boxes_shape[1], boxes_shape[2], boxes_shape[3]))
+        
+        # Step 1.b - Transform bbox_deltas shape to match the anchor shape
         bbox_deltas_shape = bbox_deltas.shape
 
         split_deltas = np.reshape(bbox_deltas, (bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, 4, bbox_deltas_shape[2],
                                         bbox_deltas_shape[3]))
         split_deltas = np.reshape(split_deltas, (bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, bbox_deltas_shape[2],
                                          bbox_deltas_shape[3], 4))
+
+        # Step 1.c - Transform scores shape and get only face probabilities
+        scores = np.reshape(scores, (scores.shape[0], -1, scores.shape[2], scores.shape[3], 2))
+        scores = scores[:,:,:,:,0]
+
+        # boxes shape: 1,20,64,64,4
+        # split_deltas shape: 1,20,64,64,4
+        # face scores shape: 1,20,64,64 
 
         # Step 2 - Apply bounding box transformations
         adjusted_boxes = boxes + split_deltas
@@ -73,24 +82,24 @@ class _ProposalLayer(nn.Module):
 
         # Step 4 - Filter those boxes that have dimensions lesser than minimum
         keep = filter_boxes(clipped_boxes, rpn_config.MIN_SIZE)
-
+        
         # Step 4.a - Flatten and get only boxes and scores that passed the filter
         keep = np.reshape(keep, (batch_size, -1))
         clipped_boxes = np.reshape(clipped_boxes, (batch_size, -1, 4))
         scores = np.reshape(scores, (batch_size, -1))
-
+        
         filtered_boxes = clipped_boxes[keep]
         filtered_scores = scores[keep]
 
         filtered_boxes = np.reshape(filtered_boxes, (batch_size, filtered_boxes.shape[0], filtered_boxes.shape[1]))
         filtered_scores = np.reshape(filtered_scores, (batch_size, filtered_scores.shape[0]))
-
+        
         # Steps 5 - Sort scores
         orders = np.flip(np.argsort(filtered_scores, 1), 1)
 
         # Create output array for RPN results
         output = np.zeros((batch_size, rpn_config.POST_NMS_TOP_N, 4), np.float)
-
+        
         for i in range(batch_size):
             proposals = filtered_boxes[i]
             scores = filtered_scores[i]
@@ -120,10 +129,8 @@ class _ProposalLayer(nn.Module):
 
             # Step 10 - Return topN proposals as output
             num_proposal = proposals.shape[0]
-            output[i, :, 0] = i
             output[i, :num_proposal, 0:] = proposals
-
-        output = output[:, :num_proposal, ]
+        
         return torch.from_numpy(output).float()
 
     def backward(self, top, propagate_down, bottom):
