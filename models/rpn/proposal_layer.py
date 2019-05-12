@@ -95,7 +95,8 @@ class _ProposalLayer(nn.Module):
         orders = np.flip(np.argsort(filtered_scores, 1), 1)
 
         # Create output array for RPN results
-        output = np.zeros((batch_size, rpn_config.POST_NMS_TOP_N, 4), np.float)
+        proposal_outputs = np.zeros((batch_size, rpn_config.POST_NMS_TOP_N, 4), np.float)
+        score_outputs = np.zeros((batch_size, rpn_config.POST_NMS_TOP_N, 1), np.float)
         
         for i in range(batch_size):
             proposals = filtered_boxes[i]
@@ -108,6 +109,7 @@ class _ProposalLayer(nn.Module):
 
             # Step 6.a - Filter those topN anchors and scores based on sorted scores
             proposals = proposals[order, :]
+            scores = scores[order, :]
 
             if rfcn_config.verbose:
                 print("\n----Proposal Layer----\n\nPRE NMS SIZE:", proposals.shape)
@@ -120,15 +122,17 @@ class _ProposalLayer(nn.Module):
                 keep_anchors_postNMS = keep_anchors_postNMS[:rpn_config.POST_NMS_TOP_N]
 
             proposals = proposals[keep_anchors_postNMS, :]
+            scores = scores[keep_anchors_postNMS, :]
 
             if rfcn_config.verbose:
-                print("\nPOST NMS SIZE:", proposals.shape)
+                print("\nPOST NMS SIZE:", proposals.shape, scores.shape)
 
-            # Step 10 - Return topN proposals as output
+            # Step 10 - Return topN proposals as proposal_outputs
             num_proposal = proposals.shape[0]
-            output[i, :num_proposal, 0:] = proposals
+            proposal_outputs[i, :num_proposal, 0:] = proposals
+            score_outputs[i, :num_proposal, 0] = scores
         
-        return output
+        return proposal_outputs, score_outputs
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""
