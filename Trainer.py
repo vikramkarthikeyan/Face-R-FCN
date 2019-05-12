@@ -143,12 +143,12 @@ class Trainer:
                     rois_label = model([data], [image_paths[j]], target)
 
                     print(cls_prob.shape, bbox_pred.shape)
-
+                    print(cls_prob, bbox_pred)
                     # Write logic for comparing GT_boxes and ROIs
                     image_location = image_paths[j]
                     #plot_boxes(image_location, bbox_pred, [], [])
 
-                    #break
+                break
 
 
 

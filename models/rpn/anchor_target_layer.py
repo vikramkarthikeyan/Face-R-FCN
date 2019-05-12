@@ -117,8 +117,6 @@ class _AnchorLayer(nn.Module):
         target_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 4).fill_(0)
 
         if cfg.verbose:
-            print("LABEL_ip:", labels.shape)
-            print("LABEL_OP:", label_op.shape)
             print("TARGET_IP:", targets.shape)
             print("TARGET_OP:", target_op.shape)
 
