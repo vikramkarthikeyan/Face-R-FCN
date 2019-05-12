@@ -8,7 +8,6 @@ def generate_anchors(dimensions, box_sizes):
     :param dimensions:  Dimensions of extracted features
     :return:         A*i Anchors (A anchors per location i)
     """
-    # print("Input dimensions:", dimensions)
     feat_h, feat_w = dimensions
 
     anchors_list = []
@@ -20,9 +19,7 @@ def generate_anchors(dimensions, box_sizes):
             for j in range(0, feat_w):
                 x = (i - (bs[0] // 2))
                 y = (j - (bs[1] // 2))
-                # l = x + bs[0]
                 l = bs[0]
-                # w = y + bs[1]
                 w = bs[1]
 
                 y_list.append((x, y, l, w))
@@ -31,7 +28,7 @@ def generate_anchors(dimensions, box_sizes):
 
         anchors_list.append(x_list)
 
-    return torch.tensor(anchors_list).float()
+    return np.array(anchors_list, dtype=np.float)
 
 
 def calc_IOU_vectorized_(bboxes1, bboxes2):

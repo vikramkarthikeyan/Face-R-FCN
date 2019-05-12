@@ -59,18 +59,17 @@ class RPN(nn.Module):
         # get rpn classification score
         rpn_classification_score = self.RPN_cls_score(rpn_conv1)
         
-        print("RPN SCORES FROM CONV:", rpn_classification_score.shape)
         rpn_classification_score_reshape = self.reshape(rpn_classification_score, 2)
-        print("RPN SCORES RESHAPED:", rpn_classification_score_reshape.shape)
         rpn_classification_prob_reshape = F.softmax(rpn_classification_score_reshape, dim=1)
         rpn_classification_prob = self.reshape(rpn_classification_prob_reshape, self.nc_score_out)
 
         # get rpn offsets to the anchor boxes
         rpn_bbox_predictions = self.RPN_bbox_pred(rpn_conv1)
 
-        rois = self.RPN_proposal(rpn_classification_prob.data, rpn_bbox_predictions.data, image_metadata)
+        # rpn_classification_prob shape: 1 * 40 * 64 * 64
+        # rpn_bbox_predictions shape: 1 * 80 * 64 * 64
 
-        # print("ROIS AND SHAPE:", rois, rois.shape)
+        rois = self.RPN_proposal(rpn_classification_prob.data, rpn_bbox_predictions.data, image_metadata)
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0
