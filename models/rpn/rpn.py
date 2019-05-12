@@ -25,11 +25,11 @@ class RPN(nn.Module):
         self.RPN_Conv = nn.Conv2d(self.input_channels, 512, 3, 1, 1, bias=True)
 
         # define bg/fg classifcation score layer
-        self.nc_score_out = len(anchor_dimensions)
+        self.nc_score_out = len(anchor_dimensions) * 2
         self.RPN_cls_score = nn.Conv2d(512, self.nc_score_out, 1, 1, 0)
 
         # define anchor box offset prediction layer
-        self.nc_bbox_out = len(anchor_dimensions) * 4  # 4(coords) * 9 (anchors)
+        self.nc_bbox_out = len(anchor_dimensions) * 4 
         self.RPN_bbox_pred = nn.Conv2d(512, self.nc_bbox_out, 1, 1, 0)
 
         # define proposal layer
@@ -58,8 +58,10 @@ class RPN(nn.Module):
 
         # get rpn classification score
         rpn_classification_score = self.RPN_cls_score(rpn_conv1)
-
+        
+        print("RPN SCORES FROM CONV:", rpn_classification_score.shape)
         rpn_classification_score_reshape = self.reshape(rpn_classification_score, 2)
+        print("RPN SCORES RESHAPED:", rpn_classification_score_reshape.shape)
         rpn_classification_prob_reshape = F.softmax(rpn_classification_score_reshape, dim=1)
         rpn_classification_prob = self.reshape(rpn_classification_prob_reshape, self.nc_score_out)
 
