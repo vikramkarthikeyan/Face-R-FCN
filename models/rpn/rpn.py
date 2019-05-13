@@ -74,7 +74,7 @@ class RPN(nn.Module):
 
         rois, scores = self.RPN_proposal(scores, bbox_proposals, image_metadata)
 
-        rois = torch.from_numpy(rois).float() 
+        #rois = torch.from_numpy(rois).float() 
 
         self.rpn_loss_cls = 0
         self.rpn_loss_box = 0

@@ -20,7 +20,7 @@ def scale_boxes_batch(boxes, scale, scale_type):
     if scale_type == 'down':
         scale = 1/scale
     
-    boxes_temp = boxes.float()
+    boxes_temp = boxes
 
     boxes_temp[:, :, 0] = boxes_temp[:, :, 0] * scale 
     boxes_temp[:, :, 1] = boxes_temp[:, :, 1] * scale

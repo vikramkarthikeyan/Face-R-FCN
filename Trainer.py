@@ -67,8 +67,8 @@ class Trainer:
                 data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
 
                 data = data.cuda(non_blocking=True)
-                target = torch.tensor(target)
-                target = target.unsqueeze(0)
+                target = np.array(target, dtype=np.float)
+                target = np.expand_dims(target, axis=0)
 
                 model.zero_grad()
 

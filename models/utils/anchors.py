@@ -32,8 +32,6 @@ def generate_anchors(dimensions, box_sizes):
 
 
 def calc_IOU_vectorized_(bboxes1, bboxes2):
-    bboxes1 = bboxes1.numpy()
-    bboxes2 = bboxes2.numpy()
 
     x11, y11, x12, y12 = bboxes1[:, 0], bboxes1[:, 1], bboxes1[:, 2], bboxes1[:, 3]
 
@@ -46,7 +44,8 @@ def calc_IOU_vectorized_(bboxes1, bboxes2):
     y22 = y21 + y22 - 1
 
     # determine the (x, y)-coordinates of the intersection rectangle
-    xA = np.maximum(x21, np.expand_dims(x11, axis=0))
+    #xA = np.maximum(np.expand_dims(x21, axis=1), np.expand_dims(x11, axis=0))
+    xA = np.maximum(x21, np.expand_dims(x11, axis=0).T)
     yA = np.maximum(y21, np.expand_dims(y11, axis=0).T)
     xB = np.maximum(x22, np.expand_dims(x12, axis=0).T)
     yB = np.maximum(y22, np.expand_dims(y12, axis=0).T)
@@ -56,6 +55,7 @@ def calc_IOU_vectorized_(bboxes1, bboxes2):
 
     print("XA:", xA.shape)
 
+    print("YA:", yA.shape)
     # label_zero = torch.tensor(0.0)
 
     # compute the area of intersection rectangle

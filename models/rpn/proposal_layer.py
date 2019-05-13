@@ -109,7 +109,7 @@ class _ProposalLayer(nn.Module):
 
             # Step 6.a - Filter those topN anchors and scores based on sorted scores
             proposals = proposals[order, :]
-            scores = scores[order, :]
+            scores = scores[order]
 
             if rfcn_config.verbose:
                 print("\n----Proposal Layer----\n\nPRE NMS SIZE:", proposals.shape)
@@ -122,7 +122,7 @@ class _ProposalLayer(nn.Module):
                 keep_anchors_postNMS = keep_anchors_postNMS[:rpn_config.POST_NMS_TOP_N]
 
             proposals = proposals[keep_anchors_postNMS, :]
-            scores = scores[keep_anchors_postNMS, :]
+            scores = scores[keep_anchors_postNMS]
 
             if rfcn_config.verbose:
                 print("\nPOST NMS SIZE:", proposals.shape, scores.shape)

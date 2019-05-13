@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from ..utils.anchors import generate_anchors, calc_IOU, calc_IOU2, calc_IOU_vectorized
+from ..utils.anchors import generate_anchors, calc_IOU, calc_IOU2, calc_IOU_vectorized_
 from ..config import rfcn_config as cfg
 import numpy as np
 
@@ -72,7 +72,7 @@ class _AnchorLayer(nn.Module):
             print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
 
         # 3. Get all area overlap for the kept anchors
-        overlaps = self.bbox_overlaps_vectorized(clipped_boxes.float(), gt_boxes.float())
+        overlaps = self.bbox_overlaps_vectorized(clipped_boxes, gt_boxes)
 
         # Set a minimum value to avoid a potential zero error
         overlaps[overlaps == 0] = 1e-10
@@ -157,23 +157,20 @@ class _AnchorLayer(nn.Module):
         Clip boxes to image boundaries.
         """
         keep = boxes >= 0
-        print("Keep shape before individual:",keep.shape)
 
         boxes[:, :, :, :, 2] = boxes[:, :, :, :, 0] + boxes[:, :, :, :, 2] - 1
         boxes[:, :, :, :, 3] = boxes[:, :, :, :, 1] + boxes[:, :, :, :, 3] - 1
-
-        keep = keep & boxes < length - 1
-
-        keep = keep[:, :, :, :, 0] & keep[:, :, :, :, 1] & keep[:, :, :, :, 2] & keep[:, :, :, :, 3]
-
-        print("after",keep.shape)
-
+        
+        keep = np.logical_and(keep, boxes<=length-1)
+        
+        keep = np.all(keep, axis=4) 
+        
         boxes[:, :, :, :, 2] = boxes[:, :, :, :, 2] - boxes[:, :, :, :, 0] + 1
         boxes[:, :, :, :, 3] = boxes[:, :, :, :, 3] - boxes[:, :, :, :, 1] + 1
+        
+        boxes = boxes[keep, :]
 
-        # boxes[keep]
-
-        return boxes
+        return boxes, keep
 
     def bbox_overlaps(self, anchors, gt_boxes):
         batch_size = gt_boxes.shape[0]
@@ -196,7 +193,7 @@ class _AnchorLayer(nn.Module):
         overlaps = []
 
         for i in range(batch_size):
-            IOUs = calc_IOU_vectorized(anchors, gt_boxes[i])
+            IOUs = calc_IOU_vectorized_(anchors, gt_boxes[i])
             overlaps.append(IOUs.unsqueeze(0))
 
         overlaps = torch.cat(overlaps, 0)
