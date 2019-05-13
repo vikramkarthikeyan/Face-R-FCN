@@ -133,17 +133,21 @@ class _AnchorLayer(nn.Module):
             if pos_anc_cnt < 5:
                 plot_layer_outputs(clipped_boxes, labels, scale, gt_boxes, image_info)
 
-        targets = np.zeros((batch_size, self.clipped_boxes.shape[0], 4), dtype=np.float32)
         
         #TODO: Convert target generation to log: http://www.telesens.co/2018/03/11/object-detection-and-classification-using-r-cnns/ 
-        
         labels_op = np.full((batch_size, cfg.NUM_ANCHORS * height *  width), -1) 
-        target_op = np.full((batch_size, cfg.NUM_ANCHORS, height, width, 4), 0) 
+        target_op = np.full((batch_size, cfg.NUM_ANCHORS * height * width, 4), 0) 
 
+        
+        fg_indices = (labels == 1)
+        
+        targets_temp = np.full((batch_size, self.clipped_boxes.shape[0], 4), 0)
+        
+        print(fg_indices, targets_temp[fg_indices])
+        
+        
         if cfg.verbose:
-            print("TARGET_IP:", targets.shape)
             print("TARGET_OP:", target_op.shape)
-            print("LABELS IP:", labels.shape)
             print("LABELS OP:", labels_op.shape)
         
         self.indices = np.reshape(self.indices, (batch_size, cfg.NUM_ANCHORS * height * width))
