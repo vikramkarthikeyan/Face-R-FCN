@@ -101,28 +101,37 @@ class _AnchorLayer(nn.Module):
         labels[max_overlaps >= cfg.RPN_POSITIVE_OVERLAP] = 1
         labels[max_overlaps <= cfg.RPN_NEGATIVE_OVERLAP] = 0
 
-        pos_anc_cnt = np.sum(max_overlaps > cfg.RPN_POSITIVE_OVERLAP)
+        pos_anc_cnt = np.sum(max_overlaps >= cfg.RPN_POSITIVE_OVERLAP)
+        neg_anc_cnt = np.sum(max_overlaps <= cfg.RPN_NEGATIVE_OVERLAP)
         
         if cfg.verbose:
             print("positive anchors generated:", pos_anc_cnt)
         
         total_rois = 256
-        num_fg = total_rois // 3
-        num_bg = (total_rois * 2) // 3
+        num_acceptable_fg = total_rois // 3
+        num_acceptable_bg = (total_rois * 2) // 3
 
-
-        if np.sum(max_overlaps < cfg.RPN_NEGATIVE_OVERLAP) > num_bg:
+        # Subsample if there are too many bg anchors
+        if neg_anc_cnt > num_acceptable_bg:
             for i in range(batch_size):
                 bg_inds = np.transpose(np.nonzero(labels[i] == 0))
                 rand_num = np.random.permutation(bg_inds.shape[0])
-                disable_inds = bg_inds[rand_num[num_bg:]]
+                disable_inds = bg_inds[rand_num[num_acceptable_bg:]]
+                labels[i][disable_inds] = -1
+        
+        # Subsample if there are too many fg anchors
+        if pos_anc_cnt > num_acceptable_fg:
+            for i in range(batch_size):
+                fg_inds = np.transpose(np.nonzero(labels[i] == 1))
+                rand_num = np.random.permutation(fg_inds.shape[0])
+                disable_inds = fg_inds[rand_num[num_acceptable_fg:]]
                 labels[i][disable_inds] = -1
 
         if cfg.demo:
             plot_layer_outputs(clipped_boxes, labels, scale, image_info)
 
-        targets = self.clipped_boxes.view(-1, 4).float() - (gt_boxes.view(-1, 4)[argmax_overlaps, :].float() / scale)
-
+        targets = np.zeros((batch_size, self.clipped_boxes.shape[0], 4), dtype=np.float32)
+        #TODO: Convert target generation to log: http://www.telesens.co/2018/03/11/object-detection-and-classification-using-r-cnns/ 
         label_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 1).fill_(-1)
         target_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 4).fill_(0)
 
