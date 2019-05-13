@@ -76,7 +76,7 @@ class _AnchorLayer(nn.Module):
 
         # Set a minimum value to avoid a potential zero error
         overlaps[overlaps == 0] = 1e-10
-
+        print(overlaps)
         if cfg.verbose:
             print("MAX OF OVERLAPS", overlaps.max())
             print(overlaps[overlaps > 1], "empty is good")
@@ -137,21 +137,6 @@ class _AnchorLayer(nn.Module):
     def plot_boxes(self, anchors, color='r'):
         pass
 
-    def clip_boxes(self, boxes, length, width, batch_size):
-
-        op2 = []
-        inds = []
-
-        for i in range(batch_size):
-            for ch, channel in enumerate(boxes[i]):
-                for x_n, x in enumerate(channel):
-                    for y_n, y in enumerate(x):
-                        if y[0] >= 0 and y[1] >= 0 and (y[0] + y[2] - 1) < length and (y[1] + y[3] - 1) < width:
-                            op2.append(y.numpy())
-                            inds.append((i, ch, x_n, y_n))
-
-        return torch.from_numpy(np.array(op2)), inds
-
     def clip_boxes_batch(self, boxes, length, width, batch_size):
         """
         Clip boxes to image boundaries.
@@ -172,21 +157,6 @@ class _AnchorLayer(nn.Module):
 
         return boxes, keep
 
-    def bbox_overlaps(self, anchors, gt_boxes):
-        batch_size = gt_boxes.shape[0]
-        overlaps = []
-
-        for i in range(batch_size):
-            overlaps_image = []
-            for anchor in anchors:
-                IOU_anchor_vs_all_gt = [calc_IOU(anchor, gt_box) for gt_box in gt_boxes[i]]
-
-                overlaps_image.append(IOU_anchor_vs_all_gt)
-
-            overlaps.append(overlaps_image)
-
-        return torch.tensor(overlaps)
-
     def bbox_overlaps_vectorized(self, anchors, gt_boxes):
         batch_size = gt_boxes.shape[0]
 
@@ -196,9 +166,7 @@ class _AnchorLayer(nn.Module):
             IOUs = calc_IOU_vectorized_(anchors, gt_boxes[i])
             overlaps.append(np.expand_dims(IOUs, axis=0))
 
-        overlaps = torch.cat(overlaps, 0)
-
-        return overlaps
+        return np.array(overlaps)
 
 
 def resize_image(self, im, dimension=cfg.IMAGE_INPUT_DIMS):
