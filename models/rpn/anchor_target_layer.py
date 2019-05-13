@@ -1,4 +1,5 @@
 import torch
+import os
 from torch import nn
 from ..utils.anchors import generate_anchors, calc_IOU, calc_IOU2, calc_IOU_vectorized_
 from ..config import rfcn_config as cfg
@@ -87,13 +88,12 @@ class _AnchorLayer(nn.Module):
             print(overlaps[overlaps > cfg.RPN_POSITIVE_OVERLAP], "empty is not good")
 
         # 4. Create labels for all anchors generated and set them as -1.
+        # (1, 69151 - 69151 anchors are left after removing those that exceed the boundaries
         labels = np.full((batch_size, self.clipped_boxes.shape[0]), -1)
 
         # 5. Calculate best possible over lap w. r. t. all GT boxes. Choose the best GT box for this match
         argmax_overlaps = np.argmax(overlaps, 2)
-        max_overlaps = np.max(overlaps, 2)
-        
-        #max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
+        max_overlaps = np.max(overlaps, 2) 
 
         if cfg.verbose:
             print("OVERLAPS SHAPE:", overlaps.shape)
@@ -106,6 +106,7 @@ class _AnchorLayer(nn.Module):
         
         if cfg.verbose:
             print("positive anchors generated:", pos_anc_cnt)
+            print("negative anchors generated:", neg_anc_cnt)
         
         total_rois = 256
         num_acceptable_fg = total_rois // 3
@@ -128,22 +129,26 @@ class _AnchorLayer(nn.Module):
                 labels[i][disable_inds] = -1
 
         if cfg.demo:
-            plot_layer_outputs(clipped_boxes, labels, scale, image_info)
+            if pos_anc_cnt < 5:
+                plot_layer_outputs(clipped_boxes, labels, scale, gt_boxes, image_info)
 
         targets = np.zeros((batch_size, self.clipped_boxes.shape[0], 4), dtype=np.float32)
+        
         #TODO: Convert target generation to log: http://www.telesens.co/2018/03/11/object-detection-and-classification-using-r-cnns/ 
-        label_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 1).fill_(-1)
-        target_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 4).fill_(0)
+        
+        labels_op = np.full((batch_size, cfg.NUM_ANCHORS, height, width, 1), -1) 
+        target_op = np.full((batch_size, cfg.NUM_ANCHORS, height, width, 4), 0) 
 
         if cfg.verbose:
             print("TARGET_IP:", targets.shape)
             print("TARGET_OP:", target_op.shape)
+            print("LABELS:", labels.shape)
+            print("LABELS reshaped", labels_op.shape)
 
         for lab, target, ind in zip(labels[0], targets[0], self.indices):
-            label_op[ind] = lab
             target_op[ind] = target
 
-        return label_op, target_op
+        return labels, target_op
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""
@@ -205,14 +210,16 @@ def resize_image(self, im, dimension=cfg.IMAGE_INPUT_DIMS):
     return new_im
 
 
-def plot_layer_outputs(clipped_boxes, labels, scale, image_info):
-    pos_anc = clipped_boxes[(labels == 1).view(-1), :]
-    neg_anc = clipped_boxes[(labels == 0).view(-1), :]
+def plot_layer_outputs(clipped_boxes, labels, scale, gt_boxes, image_info):
+    print(clipped_boxes[labels[0] == 1])
+    pos_anc = clipped_boxes[(labels[0] == 1)]
+    neg_anc = clipped_boxes[(labels[0] == 0)]
 
     img = Image.open(image_info[0])
-    plt.imshow(resize_image(img))
+    #plt.imshow(resize_image(img))
 
     ax = plt.gca()
+    ax.imshow(img)
 
     for anc in neg_anc[:100, :]:
         anc_ = anc * scale
@@ -227,9 +234,14 @@ def plot_layer_outputs(clipped_boxes, labels, scale, image_info):
                                facecolor='none'))
 
     for anc in gt_boxes[0]:
-        anc_ = anc
+        anc_ = anc * scale
         ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
                                linewidth=2, edgecolor='b',
                                facecolor='none'))
 
-    plt.show()
+    file_name = image_info[0].split('/')[-1]
+
+    cwd = os.getcwd()
+
+    plt.savefig(cwd+ "/debug_plots/anchor_target_layer/" + file_name)
+    
