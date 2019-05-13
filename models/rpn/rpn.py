@@ -92,7 +92,10 @@ class RPN(nn.Module):
             
             if cfg.verbose:
                 print("\n\n-------------- AFTER ATL --------------")
-            
+                print("FACT CHECK:", np.nonzero(labels == 1))
+                print("FACT CHECK2:", np.nonzero(targets))
+                print("FACT CHECK3:", targets[np.nonzero(targets)])
+
             # Compute cross-entropy classification loss
             flattened_labels = np.reshape(labels, -1)
             valid_indices = np.argwhere(flattened_labels > -1)
