@@ -72,9 +72,6 @@ class _AnchorLayer(nn.Module):
             self.clipped_boxes = clipped_boxes
             self.indices = indices
 
-            if cfg.verbose:
-                print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
-
 
         # 3. Get all area overlap for the kept anchors
         overlaps = self.bbox_overlaps_vectorized(self.clipped_boxes, gt_boxes)
@@ -136,19 +133,26 @@ class _AnchorLayer(nn.Module):
         
         #TODO: Convert target generation to log: http://www.telesens.co/2018/03/11/object-detection-and-classification-using-r-cnns/ 
         
-        labels_op = np.full((batch_size, cfg.NUM_ANCHORS, height, width, 1), -1) 
+        labels_op = np.full((batch_size, cfg.NUM_ANCHORS * height *  width), -1) 
         target_op = np.full((batch_size, cfg.NUM_ANCHORS, height, width, 4), 0) 
 
         if cfg.verbose:
             print("TARGET_IP:", targets.shape)
             print("TARGET_OP:", target_op.shape)
-            print("LABELS:", labels.shape)
-            print("LABELS reshaped", labels_op.shape)
+            print("LABELS IP:", labels.shape)
+            print("LABELS OP:", labels_op.shape)
+        
+        self.indices = np.reshape(self.indices, (batch_size, cfg.NUM_ANCHORS * height * width))
+        
+        # Transfer labels based on feature map size
+        labels_op[0][self.indices[0]] = labels[0]
+        labels_op = np.reshape(labels_op, (batch_size, cfg.NUM_ANCHORS, height, width))
 
-        for lab, target, ind in zip(labels[0], targets[0], self.indices):
-            target_op[ind] = target
+        #for lab, target, ind in zip(labels[0], targets[0], self.indices):
+        #    print(ind)
+        #    target_op[ind] = target
 
-        return labels, target_op
+        return labels_op, target_op
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""
