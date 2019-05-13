@@ -14,7 +14,7 @@ class _AnchorLayer(nn.Module):
 
     def __init__(self):
 
-        self.anchors = None
+        self.all_anchors = None
 
         super(_AnchorLayer, self).__init__()
 
@@ -52,19 +52,17 @@ class _AnchorLayer(nn.Module):
             print("GT_BOXES:", gt_boxes.shape)
 
         # 1. Generating anchors
-        if self.anchors is None:
-            self.anchors = generate_anchors((height, width), cfg.ANCHOR_SIZES)
+        if self.all_anchors is None:
+            self.all_anchors = generate_anchors((height, width), cfg.ANCHOR_SIZES)
 
-            all_anchors = self.anchors
-
-            all_anchors = np.reshape(all_anchors, (batch_size, all_anchors.shape[0], all_anchors.shape[1],
-                                       all_anchors.shape[2], all_anchors.shape[3]))
+            self.all_anchors = np.reshape(self.all_anchors, (batch_size, self.all_anchors.shape[0], self.all_anchors.shape[1],
+                                       self.all_anchors.shape[2], self.all_anchors.shape[3]))
 
             if cfg.verbose:
-                print("ANCHORS:", all_anchors.shape)
+                print("ANCHORS:", self.all_anchors.shape)
 
             # 2. Clipping anchors which exceed boundaries
-            clipped_boxes, indices = self.clip_boxes_batch(all_anchors, height, width, batch_size)
+            clipped_boxes, indices = self.clip_boxes_batch(self.all_anchors, height, width, batch_size)
             
             self.clipped_boxes = clipped_boxes
             self.indices = indices
@@ -136,17 +134,27 @@ class _AnchorLayer(nn.Module):
         
         #TODO: Convert target generation to log: http://www.telesens.co/2018/03/11/object-detection-and-classification-using-r-cnns/ 
         labels_op = np.full((batch_size, cfg.NUM_ANCHORS * height *  width), -1) 
-        target_op = np.full((batch_size, cfg.NUM_ANCHORS * height * width, 4), 0) 
+        target_op = np.full((batch_size, cfg.NUM_ANCHORS, height ,width, 4), 0) 
 
+        print("\n\n--------------Trying to generate bbox mask-----")    
+        fg_indices_mask = (labels == 1)[0]
+        clipped_indices = np.transpose(np.nonzero(self.indices))
         
-        fg_indices = (labels == 1)
+        fg_indices = clipped_indices[fg_indices_mask,:]
+        gt_assignments = argmax_overlaps[:,fg_indices_mask]
+
+        #targets_temp = np.full((batch_size, self.clipped_boxes.shape[0], 4), 0)
         
-        targets_temp = np.full((batch_size, self.clipped_boxes.shape[0], 4), 0)
+        fg_indices = fg_indices.T
         
-        print(fg_indices, targets_temp[fg_indices])
-        
+        fg_anchors = self.all_anchors[fg_indices[0], fg_indices[1], fg_indices[2], fg_indices[3], :] 
+        fg_gt_boxes = gt_boxes[:, gt_assignments[0], :]
+
+        bbox_targets = get_bbox_targets(fg_anchors, fg_gt_boxes)
         
         if cfg.verbose:
+            print("FG ANCHORS:", fg_anchors.shape)
+            print("FG_GT_BOXES:", fg_gt_boxes.shape)
             print("TARGET_OP:", target_op.shape)
             print("LABELS OP:", labels_op.shape)
         
@@ -204,6 +212,8 @@ class _AnchorLayer(nn.Module):
 
         return np.array(overlaps)
 
+def get_bbox_targets(anchors, gt_boxes):
+    return ""
 
 def resize_image(im, dimension=cfg.IMAGE_INPUT_DIMS):
     old_size = im.size
@@ -223,7 +233,6 @@ def resize_image(im, dimension=cfg.IMAGE_INPUT_DIMS):
 
 
 def plot_layer_outputs(clipped_boxes, labels, scale, gt_boxes, image_info):
-    print(clipped_boxes[labels[0] == 1])
     pos_anc = clipped_boxes[(labels[0] == 1)]
     neg_anc = clipped_boxes[(labels[0] == 0)]
 
