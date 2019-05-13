@@ -57,61 +57,71 @@ class _AnchorLayer(nn.Module):
         if self.anchors is None:
             self.anchors = generate_anchors((height, width), cfg.ANCHOR_SIZES)
 
-        all_anchors = self.anchors
+            all_anchors = self.anchors
 
-        all_anchors = np.reshape(all_anchors, (batch_size, all_anchors.shape[0], all_anchors.shape[1],
+            all_anchors = np.reshape(all_anchors, (batch_size, all_anchors.shape[0], all_anchors.shape[1],
                                        all_anchors.shape[2], all_anchors.shape[3]))
 
-        if cfg.verbose:
-            print("ANCHORS:", all_anchors.shape)
+            if cfg.verbose:
+                print("ANCHORS:", all_anchors.shape)
 
-        # 2. Clipping anchors which exceed boundaries
-        clipped_boxes, indices = self.clip_boxes_batch(all_anchors, height, width, batch_size)
+            # 2. Clipping anchors which exceed boundaries
+            clipped_boxes, indices = self.clip_boxes_batch(all_anchors, height, width, batch_size)
+            
+            self.clipped_boxes = clipped_boxes
+            self.indices = indices
 
-        if cfg.verbose:
-            print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
+            if cfg.verbose:
+                print("CLIPPED:", clipped_boxes.shape, clipped_boxes)
+
 
         # 3. Get all area overlap for the kept anchors
-        overlaps = self.bbox_overlaps_vectorized(clipped_boxes, gt_boxes)
+        overlaps = self.bbox_overlaps_vectorized(self.clipped_boxes, gt_boxes)
 
         # Set a minimum value to avoid a potential zero error
         overlaps[overlaps == 0] = 1e-10
-        print(overlaps)
+        
         if cfg.verbose:
             print("MAX OF OVERLAPS", overlaps.max())
             print(overlaps[overlaps > 1], "empty is good")
             print(overlaps[overlaps > cfg.RPN_POSITIVE_OVERLAP], "empty is not good")
 
         # 4. Create labels for all anchors generated and set them as -1.
-        labels = overlaps.new(batch_size, clipped_boxes.shape[0]).fill_(-1)
+        labels = np.full((batch_size, self.clipped_boxes.shape[0]), -1)
 
         # 5. Calculate best possible over lap w. r. t. all GT boxes. Choose the best GT box for this match
-        max_overlaps, gt_assignment = torch.max(overlaps, 2)
-        max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
-        gt_max_overlaps, argmax_gt_max_overlaps = torch.max(overlaps, 1)
+        argmax_overlaps = np.argmax(overlaps, 2)
+        max_overlaps = np.max(overlaps, 2)
+        
+        #max_overlaps, argmax_overlaps = torch.max(overlaps, 2)
 
         if cfg.verbose:
-            print("OVERLAPS:", overlaps)
             print("OVERLAPS SHAPE:", overlaps.shape)
 
         labels[max_overlaps >= cfg.RPN_POSITIVE_OVERLAP] = 1
         labels[max_overlaps <= cfg.RPN_NEGATIVE_OVERLAP] = 0
 
-        pos_anc_cnt = torch.sum(max_overlaps > cfg.RPN_POSITIVE_OVERLAP)
+        pos_anc_cnt = np.sum(max_overlaps > cfg.RPN_POSITIVE_OVERLAP)
+        
+        if cfg.verbose:
+            print("positive anchors generated:", pos_anc_cnt)
+        
+        total_rois = 256
+        num_fg = total_rois // 3
+        num_bg = (total_rois * 2) // 3
 
-        cutoff_cnt = max(1, 3 * pos_anc_cnt)
 
-        if torch.sum(max_overlaps < cfg.RPN_NEGATIVE_OVERLAP) > cutoff_cnt:
+        if np.sum(max_overlaps < cfg.RPN_NEGATIVE_OVERLAP) > num_bg:
             for i in range(batch_size):
-                bg_inds = torch.nonzero(labels[i] == 0).view(-1)
-                rand_num = torch.from_numpy(np.random.permutation(bg_inds.shape[0])).type_as(gt_boxes).long()
-                disable_inds = bg_inds[rand_num[:bg_inds.size(0) - cutoff_cnt]]
+                bg_inds = np.transpose(np.nonzero(labels[i] == 0))
+                rand_num = np.random.permutation(bg_inds.shape[0])
+                disable_inds = bg_inds[rand_num[num_bg:]]
                 labels[i][disable_inds] = -1
 
         if cfg.demo:
             plot_layer_outputs(clipped_boxes, labels, scale, image_info)
 
-        targets = clipped_boxes.view(-1, 4).float() - (gt_boxes.view(-1, 4)[argmax_overlaps, :].float() / scale)
+        targets = self.clipped_boxes.view(-1, 4).float() - (gt_boxes.view(-1, 4)[argmax_overlaps, :].float() / scale)
 
         label_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 1).fill_(-1)
         target_op = overlaps.new(batch_size, cfg.NUM_ANCHORS, height, width, 4).fill_(0)
@@ -120,7 +130,7 @@ class _AnchorLayer(nn.Module):
             print("TARGET_IP:", targets.shape)
             print("TARGET_OP:", target_op.shape)
 
-        for lab, target, ind in zip(labels[0], targets[0], indices):
+        for lab, target, ind in zip(labels[0], targets[0], self.indices):
             label_op[ind] = lab
             target_op[ind] = target
 
@@ -164,7 +174,7 @@ class _AnchorLayer(nn.Module):
 
         for i in range(batch_size):
             IOUs = calc_IOU_vectorized_(anchors, gt_boxes[i])
-            overlaps.append(np.expand_dims(IOUs, axis=0))
+            overlaps.append(IOUs)
 
         return np.array(overlaps)
 
