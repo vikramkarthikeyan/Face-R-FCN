@@ -64,9 +64,12 @@ class _ProposalLayer(nn.Module):
                                          bbox_deltas_shape[3], 4))
 
         # Step 1.c - Transform scores shape and get only face probabilities
+        print("\n\nBOTH SCORES SHAPE:", scores.shape)
         scores = np.reshape(scores, (scores.shape[0], -1, scores.shape[2], scores.shape[3], 2))
-        scores = scores[:,:,:,:,0]
-
+        print("scores separated check",scores[:,:,:,:,0], scores[:,:,:,:,1])
+        scores = scores[:,:,:,:,1]
+        face_scores = scores
+        
         # boxes shape: 1,20,64,64,4
         # split_deltas shape: 1,20,64,64,4
         # face scores shape: 1,20,64,64 
@@ -132,7 +135,7 @@ class _ProposalLayer(nn.Module):
             proposal_outputs[i, :num_proposal, 0:] = proposals
             score_outputs[i, :num_proposal, 0] = scores
         
-        return proposal_outputs, score_outputs
+        return proposal_outputs, score_outputs, face_scores
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""

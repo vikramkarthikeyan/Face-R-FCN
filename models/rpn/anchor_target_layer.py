@@ -47,12 +47,9 @@ class _AnchorLayer(nn.Module):
 
         batch_size = gt_boxes.shape[0]
 
-        cls_scores = cls_scores.cpu()
-
         if cfg.verbose:
             print("\n\n----Anchor Target Layer----\n")
-            print("CLS_SCORES:", cls_scores.shape)
-            print("GT_BOXES:", gt_boxes.shape, gt_boxes)
+            print("GT_BOXES:", gt_boxes.shape)
 
         # 1. Generating anchors
         if self.anchors is None:
@@ -91,14 +88,21 @@ class _AnchorLayer(nn.Module):
         # 5. Calculate best possible over lap w. r. t. all GT boxes. Choose the best GT box for this match
         argmax_overlaps = np.argmax(overlaps, 2)
         max_overlaps = np.max(overlaps, 2) 
-
+        
+        # 5.a Get the anchor with the best overlap per GT box
+        gt_argmax_overlaps = np.argmax(overlaps, 1)
+        
         if cfg.verbose:
             print("OVERLAPS SHAPE:", overlaps.shape)
-
+        
+        # Anchor targets based on threshold
         labels[max_overlaps >= cfg.RPN_POSITIVE_OVERLAP] = 1
         labels[max_overlaps <= cfg.RPN_NEGATIVE_OVERLAP] = 0
 
-        pos_anc_cnt = np.sum(max_overlaps >= cfg.RPN_POSITIVE_OVERLAP)
+        # Positive anchors based on best overlap per GT
+        labels[0, gt_argmax_overlaps[0]] = 1
+        
+        pos_anc_cnt = np.count_nonzero(labels == 1)
         neg_anc_cnt = np.sum(max_overlaps <= cfg.RPN_NEGATIVE_OVERLAP)
         
         if cfg.verbose:
@@ -197,7 +201,7 @@ class _AnchorLayer(nn.Module):
         return np.array(overlaps)
 
 
-def resize_image(self, im, dimension=cfg.IMAGE_INPUT_DIMS):
+def resize_image(im, dimension=cfg.IMAGE_INPUT_DIMS):
     old_size = im.size
     ratio = float(dimension) / max(old_size)
     new_size = tuple([int(x * ratio) for x in old_size])
@@ -223,7 +227,7 @@ def plot_layer_outputs(clipped_boxes, labels, scale, gt_boxes, image_info):
     #plt.imshow(resize_image(img))
 
     ax = plt.gca()
-    ax.imshow(img)
+    ax.imshow(resize_image(img))
 
     for anc in neg_anc[:100, :]:
         anc_ = anc * scale
