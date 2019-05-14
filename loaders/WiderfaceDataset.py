@@ -97,7 +97,7 @@ class WiderFaceDataset(Dataset):
     # Referenced from: https://jdhao.github.io/2017/11/06/resize-image-to-square-with-padding/
     def resize_image(self, im, b_boxes, dimension=cfg.IMAGE_INPUT_DIMS):
         b_boxes = np.array(b_boxes, dtype=np.float)
-        
+
         old_size = im.size
         
         ratio = float(dimension) / max(old_size)
@@ -113,17 +113,14 @@ class WiderFaceDataset(Dataset):
         new_im.paste(im, (offset_x, offset_y))
 
         # Re-size and offset bounding boxes based on image
-        results = []
-
-        print(b_boxes.shape)
         b_boxes[:,0] = (b_boxes[:,0] * ratio) + offset_x
         b_boxes[:,1] = (b_boxes[:,1] * ratio) + offset_y
         
         b_boxes[:,0] = np.clip(b_boxes[:,0], 0, None)
         b_boxes[:,1] = np.clip(b_boxes[:,1], 0, None)
 
-        b_boxes[:,2] = b_boxes[:,2] * ratio
-        b_boxes[:,3] = b_boxes[:,3] * ratio
+        b_boxes[:,2] = np.clip(b_boxes[:,2],1, None) * ratio
+        b_boxes[:,3] = np.clip(b_boxes[:,3],1, None) * ratio
 
         """for box in b_boxes:
             x = int(abs(box[0] * ratio + offset_x))
@@ -133,7 +130,7 @@ class WiderFaceDataset(Dataset):
             new_box = [x, y, l, b]
             results.append(new_box)
         """
-        return new_im, b_boxes
+        return new_im, b_boxes[:60,:]
 
     def plot_boxes(self, file, positive_anchors, negative_anchors, boxes):
         im = np.array(Image.open(file).convert('RGB'), dtype=np.uint8)

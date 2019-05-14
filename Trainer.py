@@ -29,11 +29,11 @@ def custom_collate(batch):
 # https://github.com/pytorch/examples/blob/master/imagenet/main.py
 class Trainer:
 
-    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=5, validation_batch_size=5):
+    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=1, validation_batch_size=5):
 
         # Create training dataloader
         self.train_loader = torch.utils.data.DataLoader(training_data, batch_size=training_batch_size, shuffle=True,
-                                                        num_workers=5, collate_fn=custom_collate)
+                                                        num_workers=1, collate_fn=custom_collate)
 
         # Create validation dataloader
         self.validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=validation_batch_size,
