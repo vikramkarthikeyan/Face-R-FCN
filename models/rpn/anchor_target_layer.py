@@ -142,7 +142,6 @@ class _AnchorLayer(nn.Module):
         gt_assignments = argmax_overlaps[:, fg_indices_mask]
 
         fg_indices = fg_indices.T
-        print("ALL ANCHORS:", self.all_anchors.shape)
         fg_anchors = self.all_anchors[fg_indices[0], fg_indices[1], fg_indices[2], fg_indices[3], :]
         fg_gt_boxes = gt_boxes[:, gt_assignments[0], :]
         fg_anchors = np.expand_dims(fg_anchors, axis=0)
