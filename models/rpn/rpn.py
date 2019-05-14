@@ -108,16 +108,14 @@ class RPN(nn.Module):
 
             # Compute smooth l1 bbox regression loss
             self.rpn_loss_box = self.smooth_l1_loss(rpn_bbox_predictions.cpu(), targets, labels,
-                                                    delta=cfg.RPN_L1_DELTA, dim=[1, 2, 3])
-
-            print(self.rpn_loss_box)
+                                                    delta=cfg.RPN_L1_DELTA)
 
 
         rois = torch.from_numpy(rois).float() 
         
         return rois, self.rpn_loss_cls, self.rpn_loss_box
 
-    def smooth_l1_loss(self, bb_prediction, bb_target, bb_labels, delta=1.0, dim=[1]):
+    def smooth_l1_loss(self, bb_prediction, bb_target, bb_labels, delta=1.0):
         """
         Loss function for Smooth L1 taken from Wikipedia (https://en.wikipedia.org/wiki/Huber_loss) and
             reference code.
@@ -136,12 +134,9 @@ class RPN(nn.Module):
                                            bb_prediction.shape[2], bb_prediction.shape[3], 4)
 
         difference = torch.abs(bb_prediction - bb_target).float()
-        print(difference.shape)
 
         mask = (bb_labels == 1.0).float()
 
-        print("LABEL:", bb_labels.shape, bb_labels.ge(1).float().sum())
-        print("MASK:", mask.shape, mask.sum())
         """
         Mask to take only positive anchors into consideration
         """
@@ -170,18 +165,12 @@ class RPN(nn.Module):
 
         losses = LHS + RHS
         losses = (losses * weight)
-        print(losses)
-        losses = np.sum(losses, axis=4)
-
-        # print("Losses BEFORE mask:", losses)
-        print(losses.shape, mask.shape)
-        losses = losses * mask
-        # print("Losses after mask:", losses)
+        losses = torch.sum(losses, dim=4)
         
-        for i in sorted(dim, reverse=True):
-            losses = losses.sum(i)
-        losses = losses.mean()
-
-        # print("LOSSES AFTER MEAN", losses)
+        # Perform masking for only FG anchors
+        losses = losses * mask
+        
+        # Get sum of all losses
+        losses = losses.sum()
 
         return losses
