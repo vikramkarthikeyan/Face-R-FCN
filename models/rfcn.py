@@ -73,17 +73,12 @@ class _RFCN(nn.Module):
         # Base features: (1, 1024, 64, 64)
         # if it is training phrase, then use ground truth bboxes for refining proposals
         if self.training:
-            rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = self.RCNN_proposal_target(rois, gt_boxes,
-                                                                                                       base_features)
+            rois, rois_label, rois_target = self.RCNN_proposal_target(rois, gt_boxes, base_features)
             rois_label = Variable(rois_label.view(-1).long())
             rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
-            rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
-            rois_outside_ws = Variable(rois_outside_ws.view(-1, rois_outside_ws.size(2)))
         else:
             rois_label = None
             rois_target = None
-            rois_inside_ws = None
-            rois_outside_ws = None
             rpn_loss_cls = 0
             rpn_loss_bbox = 0
 
@@ -130,8 +125,7 @@ class _RFCN(nn.Module):
         RCNN_loss_bbox = 0
 
         if self.training:
-            RCNN_loss_cls, RCNN_loss_bbox = self.ohem_detect_loss(cls_score, rois_label, bbox_pred, rois_target,
-                                                                  rois_inside_ws, rois_outside_ws)
+            RCNN_loss_cls, RCNN_loss_bbox = self.ohem_detect_loss(cls_score, rois_label, bbox_pred, rois_target)
 
         # Convert it to the batchwise format and return, TODO: Replace "1" with batch size hopefully soon
         cls_prob = cls_prob.view(1, rois.size(1), -1)
@@ -139,7 +133,7 @@ class _RFCN(nn.Module):
 
         return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label
 
-    def ohem_detect_loss(self, cls_score, rois_label, bbox_pred, rois_target, rois_inside_ws, rois_outside_ws):
+    def ohem_detect_loss(self, cls_score, rois_label, bbox_pred, rois_target):
 
         def log_sum_exp(x):
             x_max = x.data.max()
@@ -154,6 +148,7 @@ class _RFCN(nn.Module):
         if rfcn_config.verbose:
             print("\n\n-----OHEM-----")
             print("Number of positive examples:", num_pos.data)
+            print(cls_score.shape, rois_label.shape, bbox_pred.shape, rois_target.shape)
 
         # classification loss
         num_classes = cls_score.size(1)

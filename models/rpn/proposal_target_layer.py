@@ -42,9 +42,9 @@ class _ProposalTargetLayer(nn.Module):
                                                                                rois_per_image, self.num_classes,
                                                                                features)
 
-        bbox_outside_weights = (bbox_inside_weights > 0).float()
+        # bbox_outside_weights = (bbox_inside_weights > 0).float()
 
-        return rois, labels, bbox_targets, bbox_inside_weights, bbox_outside_weights
+        return rois, labels, bbox_targets
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""
