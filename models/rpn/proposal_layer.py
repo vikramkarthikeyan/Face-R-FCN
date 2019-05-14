@@ -68,7 +68,8 @@ class _ProposalLayer(nn.Module):
         # face scores shape: 1,20,64,64 
 
         # Step 2 - Apply bounding box transformations
-        adjusted_boxes = boxes + split_deltas
+        # adjusted_boxes = boxes + split_deltas
+        adjusted_boxes = bbox_transform(boxes, split_deltas)
         
         # Step 3 - Clip boxes so that they are within the feature dimensions
         clipped_boxes = clip_boxes_batch(adjusted_boxes, height, width, batch_size)
@@ -138,6 +139,13 @@ class _ProposalLayer(nn.Module):
         """Reshaping happens during the call to forward."""
         pass
 
+def bbox_transform(boxes, split_deltas):
+    print(boxes.shape)
+    print(split_deltas.shape)
+    results =  np.full(boxes.shape, 0.0, dtype=np.float)
+    
+    return results
+    
 
 def clip_boxes_batch(boxes, length, width, batch_size):
     """
@@ -159,21 +167,6 @@ def clip_boxes_batch(boxes, length, width, batch_size):
 
     return boxes
 
-
-def filter_boxes_torch(boxes, min_size):
-    """Remove all boxes with any side smaller than min_size."""
-
-    widths = boxes[:, :, :, :, 2]
-    heights = boxes[:, :, :, :, 3]
-
-    keep = torch.zeros_like(widths)
-
-    min_sizes = keep.new_full(keep.shape, min_size)
-
-    keep = ((widths >= min_sizes) & (heights >= min_sizes))
-    return keep
-
-
 def filter_boxes(boxes, min_size):
     """Remove all boxes with any side smaller than min_size."""
 
@@ -186,121 +179,6 @@ def filter_boxes(boxes, min_size):
     min_sizes.fill(min_size)
     keep = ((widths >= min_sizes) & (heights >= min_sizes))
     return keep
-
-
-# https://www.pyimagesearch.com/2014/11/17/non-maximum-suppression-object-detection-python/
-def nms_old(entries, thresh):
-    x1 = entries[:, 0]
-    y1 = entries[:, 1]
-    l = entries[:, 2]
-    b = entries[:, 3]
-    scores = entries[:, 4]
-
-    x2 = x1 + l - 1
-    y2 = y1 + b - 1
-
-    # Initialize list of picked indices
-    keep = []
-
-    # Calculate areas of all bounding boxes
-    areas = l * b
-
-    # Sort the bounding boxes by the bottom-right y-coordinate of the bounding box
-    idxs = np.argsort(y2)
-
-    # keep looping while some indexes still remain in the indexes list
-    while len(idxs) > 0:
-        # grab the last index in the indexes list, add the index
-        # value to the list of picked indexes, then initialize
-        # the suppression list (i.e. indexes that will be deleted)
-        # using the last index
-        last = len(idxs) - 1
-        i = idxs[last]
-        keep.append(i)
-        suppress = [last]
-
-        # loop over all indexes in the indexes list
-        for pos in range(0, last):
-            # grab the current index
-            j = idxs[pos]
-
-            # find the largest (x, y) coordinates for the start of
-            # the bounding box and the smallest (x, y) coordinates
-            # for the end of the bounding box
-            xx1 = max(x1[i], x1[j])
-            yy1 = max(y1[i], y1[j])
-            xx2 = min(x2[i], x2[j])
-            yy2 = min(y2[i], y2[j])
-
-            # compute the width and height of the bounding box
-            w = max(0, xx2 - xx1 + 1)
-            h = max(0, yy2 - yy1 + 1)
-
-            # compute the ratio of overlap between the computed
-            # bounding box and the bounding box in the area list
-            overlap = float(w * h) / areas[j]
-
-            # if there is sufficient overlap, suppress the
-            # current bounding box
-            if overlap > rpn_config.NMS_THRESH:
-                suppress.append(pos)
-
-        # delete all indexes from the index list that are in the suppression list
-        idxs = np.delete(idxs, suppress)
-
-    # return only the bounding boxes that were picked
-    return keep
-
-
-# https://www.pyimagesearch.com/2014/11/17/non-maximum-suppression-object-detection-python/
-def nms(entries, thresh):
-    x1 = entries[:, 0]
-    y1 = entries[:, 1]
-    l = entries[:, 2]
-    b = entries[:, 3]
-    # COMMENTED FOR SPEED
-    # TODO: check why it is needed
-    # scores = entries[:, 4]
-
-    x2 = x1 + l - 1
-    y2 = y1 + b - 1
-
-    # Initialize list of picked indices
-    idx_keep = []
-
-    # Calculate areas of all bounding boxes
-    areas = l * b
-
-    # Sort the bounding boxes by the bottom-right y-coordinate of the bounding box
-    _, idxs = torch.sort(y2)
-
-    # keep looping while some indexes still remain in the indexes list
-    while idxs.shape[0] > 0:
-        # grab the last index in the indexes list, add the index
-        # value to the list of picked indexes, then initialize
-        # the suppression list (i.e. indexes that will be deleted)
-        # using the last index
-        ind = idxs[-1]
-        idx_keep.append(ind)
-
-        XX1 = torch.clamp(x1[idxs], min=x1[ind])
-        YY1 = torch.clamp(y1[idxs], min=y1[ind])
-
-        XX2 = torch.clamp(x2[idxs], max=x2[ind])
-        YY2 = torch.clamp(y2[idxs], max=y2[ind])
-
-        W = torch.clamp((XX2 - XX1 + 1), min=0)
-        H = torch.clamp((YY2 - YY1 + 1), min=0)
-
-        mask = ((W * H).float() / areas.float()).lt(thresh)
-        mask[-1] = 0
-
-        areas = areas[mask]
-        idxs = idxs[mask]
-
-    # return only the bounding boxes that were picked
-    return torch.tensor(idx_keep)
-
 
 def nms_numpy(entries, thresh):
     x1 = entries[:, 0]
