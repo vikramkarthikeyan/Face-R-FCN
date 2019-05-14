@@ -157,10 +157,10 @@ class _AnchorLayer(nn.Module):
             print("BOX_TARGETS:", bbox_targets.shape)
             print("FG INDICES:", fg_indices.shape)
 
-        self.indices = np.reshape(self.indices, (batch_size, cfg.NUM_ANCHORS * height * width))
+        instance_indices = np.reshape(self.indices, (batch_size, cfg.NUM_ANCHORS * height * width))
 
         # Transfer labels based on feature map size
-        labels_op[0][self.indices[0]] = labels[0]
+        labels_op[0][instance_indices[0]] = labels[0]
         labels_op = np.reshape(labels_op, (batch_size, cfg.NUM_ANCHORS, height, width))
 
 
