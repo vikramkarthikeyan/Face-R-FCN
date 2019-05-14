@@ -92,9 +92,6 @@ class RPN(nn.Module):
             
             if cfg.verbose:
                 print("\n\n-------------- AFTER ATL --------------")
-                print("FACT CHECK:", np.nonzero(labels == 1))
-                print("FACT CHECK2:", np.nonzero(targets))
-                print("FACT CHECK3:", targets[np.nonzero(targets)])
 
             # Compute cross-entropy classification loss
             flattened_labels = np.reshape(labels, -1)
@@ -104,10 +101,17 @@ class RPN(nn.Module):
             actual = torch.from_numpy(flattened_labels[valid_indices].flatten()).float().cuda()
             
             self.rpn_loss_cls = F.binary_cross_entropy(pred, actual)
+            
+            # Convert from numpy to torch for smooth LI loss
+            labels = torch.from_numpy(labels).float()
+            targets = torch.from_numpy(targets).float()
 
             # Compute smooth l1 bbox regression loss
-            self.rpn_loss_box = self.smooth_l1_loss(rpn_bbox_predictions, targets.cuda(), labels,
+            self.rpn_loss_box = self.smooth_l1_loss(rpn_bbox_predictions.cpu(), targets, labels,
                                                     delta=cfg.RPN_L1_DELTA, dim=[1, 2, 3])
+
+            print(self.rpn_loss_box)
+
 
         rois = torch.from_numpy(rois).float() 
         
@@ -132,11 +136,12 @@ class RPN(nn.Module):
                                            bb_prediction.shape[2], bb_prediction.shape[3], 4)
 
         difference = torch.abs(bb_prediction - bb_target).float()
+        print(difference.shape)
 
         mask = (bb_labels == 1.0).float()
 
-        # print("LABEL:", bb_labels.shape, bb_labels.ge(0).float().sum())
-        # print("MASK:", mask.shape, mask.sum())
+        print("LABEL:", bb_labels.shape, bb_labels.ge(1).float().sum())
+        print("MASK:", mask.shape, mask.sum())
         """
         Mask to take only positive anchors into consideration
         """
@@ -147,13 +152,9 @@ class RPN(nn.Module):
         """
 
         if cfg.UNIFORM_EXAMPLE_WEIGHTING:
-            weight = 1.0 / torch.sum(bb_labels >= 0).float()
+            weight = 1.0 / torch.sum(bb_labels >= 1).float()
 
-        l1_apply_mask = difference <= delta
-
-        # print("L1 MASK", l1_apply_mask)
-
-        l1_apply_mask = l1_apply_mask.float()
+        l1_apply_mask = (difference < delta).float()
 
         diff_sq = torch.pow(difference, 2)
 
@@ -163,18 +164,20 @@ class RPN(nn.Module):
 
         # print("LHS:", LHS)
 
-        RHS = ((1 - l1_apply_mask) * ((delta * difference) - (0.5 * delta_sq)))
+        RHS = ((1 - l1_apply_mask) * (difference - (0.5 * delta_sq)))
 
         # print("RHS:", RHS)
 
         losses = LHS + RHS
-
-        losses = (losses * weight.cuda())
+        losses = (losses * weight)
+        print(losses)
+        losses = np.sum(losses, axis=4)
 
         # print("Losses BEFORE mask:", losses)
-
-        losses = losses * mask.cuda()
+        print(losses.shape, mask.shape)
+        losses = losses * mask
         # print("Losses after mask:", losses)
+        
         for i in sorted(dim, reverse=True):
             losses = losses.sum(i)
         losses = losses.mean()

@@ -132,19 +132,14 @@ class _AnchorLayer(nn.Module):
             if pos_anc_cnt < 5:
                 plot_layer_outputs(clipped_boxes, labels, scale, gt_boxes, image_info)
 
-        # TODO: Convert target generation to log: http://www.telesens.co/2018/03/11/object-detection-and-classification-using-r-cnns/
-
         labels_op = np.full((batch_size, cfg.NUM_ANCHORS * height * width), -1)
-        target_op = np.full((batch_size, cfg.NUM_ANCHORS, height, width, 4), 0)
+        target_op = np.full((batch_size, cfg.NUM_ANCHORS, height, width, 4), 0, dtype=np.float)
 
-        print("\n\n--------------Trying to generate bbox mask-----")
         fg_indices_mask = (labels == 1)[0]
         clipped_indices = np.transpose(np.nonzero(self.indices))
 
         fg_indices = clipped_indices[fg_indices_mask, :]
         gt_assignments = argmax_overlaps[:, fg_indices_mask]
-
-        # targets_temp = np.full((batch_size, self.clipped_boxes.shape[0], 4), 0)
 
         fg_indices = fg_indices.T
 
@@ -160,6 +155,7 @@ class _AnchorLayer(nn.Module):
             print("TARGET_OP:", target_op.shape)
             print("LABELS OP:", labels_op.shape)
             print("BOX_TARGETS:", bbox_targets.shape)
+            print("FG INDICES:", fg_indices.shape)
 
         self.indices = np.reshape(self.indices, (batch_size, cfg.NUM_ANCHORS * height * width))
 
@@ -167,20 +163,13 @@ class _AnchorLayer(nn.Module):
         labels_op[0][self.indices[0]] = labels[0]
         labels_op = np.reshape(labels_op, (batch_size, cfg.NUM_ANCHORS, height, width))
 
-        # print(fg_indices.shape, bbox_targets.shape, target_op.shape)
 
-        target_op[fg_indices[0], fg_indices[1], fg_indices[2], fg_indices[3], 0] = bbox_targets[0, :, 0]
-        target_op[fg_indices[0], fg_indices[1], fg_indices[2], fg_indices[3], 1] = bbox_targets[0, :, 1]
-        target_op[fg_indices[0], fg_indices[1], fg_indices[2], fg_indices[3], 2] = bbox_targets[0, :, 2]
-        target_op[fg_indices[0], fg_indices[1], fg_indices[2], fg_indices[3], 3] = bbox_targets[0, :, 3]
-
-        print(target_op[target_op != 0.0])
-        print(fg_indices, fg_indices.shape)
-
-        # for lab, target, ind in zip(labels[0], targets[0], self.indices):
-        #    print(ind)
-        #    target_op[ind] = target
-
+        for i, index_list in enumerate(fg_indices.T):
+            target_op[index_list[0], index_list[1], index_list[2], index_list[3], 0] = bbox_targets[0, i, 0]
+            target_op[index_list[0], index_list[1], index_list[2], index_list[3], 1] = bbox_targets[0, i, 1]
+            target_op[index_list[0], index_list[1], index_list[2], index_list[3], 2] = bbox_targets[0, i, 2]
+            target_op[index_list[0], index_list[1], index_list[2], index_list[3], 3] = bbox_targets[0, i, 3]
+        
         return labels_op, target_op
 
     def backward(self, top, propagate_down, bottom):
