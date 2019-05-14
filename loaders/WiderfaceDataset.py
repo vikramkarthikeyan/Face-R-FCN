@@ -77,8 +77,10 @@ class WiderFaceDataset(Dataset):
     def __getitem__(self, idx):
         try:
             with open(self.dataset.iloc[idx]['image_location'], 'rb') as f:
+            #with open("/home/vedvalsangkar/Face-R-FCN/data/widerface/WIDER_train/images/0--Parade/0_Parade_Parade_0_452.jpg", 'rb') as f:
                 image = Image.open(f)
                 image = image.convert('RGB')
+                #print(image.size)
                 image, boxes = self.resize_image(image, self.dataset.iloc[idx]['image_ground_truth'],
                                                  dimension=cfg.IMAGE_INPUT_DIMS)
 
@@ -94,7 +96,10 @@ class WiderFaceDataset(Dataset):
 
     # Referenced from: https://jdhao.github.io/2017/11/06/resize-image-to-square-with-padding/
     def resize_image(self, im, b_boxes, dimension=cfg.IMAGE_INPUT_DIMS):
+        b_boxes = np.array(b_boxes, dtype=np.float)
+        
         old_size = im.size
+        
         ratio = float(dimension) / max(old_size)
         new_size = tuple([int(x * ratio) for x in old_size])
 
@@ -110,15 +115,25 @@ class WiderFaceDataset(Dataset):
         # Re-size and offset bounding boxes based on image
         results = []
 
-        for box in b_boxes:
+        print(b_boxes.shape)
+        b_boxes[:,0] = (b_boxes[:,0] * ratio) + offset_x
+        b_boxes[:,1] = (b_boxes[:,1] * ratio) + offset_y
+        
+        b_boxes[:,0] = np.clip(b_boxes[:,0], 0, None)
+        b_boxes[:,1] = np.clip(b_boxes[:,1], 0, None)
+
+        b_boxes[:,2] = b_boxes[:,2] * ratio
+        b_boxes[:,3] = b_boxes[:,3] * ratio
+
+        """for box in b_boxes:
             x = int(abs(box[0] * ratio + offset_x))
             y = int(abs(box[1] * ratio + offset_y))
             l = int(box[2] * ratio)
             b = int(box[3] * ratio)
             new_box = [x, y, l, b]
             results.append(new_box)
-
-        return new_im, results
+        """
+        return new_im, b_boxes
 
     def plot_boxes(self, file, positive_anchors, negative_anchors, boxes):
         im = np.array(Image.open(file).convert('RGB'), dtype=np.uint8)

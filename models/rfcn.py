@@ -62,10 +62,12 @@ class _RFCN(nn.Module):
                                                                                    base_features.shape,
                                                                                    resize_scale)
                   )
-
+        
+        print("G BOXES before scaling:", gt_boxes)
         # Resize GT anchors to size of base features
         gt_boxes = scale_boxes_batch(gt_boxes, resize_scale, 'down')
-
+        
+        print("GT BOXES after scaling:", gt_boxes)
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.RCNN_rpn(base_features, image_metadata, gt_boxes)
         
