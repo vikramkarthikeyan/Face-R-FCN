@@ -148,7 +148,6 @@ class _RFCN(nn.Module):
         if rfcn_config.verbose:
             print("\n\n-----OHEM-----")
             print("Number of positive examples:", num_pos.data)
-            print(cls_score.shape, rois_label.shape, bbox_pred.shape, rois_target.shape)
 
         # classification loss
         num_classes = cls_score.size(1)
@@ -170,6 +169,8 @@ class _RFCN(nn.Module):
         cls_score = cls_score.cuda()
         rois_label = rois_label.cuda()
         loss_cls = F.cross_entropy(cls_score[topk_idx], rois_label[topk_idx], weight=weight)
+        
+        rois_target = rois_target.cuda().float()
 
         # bounding box regression L1 loss
         pos_idx = pos_idx.unsqueeze(1).expand_as(bbox_pred)
