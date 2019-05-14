@@ -27,6 +27,7 @@ class _ProposalLayer(nn.Module):
         # self.anchors = anchors.generate_anchors((height, width), self.box_sizes)
         self.anchors = None
         self.scale = scale
+        self.boxes = None
 
     def forward(self, scores, bbox_deltas, image_metadata):
 
@@ -49,11 +50,11 @@ class _ProposalLayer(nn.Module):
         
         if self.anchors is None:
             self.anchors = anchors.generate_anchors((height, width), self.box_sizes)
-            boxes = self.anchors
+            self.boxes = self.anchors
             
             # Step 1.a - Transform anchors shape to match the batch size
-            boxes_shape = boxes.shape
-            boxes = np.reshape(boxes, (batch_size, boxes_shape[0], boxes_shape[1], boxes_shape[2], boxes_shape[3]))
+            boxes_shape = self.boxes.shape
+            self.boxes = np.reshape(self.boxes, (batch_size, boxes_shape[0], boxes_shape[1], boxes_shape[2], boxes_shape[3]))
         
         # Step 1.b - Transform bbox_deltas shape to match the anchor shape
         bbox_deltas_shape = bbox_deltas.shape
@@ -68,7 +69,7 @@ class _ProposalLayer(nn.Module):
         # face scores shape: 1,20,64,64 
 
         # Step 2 - Apply bounding box transformations
-        adjusted_boxes = bbox_transform(boxes, split_deltas)
+        adjusted_boxes = bbox_transform(self.boxes, split_deltas)
         
         # Step 3 - Clip boxes so that they are within the feature dimensions
         clipped_boxes = clip_boxes_batch(adjusted_boxes, height, width, batch_size)
