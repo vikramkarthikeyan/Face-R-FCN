@@ -113,7 +113,7 @@ class RPN(nn.Module):
 
         rois = torch.from_numpy(rois).float() 
         
-        return rois, self.rpn_loss_cls, self.rpn_loss_box
+        return rois, self.rpn_loss_cls, self.rpn_loss_box.cuda()
 
     def smooth_l1_loss(self, bb_prediction, bb_target, bb_labels, delta=1.0):
         """
