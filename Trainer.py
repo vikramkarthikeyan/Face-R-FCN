@@ -63,7 +63,7 @@ class Trainer:
             start = time.time()
 
             for j in range(len(targets)):
-
+                print(image_paths[j])
                 data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
 
                 data = data.cuda(non_blocking=True)
@@ -83,7 +83,7 @@ class Trainer:
                 file_ip.append([i, loss.item(), rpn_loss_cls.mean().item(), rpn_loss_box.mean().item(),
                                 RCNN_loss_cls.mean().item(), RCNN_loss_bbox.mean().item()])
 
-                if i % 200 == 0:
+                if i % 50 == 0:
                     pd.DataFrame(data=file_ip,
                                  columns=["Batch", "Loss", "RPN Classification Loss", "RPN Regression Loss",
                                           "RCNN Classification Loss", "RCNN Regression Loss"]
@@ -100,11 +100,11 @@ class Trainer:
 
                 losses.update(loss)
 
+                if i == 200:
+                    break
+
             # measure elapsed time
             batch_time.update(time.time() - start)
-
-            #if i==200:
-            #    break
 
             print('\rTraining - Epoch [{:04d}] Batch [{:04d}/{:04d}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'

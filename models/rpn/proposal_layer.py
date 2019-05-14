@@ -154,6 +154,7 @@ def clip_boxes_batch(boxes, length, width, batch_size):
     Clip boxes to image boundaries.
     """
 
+    boxes = np.nan_to_num(boxes)
     boxes[boxes < 0] = 0
 
     boxes[:, :, :, :, 2] = boxes[:, :, :, :, 0] + boxes[:, :, :, :, 2] - 1

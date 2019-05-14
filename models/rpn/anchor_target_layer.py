@@ -254,11 +254,11 @@ def plot_layer_outputs(clipped_boxes, labels, scale, gt_boxes, image_info):
     ax = plt.gca()
     ax.imshow(resize_image(img))
 
-    for anc in neg_anc[:100, :]:
-        anc_ = anc * scale
-        ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
-                               linewidth=2, edgecolor='r',
-                               facecolor='none'))
+    #for anc in neg_anc[:100, :]:
+    #    anc_ = anc * scale
+    #    ax.add_patch(Rectangle((anc_[0], anc_[1]), anc_[2], anc_[3],
+    #                           linewidth=2, edgecolor='r',
+    #                           facecolor='none'))
 
     for anc in pos_anc:
         anc_ = anc * scale
