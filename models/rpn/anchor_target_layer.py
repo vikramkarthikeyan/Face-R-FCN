@@ -222,8 +222,8 @@ def get_bbox_targets(anchors, gt_boxes):
     targets[:, :, 0] = (gt_boxes[:, :, 0] - anchors[:, :, 0]) / anchors[:, :, 2]
     targets[:, :, 1] = (gt_boxes[:, :, 1] - anchors[:, :, 1]) / anchors[:, :, 3]
 
-    targets[:, :, 2] = np.log10(gt_boxes[:, :, 2] / anchors[:, :, 2])
-    targets[:, :, 3] = np.log10(gt_boxes[:, :, 3] / anchors[:, :, 3])
+    targets[:, :, 2] = np.log(gt_boxes[:, :, 2] / anchors[:, :, 2])
+    targets[:, :, 3] = np.log(gt_boxes[:, :, 3] / anchors[:, :, 3])
 
     return targets
 

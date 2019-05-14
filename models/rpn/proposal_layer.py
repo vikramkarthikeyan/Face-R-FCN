@@ -144,6 +144,11 @@ def bbox_transform(boxes, split_deltas):
     print(split_deltas.shape)
     results =  np.full(boxes.shape, 0.0, dtype=np.float)
     
+    results[:,:,:,:,0] = 1
+    results[:,:,:,:,1] = 1
+    results[:,:,:,:,2] = np.exp(split_deltas[:,:,:,:,2]) * boxes[:,:,:,:,2]
+    results[:,:,:,:,3] = np.exp(split_deltas[:,:,:,:,3]) * boxes[:,:,:,:,3]
+    print(results)
     return results
     
 
