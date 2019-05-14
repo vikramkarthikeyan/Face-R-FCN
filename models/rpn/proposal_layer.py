@@ -68,7 +68,6 @@ class _ProposalLayer(nn.Module):
         # face scores shape: 1,20,64,64 
 
         # Step 2 - Apply bounding box transformations
-        # adjusted_boxes = boxes + split_deltas
         adjusted_boxes = bbox_transform(boxes, split_deltas)
         
         # Step 3 - Clip boxes so that they are within the feature dimensions
@@ -140,15 +139,12 @@ class _ProposalLayer(nn.Module):
         pass
 
 def bbox_transform(boxes, split_deltas):
-    print(boxes.shape)
-    print(split_deltas.shape)
     results =  np.full(boxes.shape, 0.0, dtype=np.float)
     
-    results[:,:,:,:,0] = 1
-    results[:,:,:,:,1] = 1
+    results[:,:,:,:,0] = (split_deltas[:,:,:,:,0] * boxes[:,:,:,:,0]) + boxes[:,:,:,:,0]
+    results[:,:,:,:,1] = (split_deltas[:,:,:,:,1] * boxes[:,:,:,:,1]) + boxes[:,:,:,:,1]
     results[:,:,:,:,2] = np.exp(split_deltas[:,:,:,:,2]) * boxes[:,:,:,:,2]
     results[:,:,:,:,3] = np.exp(split_deltas[:,:,:,:,3]) * boxes[:,:,:,:,3]
-    print(results)
     return results
     
 
