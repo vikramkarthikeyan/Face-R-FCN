@@ -29,7 +29,7 @@ def custom_collate(batch):
 # https://github.com/pytorch/examples/blob/master/imagenet/main.py
 class Trainer:
 
-    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=1, validation_batch_size=5):
+    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=5, validation_batch_size=5):
 
         # Create training dataloader
         self.train_loader = torch.utils.data.DataLoader(training_data, batch_size=training_batch_size, shuffle=True,
@@ -63,7 +63,6 @@ class Trainer:
             start = time.time()
 
             for j in range(len(targets)):
-                print(image_paths[j])
                 data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
 
                 data = data.cuda(non_blocking=True)
