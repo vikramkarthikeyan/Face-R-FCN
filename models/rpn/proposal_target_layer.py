@@ -21,8 +21,8 @@ class _ProposalTargetLayer(nn.Module):
 
     def forward(self, rois, gt_boxes, features):
         batch_size = rois.shape[0]
-
-        # print("ROIS AND GT BOXES:", rois, gt_boxes)
+        
+        gt_boxes = torch.tensor(gt_boxes).float()
 
         # Include ground-truth boxes in the set of candidate rois
         all_rois = torch.cat([rois, gt_boxes], 1)
@@ -174,13 +174,7 @@ def _compute_targets_pytorch(ex_rois, gt_rois):
     assert gt_rois.size(2) == 4
 
     targets = bbox_transform_batch(ex_rois, gt_rois)
-
-    # TODO: Explore target normalization
-    # if cfg.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED:
-    #     # Optionally normalize targets by a precomputed mean and stdev
-    #     targets = ((targets - self.BBOX_NORMALIZE_MEANS.expand_as(targets))
-    #                 / self.BBOX_NORMALIZE_STDS.expand_as(targets))
-
+    
     return targets
 
 
@@ -201,7 +195,8 @@ def bbox_overlaps_vectorized(anchors, gt_boxes):
     return overlaps
 
 
-def bbox_transform_batch(ex_rois, gt_rois):
+def bbox_transform_batch_old(ex_rois, gt_rois):
+    print("shapes of genierated and gt", ex_rois.shape, gt_rois.shape)
     targets_dx = (gt_rois[:, :, 0] - ex_rois[:, :, 0])
     targets_dy = (gt_rois[:, :, 1] - ex_rois[:, :, 1])
     targets_dw = (gt_rois[:, :, 2] - ex_rois[:, :, 2])
@@ -210,6 +205,18 @@ def bbox_transform_batch(ex_rois, gt_rois):
     targets = torch.stack((targets_dx, targets_dy, targets_dw, targets_dh), 2)
 
     return targets
+
+def bbox_transform_batch(anchors, gt_boxes):
+
+    targets = np.full(gt_boxes.shape, 0.0, dtype=np.float)
+
+    targets[:, :, 0] = (gt_boxes[:, :, 0] - anchors[:, :, 0]) / anchors[:, :, 2]
+    targets[:, :, 1] = (gt_boxes[:, :, 1] - anchors[:, :, 1]) / anchors[:, :, 3]
+
+    targets[:, :, 2] = np.log10(gt_boxes[:, :, 2] / anchors[:, :, 2])
+    targets[:, :, 3] = np.log10(gt_boxes[:, :, 3] / anchors[:, :, 3])
+
+    return torch.from_numpy(targets)
 
 
 def _get_bbox_regression_labels_pytorch(bbox_target_data, labels_batch, num_classes):

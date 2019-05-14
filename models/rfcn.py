@@ -68,7 +68,9 @@ class _RFCN(nn.Module):
 
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.RCNN_rpn(base_features, image_metadata, gt_boxes)
-
+        
+        # ROIs shape: (1, 300, 4)
+        # Base features: (1, 1024, 64, 64)
         # if it is training phrase, then use ground truth bboxes for refining proposals
         if self.training:
             rois, rois_label, rois_target, rois_inside_ws, rois_outside_ws = self.RCNN_proposal_target(rois, gt_boxes,
