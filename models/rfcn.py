@@ -44,16 +44,12 @@ class _RFCN(nn.Module):
         self.ps_average_pool_bbox = nn.Conv2d(in_channels=4, out_channels=4, kernel_size=3, stride=1, padding=0, bias=False)
     
     def forward(self, image, image_metadata, gt_boxes):
-        print("(IN RFCN INPUT)GRAD:", image[0].requires_grad)
-
         # Add an extra dimension to the image tensor to handle batches in the future
         sizes = image[0].size()
         reshaped_image = image[0].reshape(1, sizes[0], sizes[1], sizes[2])
 
         # Pass the image onto the feature extractor
         base_features = self.RCNN_base(reshaped_image)
-
-        print("(BASE FEATURES)GRAD:", base_features.requires_grad)
 
         # Calculate scale of features vs image 
         base_feature_dimension = base_features.shape[-1]
@@ -79,7 +75,6 @@ class _RFCN(nn.Module):
             rois, rois_label, rois_target = self.RCNN_proposal_target(rois, gt_boxes, base_features)
             rois_label = Variable(rois_label.view(-1), requires_grad = True)
             rois_target = Variable(rois_target.view(-1, rois_target.size(2)), requires_grad = True)
-            print("(ROIS from ATL) GRAD:", rois_label.requires_grad, rois_target.requires_grad)
         else:
             rois_label = None
             rois_target = None
@@ -91,7 +86,6 @@ class _RFCN(nn.Module):
             print("\n\n----ROIS generated, moving onto PSROI----\n")
 
         rois = Variable(rois.cuda(), requires_grad = True)
-        print("(ROIS from RPN) GRAD:", rois.requires_grad)
 
         base_features = self.RCNN_conv_new(base_features)
 
@@ -99,8 +93,6 @@ class _RFCN(nn.Module):
         cls_feat = self.RCNN_cls_base(base_features)
         bbox_base = self.RCNN_bbox_base(base_features)
         
-        print("(PS Score maps) GRAD:", cls_feat.requires_grad, bbox_base.requires_grad)
-
         if rfcn_config.verbose:
             print("Features after conversion layer:", base_features.shape)
             print("PS Score maps for classification:", cls_feat.shape)
@@ -118,7 +110,7 @@ class _RFCN(nn.Module):
         bbox_pred = self.ps_average_pool_bbox(pooled_feat_loc)
         bbox_pred = bbox_pred.squeeze()
 
-        print("(AFTER PSROI Pooling) GRAD:", cls_score.requires_grad, bbox_pred.requires_grad)
+        print("(AFTER PSROI Pooling) :", cls_score.requires_grad, bbox_pred.requires_grad)
 
         if rfcn_config.verbose:
             print("\n\n----PSROI----")
