@@ -102,6 +102,7 @@ class RPN(nn.Module):
             actual = torch.from_numpy(flattened_labels[valid_indices].flatten()).float().cuda()
             
             self.rpn_loss_cls = F.binary_cross_entropy(pred, actual)
+            print(self.rpn_loss_cls)
             
             # Convert from numpy to torch for smooth LI loss
             labels = torch.from_numpy(labels).float()

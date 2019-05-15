@@ -151,16 +151,17 @@ class _RFCN(nn.Module):
 
         num_hard = rfcn_config.PSROI_TRAINING_BATCH_SIZE * batch_size
         pos_idx = rois_label > 0
-        num_pos = pos_idx.int().sum()
+        num_pos = pos_idx.int().sum().float()
 
         if rfcn_config.verbose:
             print("\n\n-----OHEM-----")
             print("Number of positive examples:", num_pos.data)
-
+        
+        print("classification scores to OHEM:", cls_score.shape)
         # classification loss
         num_classes = cls_score.size(1)
         weight = cls_score.data.new(num_classes).fill_(1.)
-        weight[0] = num_pos.data / num_hard
+        weight[1] = num_pos / num_hard
 
         # Detach is used to clone a tensor which is removed from the computation graph
         cls_score_temp = cls_score.detach()
@@ -168,14 +169,22 @@ class _RFCN(nn.Module):
 
         cls_score_temp = cls_score_temp.cuda()
         rois_label_temp = rois_label_temp.cuda()
+        
+        #one_hot_labels = torch.LongTensor(rois_label_temp.shape[0], 2).zero_().cuda()
+        #one_hot_labels.scatter_(1, rois_label_temp.long().view(-1,1), 1)
+        cls_score_temp = cls_score_temp[:,1].view(-1,1,1)
+        rois_label_temp = rois_label_temp.view(-1,1,1).long()
 
-        # rank on cross_entropy loss
-        loss_c = log_sum_exp(cls_score_temp) - cls_score_temp.gather(1, rois_label_temp.view(-1, 1))
+        print(cls_score_temp.shape, rois_label_temp.shape)
+
+        loss_c = F.cross_entropy(cls_score_temp, rois_label_temp)
+        #loss_c = cross_entropy(cls_score_temp, one_hot_labels)
+        print(loss_c)
         loss_c[pos_idx] = 100.  # include all positive samples
         _, topk_idx = torch.topk(loss_c.view(-1), num_hard)
 
-        cls_score = cls_score.cuda()
-        rois_label = rois_label.cuda()
+
+        # Calculate losses with respect to original losses array for backprop
         loss_cls = F.cross_entropy(cls_score[topk_idx], rois_label[topk_idx], weight=weight)
         
         rois_target = rois_target.cuda().float()
@@ -184,6 +193,7 @@ class _RFCN(nn.Module):
         pos_idx = pos_idx.unsqueeze(1).expand_as(bbox_pred)
         loc_p = bbox_pred[pos_idx].view(-1, 4)
         loc_t = rois_target[pos_idx].view(-1, 4)
+        print(loc_p.shape, loc_t.shape)
         loss_box = F.smooth_l1_loss(loc_p.cuda(), loc_t.cuda())
 
         loss_cls = Variable(loss_cls, requires_grad=True)
@@ -211,3 +221,11 @@ class _RFCN(nn.Module):
     def create_architecture(self):
         self._init_modules()
         self._init_weights()
+
+# https://stackoverflow.com/questions/47377222/cross-entropy-function-python
+def cross_entropy(predictions, targets, epsilon=1e-12):
+    predictions = np.clip(predictions, epsilon, 1. - epsilon)
+    N = predictions.shape[0]
+    ce = -np.sum(targets*np.log(predictions+1e-9))/N
+    return ce
+

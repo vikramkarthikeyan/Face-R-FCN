@@ -47,5 +47,5 @@ BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
 
 ########################
 
-verbose = False
+verbose = True
 demo = False
