@@ -29,11 +29,11 @@ def custom_collate(batch):
 # https://github.com/pytorch/examples/blob/master/imagenet/main.py
 class Trainer:
 
-    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=5, validation_batch_size=5):
+    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=1, validation_batch_size=5):
 
         # Create training dataloader
         self.train_loader = torch.utils.data.DataLoader(training_data, batch_size=training_batch_size, shuffle=True,
-                                                        num_workers=5, collate_fn=custom_collate)
+                                                        num_workers=1, collate_fn=custom_collate)
 
         # Create validation dataloader
         self.validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=validation_batch_size,
@@ -63,7 +63,7 @@ class Trainer:
             start = time.time()
 
             for j in range(len(targets)):
-                data, target = Variable(images[j]), Variable(targets[j], requires_grad=False)
+                data, target = Variable(images[j], requires_grad=True), Variable(targets[j], requires_grad=False)
 
                 data = data.cuda(non_blocking=True)
                 target = np.array(target, dtype=np.float)
@@ -99,8 +99,8 @@ class Trainer:
 
                 losses.update(loss)
 
-                if i == 200:
-                    break
+            if i == 200:
+                break
 
             # measure elapsed time
             batch_time.update(time.time() - start)

@@ -44,6 +44,7 @@ class _RFCN(nn.Module):
         self.ps_average_pool_bbox = nn.Conv2d(in_channels=4, out_channels=4, kernel_size=3, stride=1, padding=0, bias=False)
     
     def forward(self, image, image_metadata, gt_boxes):
+        print("(IN RFCN INPUT)GRAD:", image[0].requires_grad)
 
         # Add an extra dimension to the image tensor to handle batches in the future
         sizes = image[0].size()
@@ -51,6 +52,8 @@ class _RFCN(nn.Module):
 
         # Pass the image onto the feature extractor
         base_features = self.RCNN_base(reshaped_image)
+
+        print("(BASE FEATURES)GRAD:", base_features.requires_grad)
 
         # Calculate scale of features vs image 
         base_feature_dimension = base_features.shape[-1]
@@ -68,14 +71,15 @@ class _RFCN(nn.Module):
         
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.RCNN_rpn(base_features, image_metadata, gt_boxes)
-        
+
         # ROIs shape: (1, 300, 4)
         # Base features: (1, 1024, 64, 64)
         # if it is training phrase, then use ground truth bboxes for refining proposals
         if self.training:
             rois, rois_label, rois_target = self.RCNN_proposal_target(rois, gt_boxes, base_features)
-            rois_label = Variable(rois_label.view(-1).long())
-            rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
+            rois_label = Variable(rois_label.view(-1), requires_grad = True)
+            rois_target = Variable(rois_target.view(-1, rois_target.size(2)), requires_grad = True)
+            print("(ROIS from ATL) GRAD:", rois_label.requires_grad, rois_target.requires_grad)
         else:
             rois_label = None
             rois_target = None
@@ -86,14 +90,16 @@ class _RFCN(nn.Module):
             print("ROIS generated:", rois.shape)
             print("\n\n----ROIS generated, moving onto PSROI----\n")
 
-        rois = Variable(rois.cuda())
-        base_features = Variable(base_features.cuda())
+        rois = Variable(rois.cuda(), requires_grad = True)
+        print("(ROIS from RPN) GRAD:", rois.requires_grad)
 
         base_features = self.RCNN_conv_new(base_features)
 
         # Get position based score maps
         cls_feat = self.RCNN_cls_base(base_features)
         bbox_base = self.RCNN_bbox_base(base_features)
+        
+        print("(PS Score maps) GRAD:", cls_feat.requires_grad, bbox_base.requires_grad)
 
         if rfcn_config.verbose:
             print("Features after conversion layer:", base_features.shape)
@@ -111,6 +117,8 @@ class _RFCN(nn.Module):
         pooled_feat_loc = self.RCNN_psroi_pool_loc(bbox_base, flattened_rois)
         bbox_pred = self.ps_average_pool_bbox(pooled_feat_loc)
         bbox_pred = bbox_pred.squeeze()
+
+        print("(AFTER PSROI Pooling) GRAD:", cls_score.requires_grad, bbox_pred.requires_grad)
 
         if rfcn_config.verbose:
             print("\n\n----PSROI----")
@@ -130,7 +138,7 @@ class _RFCN(nn.Module):
         # Convert it to the batchwise format and return, TODO: Replace "1" with batch size hopefully soon
         cls_prob = cls_prob.view(1, rois.size(1), -1)
         bbox_pred = bbox_pred.view(1, rois.size(1), -1)
-
+        print("(ALL LOSSES CHECK) rois: {}, cls_prob: {}, bbox_pred: {}, rpn_loss_cls: {}, rpn_loss_bbox: {}, RCNN_loss_cls: {], RCNN_loss_bbox: {}". format(rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label))
         return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label
 
     def ohem_detect_loss(self, cls_score, rois_label, bbox_pred, rois_target):

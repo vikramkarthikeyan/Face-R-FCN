@@ -71,6 +71,7 @@ class RPN(nn.Module):
 
         # rpn_classification_prob shape: 1 * 20 * 64 * 64
         # rpn_bbox_predictions shape: 1 * 80 * 64 * 64
+        print("(RPN INITIAL CONV LAYERS) GRAD:", rpn_classification_prob.requires_grad, rpn_bbox_predictions.requires_grad)
 
         scores = rpn_classification_prob.data.cpu().numpy()
         bbox_proposals = rpn_bbox_predictions.data.cpu().numpy()
@@ -80,8 +81,8 @@ class RPN(nn.Module):
         # ROIs shape: 1 * 300 * 4
         # Corresponding scores shape: 1 * 300 * 1
 
-        self.rpn_loss_cls = 0
-        self.rpn_loss_box = 0
+        self.rpn_loss_cls = torch.tensor(0)
+        self.rpn_loss_box = torch.tensor(0)
 
         # generating training labels and build the rpn loss
         if self.training:
