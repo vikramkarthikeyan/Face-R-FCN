@@ -118,7 +118,6 @@ class _RFCN(nn.Module):
         bbox_pred = self.ps_average_pool_bbox(pooled_feat_loc)
         bbox_pred = bbox_pred.squeeze()
 
-        print("After PSROI pooling on score maps:", pooled_feat_cls.requires_grad, pooled_feat_loc.requires_grad)
         if rfcn_config.verbose:
             print("\n\n----PSROI----")
             print("\nAfter PSROI on score maps for classification:", pooled_feat_cls.shape)
@@ -127,14 +126,11 @@ class _RFCN(nn.Module):
             print("After averaging bbox_pred:", bbox_pred.shape)
 
         cls_prob = F.softmax(cls_score, dim=1)
-
         RCNN_loss_cls = 0
         RCNN_loss_bbox = 0
 
-        print(cls_prob)
-
         if self.training:
-            RCNN_loss_cls, RCNN_loss_bbox = self.ohem_detect_loss(cls_score, bbox_pred, rois_label, rois_target)
+            RCNN_loss_cls, RCNN_loss_bbox = self.ohem_detect_loss(cls_prob, bbox_pred, rois_label, rois_target)
 
         # Convert it to the batchwise format and return, TODO: Replace "1" with batch size hopefully soon
         cls_prob = cls_prob.view(1, rois.size(1), -1)
@@ -165,15 +161,12 @@ class _RFCN(nn.Module):
         weight[1] = num_pos / num_hard
 
         # Detach is used to clone a tensor which is removed from the computation graph
-        cls_score_temp = cls_score.detach()
-        rois_label_temp = rois_label.detach()
+        cls_score_temp = cls_score.detach().cuda()
+        rois_label_temp = rois_label.detach().cuda()
 
-        cls_score_temp = cls_score_temp.cuda()
-        rois_label_temp = rois_label_temp.cuda()
-        
         cls_score_temp = cls_score_temp[:,1].view(-1).float()
         rois_label_temp = rois_label_temp.view(-1).float()
-
+        
         loss_c = cross_entropy(cls_score_temp, rois_label_temp)
         loss_c[pos_idx] = 100.  # include all positive samples
         _, topk_idx = torch.topk(loss_c.view(-1), num_hard)
