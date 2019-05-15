@@ -110,12 +110,13 @@ class _RFCN(nn.Module):
         bbox_pred = self.ps_average_pool_bbox(pooled_feat_loc)
         bbox_pred = bbox_pred.squeeze()
 
-
+        print("After PSROI pooling on score maps:", pooled_feat_cls.requires_grad, pooled_feat_loc.requires_grad)
+        #print(cls_feat, bbox_base, flattened_rois)
         if rfcn_config.verbose:
             print("\n\n----PSROI----")
             print("\nAfter PSROI on score maps for classification:", pooled_feat_cls.shape)
             print("After PSROI on score maps for bounding boxes:", pooled_feat_loc.shape)
-            print("\nAfter averaging score maps:", cls_score.shape)
+            print("\nAfterr averaging score maps:", cls_score.shape)
             print("After averaging bbox_pred:", bbox_pred.shape)
 
         cls_prob = F.softmax(cls_score, dim=1)

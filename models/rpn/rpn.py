@@ -79,7 +79,6 @@ class RPN(nn.Module):
 
         # ROIs shape: 1 * 300 * 4
         # Corresponding scores shape: 1 * 300 * 1
-
         self.rpn_loss_cls = torch.tensor(0)
         self.rpn_loss_box = torch.tensor(0)
 

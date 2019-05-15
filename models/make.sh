@@ -7,7 +7,7 @@ export CUDA_PATH=/usr/local/cuda-10.0/
 python3 setup.py build_ext --inplace
 rm -rf build
 
-CUDA_ARCH="-gencode arch=compute_37,code=sm_37"
+CUDA_ARCH="-gencode arch=compute_60,code=sm_60"
 
 # clean build file
 rm psroi_pooling/src/cuda/*.o
