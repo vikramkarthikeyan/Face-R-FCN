@@ -34,10 +34,10 @@ class _RFCN(nn.Module):
 
         # Define the pooling layers
         self.RCNN_psroi_pool_cls = PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
-                                             spatial_scale=1.0/16, group_size=resnet_config.POOLING_SIZE,
+                                             spatial_scale=rfcn_config.SCALE, group_size=resnet_config.POOLING_SIZE,
                                              output_dim=self.n_classes)
         self.RCNN_psroi_pool_loc = PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
-                                             spatial_scale=1.0/16, group_size=resnet_config.POOLING_SIZE,
+                                             spatial_scale=rfcn_config.SCALE, group_size=resnet_config.POOLING_SIZE,
                                              output_dim=4)
                 
         self.ps_average_pool_cls = nn.Conv2d(in_channels=2, out_channels= 2, kernel_size=3, stride=1, padding=0, bias=False)
