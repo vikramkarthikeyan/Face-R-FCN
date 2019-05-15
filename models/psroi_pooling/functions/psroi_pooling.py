@@ -18,13 +18,16 @@ class PSRoIPoolingFunction(Function):
     def forward(self, features, rois):
         batch_size, num_channels, data_height, data_width = features.size()
         num_rois = rois.size()[0]
+        
         output = torch.zeros(num_rois, self.output_dim, self.pooled_height, self.pooled_width)
         mappingchannel = torch.IntTensor(num_rois, self.output_dim, self.pooled_height, self.pooled_width).zero_()
+        
         output = output.cuda()
         mappingchannel = mappingchannel.cuda()
-        #print(features, rois)
+        
         psroi_pooling.psroi_pooling_forward_cuda(self.pooled_height, self.pooled_width, self.spatial_scale, self.group_size, self.output_dim, \
         features, rois, output, mappingchannel)
+        
         self.output = output
         self.mappingchannel = mappingchannel
         self.rois = rois

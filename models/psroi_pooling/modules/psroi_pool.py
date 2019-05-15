@@ -14,8 +14,6 @@ class PSRoIPool(Module):
         self.output_dim = int(output_dim)
 
     def forward(self, features, rois):
-        rois = Variable(rois.cuda())
-        features = Variable(features.cuda())
         return PSRoIPoolingFunction(self.pooled_height, self.pooled_width, self.spatial_scale, self.group_size, self.output_dim)(features, rois)
 
 if __name__ == '__main__':

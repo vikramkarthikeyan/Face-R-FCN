@@ -34,10 +34,10 @@ class _RFCN(nn.Module):
 
         # Define the pooling layers
         self.RCNN_psroi_pool_cls = PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
-                                             spatial_scale=1 / 16.0, group_size=resnet_config.POOLING_SIZE,
+                                             spatial_scale=1.0/16, group_size=resnet_config.POOLING_SIZE,
                                              output_dim=self.n_classes)
         self.RCNN_psroi_pool_loc = PSRoIPool(resnet_config.POOLING_SIZE, resnet_config.POOLING_SIZE,
-                                             spatial_scale=1 / 16.0, group_size=resnet_config.POOLING_SIZE,
+                                             spatial_scale=1.0/16, group_size=resnet_config.POOLING_SIZE,
                                              output_dim=4)
                 
         self.ps_average_pool_cls = nn.Conv2d(in_channels=2, out_channels= 2, kernel_size=3, stride=1, padding=0, bias=False)
@@ -100,6 +100,14 @@ class _RFCN(nn.Module):
 
         # Flatten the ROIs generated from all the images in the batch as a single array of ROIs
         flattened_rois = rois.view(-1, 4)
+        zeros_batch = torch.zeros_like(flattened_rois)
+        flattened_rois = torch.cat([zeros_batch[:,0].view(-1,1), flattened_rois], 1)
+
+
+        flattened_rois[:,3] = flattened_rois[:,3] + flattened_rois[:,1] - 1
+        flattened_rois[:,4] = flattened_rois[:,4] + flattened_rois[:,2] - 1
+
+
 
         # Do PSROI average pooling on the position based score maps
         pooled_feat_cls = self.RCNN_psroi_pool_cls(cls_feat, flattened_rois)
@@ -111,7 +119,6 @@ class _RFCN(nn.Module):
         bbox_pred = bbox_pred.squeeze()
 
         print("After PSROI pooling on score maps:", pooled_feat_cls.requires_grad, pooled_feat_loc.requires_grad)
-        #print(cls_feat, bbox_base, flattened_rois)
         if rfcn_config.verbose:
             print("\n\n----PSROI----")
             print("\nAfter PSROI on score maps for classification:", pooled_feat_cls.shape)
