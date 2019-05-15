@@ -110,7 +110,6 @@ class _RFCN(nn.Module):
         bbox_pred = self.ps_average_pool_bbox(pooled_feat_loc)
         bbox_pred = bbox_pred.squeeze()
 
-        print("(AFTER PSROI Pooling) :", cls_score.requires_grad, bbox_pred.requires_grad)
 
         if rfcn_config.verbose:
             print("\n\n----PSROI----")
