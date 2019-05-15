@@ -131,8 +131,10 @@ class _RFCN(nn.Module):
         RCNN_loss_cls = 0
         RCNN_loss_bbox = 0
 
+        print(cls_prob)
+
         if self.training:
-            RCNN_loss_cls, RCNN_loss_bbox = self.ohem_detect_loss(cls_score, rois_label, bbox_pred, rois_target)
+            RCNN_loss_cls, RCNN_loss_bbox = self.ohem_detect_loss(cls_score, bbox_pred, rois_label, rois_target)
 
         # Convert it to the batchwise format and return, TODO: Replace "1" with batch size hopefully soon
         cls_prob = cls_prob.view(1, rois.size(1), -1)
@@ -141,7 +143,7 @@ class _RFCN(nn.Module):
         
         return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label
 
-    def ohem_detect_loss(self, cls_score, rois_label, bbox_pred, rois_target):
+    def ohem_detect_loss(self, cls_score, bbox_pred, rois_label, rois_target):
 
         def log_sum_exp(x):
             x_max = x.data.max()
