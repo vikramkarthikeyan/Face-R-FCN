@@ -99,7 +99,7 @@ class Trainer:
 
                 losses.update(loss)
 
-            if i == 100:
+            if i == 500:
                 break
 
             # measure elapsed time
