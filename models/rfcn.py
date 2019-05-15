@@ -138,7 +138,8 @@ class _RFCN(nn.Module):
         # Convert it to the batchwise format and return, TODO: Replace "1" with batch size hopefully soon
         cls_prob = cls_prob.view(1, rois.size(1), -1)
         bbox_pred = bbox_pred.view(1, rois.size(1), -1)
-        print("(ALL LOSSES CHECK) rois: {}, cls_prob: {}, bbox_pred: {}, rpn_loss_cls: {}, rpn_loss_bbox: {}, RCNN_loss_cls: {], RCNN_loss_bbox: {}". format(rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label))
+        
+        
         return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label
 
     def ohem_detect_loss(self, cls_score, rois_label, bbox_pred, rois_target):
@@ -157,7 +158,6 @@ class _RFCN(nn.Module):
             print("\n\n-----OHEM-----")
             print("Number of positive examples:", num_pos.data)
         
-        print("classification scores to OHEM:", cls_score.shape)
         # classification loss
         num_classes = cls_score.size(1)
         weight = cls_score.data.new(num_classes).fill_(1.)
@@ -170,30 +170,23 @@ class _RFCN(nn.Module):
         cls_score_temp = cls_score_temp.cuda()
         rois_label_temp = rois_label_temp.cuda()
         
-        #one_hot_labels = torch.LongTensor(rois_label_temp.shape[0], 2).zero_().cuda()
-        #one_hot_labels.scatter_(1, rois_label_temp.long().view(-1,1), 1)
-        cls_score_temp = cls_score_temp[:,1].view(-1,1,1)
-        rois_label_temp = rois_label_temp.view(-1,1,1).long()
+        cls_score_temp = cls_score_temp[:,1].view(-1).float()
+        rois_label_temp = rois_label_temp.view(-1).float()
 
-        print(cls_score_temp.shape, rois_label_temp.shape)
-
-        loss_c = F.cross_entropy(cls_score_temp, rois_label_temp)
-        #loss_c = cross_entropy(cls_score_temp, one_hot_labels)
-        print(loss_c)
+        loss_c = cross_entropy(cls_score_temp, rois_label_temp)
         loss_c[pos_idx] = 100.  # include all positive samples
         _, topk_idx = torch.topk(loss_c.view(-1), num_hard)
 
-
+        rois_label_topk = rois_label_temp[topk_idx]
         # Calculate losses with respect to original losses array for backprop
-        loss_cls = F.cross_entropy(cls_score[topk_idx], rois_label[topk_idx], weight=weight)
+        loss_cls = F.binary_cross_entropy(cls_score[topk_idx, 1], rois_label_topk, weight=weight[1])
         
-        rois_target = rois_target.cuda().float()
+        rois_target = rois_target.detach().float()
 
         # bounding box regression L1 loss
         pos_idx = pos_idx.unsqueeze(1).expand_as(bbox_pred)
         loc_p = bbox_pred[pos_idx].view(-1, 4)
         loc_t = rois_target[pos_idx].view(-1, 4)
-        print(loc_p.shape, loc_t.shape)
         loss_box = F.smooth_l1_loss(loc_p.cuda(), loc_t.cuda())
 
         loss_cls = Variable(loss_cls, requires_grad=True)
@@ -222,10 +215,9 @@ class _RFCN(nn.Module):
         self._init_modules()
         self._init_weights()
 
-# https://stackoverflow.com/questions/47377222/cross-entropy-function-python
 def cross_entropy(predictions, targets, epsilon=1e-12):
-    predictions = np.clip(predictions, epsilon, 1. - epsilon)
+    predictions = torch.clamp(predictions, epsilon, 1. - epsilon)
     N = predictions.shape[0]
-    ce = -np.sum(targets*np.log(predictions+1e-9))/N
+    ce = -(targets*torch.log(predictions+1e-9)/N)
     return ce
-
+# https://stackoverflow.com/questions/47377222/cross-entropy-function-python
