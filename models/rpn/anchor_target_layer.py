@@ -169,6 +169,10 @@ class _AnchorLayer(nn.Module):
             target_op[index_list[0], index_list[1], index_list[2], index_list[3], 2] = bbox_targets[0, i, 2]
             target_op[index_list[0], index_list[1], index_list[2], index_list[3], 3] = bbox_targets[0, i, 3]
         
+        if cfg.gc_collect:
+            del overlaps, argmax_overlaps, max_overlaps, gt_argmax_overlaps
+
+        
         return labels_op, target_op
 
     def backward(self, top, propagate_down, bottom):
