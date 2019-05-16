@@ -17,15 +17,15 @@ from PIL import Image
 # https://www.cs.virginia.edu/~vicente/recognition/notebooks/image_processing_lab.html
 class WiderFaceDataset(Dataset):
 
-    def __init__(self, image_path, metadata_path, transform=None):
+    def __init__(self, image_path, metadata_path, object_min_dim=300, transform=None):
         self.image_path = image_path
         self.metadata_path = metadata_path
         self.transform = transform
         self.pil2tensor = transforms.ToTensor()
 
-        self.convert_to_image_list(self.metadata_path)
+        self.convert_to_image_list(self.metadata_path, object_min_dim)
 
-    def convert_to_image_list(self, path):
+    def convert_to_image_list(self, path, object_min_dim):
         self.f = scipy.io.loadmat(path)
         self.event_list = self.f.get('event_list')
         self.file_list = self.f.get('file_list')
@@ -45,6 +45,7 @@ class WiderFaceDataset(Dataset):
                 file_name = file_path[0][0] + '.jpg'
                 file_name = event + '/' + file_name
                 file_path = os.path.abspath(self.image_path + '/' + file_name)
+                
                 bounding_boxes = self.face_bbx_list[idx][0][file_idx][0]
                 occlusions = self.occlusion_label_list[idx][0][file_idx][0]
                 pose = self.pose_label_list[idx][0][file_idx][0]
@@ -52,9 +53,13 @@ class WiderFaceDataset(Dataset):
                 # Filter out medium and hard bounding_boxes if any 
                 bounding_boxes_filtered = []
                 for occlusion_idx, occlusion in enumerate(occlusions):
-                    if occlusion[0] == 0:
-                        bounding_boxes_filtered.append(bounding_boxes[occlusion_idx])
-
+                    if occlusion[0] == 0 and pose[occlusion_idx][0] == 0:
+                        # Now, get only large Bboxes
+                        #print(bounding_boxes[occlusion_idx])
+                        if bounding_boxes[occlusion_idx][2] > object_min_dim and bounding_boxes[occlusion_idx][3] > object_min_dim:
+                            bounding_boxes_filtered.append(bounding_boxes[occlusion_idx])
+                
+                
                 if len(bounding_boxes_filtered) > 0:
                     image_metadata['image_location'].append(file_path)
                     image_metadata['image_ground_truth'].append(bounding_boxes_filtered)

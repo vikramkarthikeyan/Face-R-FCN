@@ -99,7 +99,7 @@ class Trainer:
 
                 losses.update(loss)
 
-            if i == 500:
+            if i == 400:
                 break
 
             # measure elapsed time
@@ -141,7 +141,7 @@ class Trainer:
                     RCNN_loss_cls, RCNN_loss_bbox, \
                     rois_label = model([data], [image_paths[j]], target)
 
-                    print(cls_prob.shape, bbox_pred.shape)
+                    print(cls_prob, bbox_pred, rois)
                     
                     # Write logic for comparing GT_boxes and ROIs
                     image_location = image_paths[j]
