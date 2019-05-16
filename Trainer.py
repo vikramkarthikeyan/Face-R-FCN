@@ -155,6 +155,11 @@ class Trainer:
 
                     #print(cls_prob, bbox_pred, rois)
 
+                    # Perform NMS on ROIs
+                    rois = rois.cpu().numpy()
+                    keep_rois_postNMS = nms_numpy(rois, 0.7)
+                    rois = rois[:, keep_rois_postNMS, :]
+
                     # Write logic for comparing GT_boxes and ROIs
                     image_location = image_paths[j]
                     plot_boxes(data, scale_boxes_batch(rois, 16, "up"), targets, str(i))
@@ -200,3 +205,54 @@ def plot_boxes(image, rois, gt_boxes,  image_count):
 
     # plt.show()
     plt.savefig('validation_plots/regions_{}.png'.format(image_count))
+
+
+def nms_numpy(entries, thresh):
+    x1 = entries[:, 0]
+    y1 = entries[:, 1]
+    l = entries[:, 2]
+    b = entries[:, 3]
+    # COMMENTED FOR SPEED
+    # TODO: check why it is needed
+    # scores = entries[:, 4]
+
+    x2 = x1 + l - 1
+    y2 = y1 + b - 1
+
+    # Initialize list of picked indices
+    idx_keep = []
+
+    # Calculate areas of all bounding boxes
+    areas = l * b
+
+    # Sort the bounding boxes by the bottom-right y-coordinate of the bounding box
+    # _, idxs = torch.sort(y2)
+    idxs = np.argsort(y2)
+
+    # keep looping while some indexes still remain in the indexes list
+    while idxs.shape[0] > 0:
+        # grab the last index in the indexes list, add the index
+        # value to the list of picked indexes, then initialize
+        # the suppression list (i.e. indexes that will be deleted)
+        # using the last index
+        ind = idxs[-1]
+        idx_keep.append(ind)
+
+        XX1 = np.clip(x1[idxs], x1[ind], None)
+        YY1 = np.clip(y1[idxs], y1[ind], None)
+
+        XX2 = np.clip(x2[idxs], None, x2[ind])
+        YY2 = np.clip(y2[idxs], None, y2[ind])
+
+        W = np.clip((XX2 - XX1 + 1), 0, None)
+        H = np.clip((YY2 - YY1 + 1), 0, None)
+
+        # mask = ((W * H).float() / areas.float()).lt(thresh)
+        mask = ((W * H) / areas) < thresh
+        mask[-1] = False
+
+        areas = areas[mask]
+        idxs = idxs[mask]
+
+    # return only the bounding boxes that were picked
+    return torch.from_numpy(np.array(idx_keep))
