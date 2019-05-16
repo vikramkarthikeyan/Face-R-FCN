@@ -33,7 +33,7 @@ class Trainer:
 
         # Create training dataloader
         self.train_loader = torch.utils.data.DataLoader(training_data, batch_size=training_batch_size, shuffle=True,
-                                                        num_workers=1, collate_fn=custom_collate)
+                                                        num_workers=0, collate_fn=custom_collate)
 
         # Create validation dataloader
         self.validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=validation_batch_size,
@@ -69,37 +69,46 @@ class Trainer:
                 target = np.array(target, dtype=np.float)
                 target = np.expand_dims(target, axis=0)
 
-                model.zero_grad()
+                try:
+                    model.zero_grad()
 
-                # Compute Model output and loss
-                rois, cls_prob, bbox_pred, \
-                rpn_loss_cls, rpn_loss_box, \
-                RCNN_loss_cls, RCNN_loss_bbox, \
-                rois_label = model([data], [image_paths[j]], target)
+                    # Compute Model output and loss
+                    rois, cls_prob, bbox_pred, \
+                    rpn_loss_cls, rpn_loss_box, \
+                    RCNN_loss_cls, RCNN_loss_bbox, \
+                    rois_label = model([data], [image_paths[j]], target)
 
-                loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
+                    loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
 
-                file_ip.append([i, loss.item(), rpn_loss_cls.mean().item(), rpn_loss_box.mean().item(),
+                    file_ip.append([i, loss.item(), rpn_loss_cls.mean().item(), rpn_loss_box.mean().item(),
                                 RCNN_loss_cls.mean().item(), RCNN_loss_bbox.mean().item()])
 
-                if i % 50 == 0:
-                    pd.DataFrame(data=file_ip,
-                                 columns=["Batch", "Loss", "RPN Classification Loss", "RPN Regression Loss",
-                                          "RCNN Classification Loss", "RCNN Regression Loss"]
-                                 ).to_csv(path_or_buf="losses.csv")
+                    if i % 200 == 0:
+                        print("Memory allocated tensors: {}, cached: {} ".format(torch.cuda.memory_allocated(device=None), torch.cuda.memory_cached(device=None)))
+                        pd.DataFrame(data=file_ip,
+                                    columns=["Batch", "Loss", "RPN Classification Loss", "RPN Regression Loss",
+                                              "RCNN Classification Loss", "RCNN Regression Loss"]
+                                    ).to_csv(path_or_buf="losses.csv")
 
-                # Clear(zero) Gradients for theta
-                optimizer.zero_grad()
+                    # Clear(zero) Gradients for theta
+                    optimizer.zero_grad()
 
-                # Perform BackProp wrt theta
-                loss.backward()
+                    # Perform BackProp wrt theta
+                    loss.backward()
 
-                # Update theta
-                optimizer.step()
+                    # Update theta
+                    optimizer.step()
 
-                losses.update(loss)
+                    losses.update(loss)
+                
+                except RuntimeError as e:
+                    if 'out of memory' in str(e):
+                        print("out of memory...clearing cache...")
+                        torch.cuda.empty_cache()
+                        torch.cuda.synchronize()
+                        break
 
-            if i == 400:
+            if i == 1000:
                 break
 
             # measure elapsed time
