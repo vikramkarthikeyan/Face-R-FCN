@@ -6,6 +6,8 @@ import pandas as pd
 
 from torch.autograd import Variable
 
+from  models.utils.image_processing import scale_boxes_batch
+
 import torchvision
 import EarlyStopping
 import AverageMeter
@@ -14,7 +16,6 @@ import matplotlib.patches as patches
 import numpy as np
 
 from PIL import Image
-
 
 
 def custom_collate(batch):
@@ -29,7 +30,7 @@ def custom_collate(batch):
 # https://github.com/pytorch/examples/blob/master/imagenet/main.py
 class Trainer:
 
-    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=1, validation_batch_size=5):
+    def __init__(self, training_data, validation_data, num_classes=2, training_batch_size=1, validation_batch_size=1):
 
         # Create training dataloader
         self.train_loader = torch.utils.data.DataLoader(training_data, batch_size=training_batch_size, shuffle=True,
@@ -38,7 +39,7 @@ class Trainer:
         # Create validation dataloader
         self.validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=validation_batch_size,
                                                              shuffle=False,
-                                                             collate_fn=custom_collate, num_workers=5)
+                                                             collate_fn=custom_collate, num_workers=1)
 
         self.num_classes = num_classes
         self.early_stopper = EarlyStopping.EarlyStopper()
@@ -81,14 +82,16 @@ class Trainer:
                     loss = rpn_loss_cls.mean() + rpn_loss_box.mean() + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
 
                     file_ip.append([i, loss.item(), rpn_loss_cls.mean().item(), rpn_loss_box.mean().item(),
-                                RCNN_loss_cls.mean().item(), RCNN_loss_bbox.mean().item()])
+                                    RCNN_loss_cls.mean().item(), RCNN_loss_bbox.mean().item()])
 
                     if i % 200 == 0:
-                        print("Memory allocated tensors: {}, cached: {} ".format(torch.cuda.memory_allocated(device=None), torch.cuda.memory_cached(device=None)))
+                        print(
+                            "Memory allocated tensors: {}, cached: {} ".format(torch.cuda.memory_allocated(device=None),
+                                                                               torch.cuda.memory_cached(device=None)))
                         pd.DataFrame(data=file_ip,
-                                    columns=["Batch", "Loss", "RPN Classification Loss", "RPN Regression Loss",
+                                     columns=["Batch", "Loss", "RPN Classification Loss", "RPN Regression Loss",
                                               "RCNN Classification Loss", "RCNN Regression Loss"]
-                                    ).to_csv(path_or_buf="losses.csv")
+                                     ).to_csv(path_or_buf="losses.csv")
 
                     # Clear(zero) Gradients for theta
                     optimizer.zero_grad()
@@ -100,7 +103,7 @@ class Trainer:
                     optimizer.step()
 
                     losses.update(loss)
-                
+
                 except RuntimeError as e:
                     if 'out of memory' in str(e):
                         print("out of memory...clearing cache...")
@@ -151,14 +154,12 @@ class Trainer:
                     rois_label = model([data], [image_paths[j]], target)
 
                     print(cls_prob, bbox_pred, rois)
-                    
+
                     # Write logic for comparing GT_boxes and ROIs
                     image_location = image_paths[j]
-                    #plot_boxes(image_location, bbox_pred, [], [])
+                    plot_boxes(image_location, scale_boxes_batch(bbox_pred, 8), [], [])
 
                 break
-
-
 
     # Used - https://github.com/pytorch/examples/blob/master/imagenet/main.py
     def accuracy(self, output, target, topk=(1,)):
@@ -178,8 +179,7 @@ class Trainer:
             return res
 
 
-def plot_boxes(file, positive_anchors, negative_anchors, boxes):
-
+def plot_boxes(file, positive_anchors, negative_anchors, boxes, i):
     im = np.array(Image.open(file).convert('RGB'), dtype=np.uint8)
 
     # Create figure and axes
@@ -187,22 +187,22 @@ def plot_boxes(file, positive_anchors, negative_anchors, boxes):
 
     # Display the image
     ax.imshow(im)
-    
-    print("acnhors generatd!:",positive_anchors.shape)
-    #for i, box in enumerate(boxes):
-       # rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='blue', facecolor='none')
-       # ax.add_patch(rect)
-    
-    #if positive_anchors:
+
+    print("acnhors generatd!:", positive_anchors.shape)
+    # for i, box in enumerate(boxes):
+    # rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='blue', facecolor='none')
+    # ax.add_patch(rect)
+
+    # if positive_anchors:
     for i, box in enumerate(positive_anchors):
-            print(box)
-            rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='green',facecolor='none')
-            ax.add_patch(rect)
-    
+        print(box)
+        rect = patches.Rectangle((box[0], box[1]), box[2], box[3], linewidth=1, edgecolor='green', facecolor='none')
+        ax.add_patch(rect)
+
     if negative_anchors:
         for i, box in enumerate(negative_anchors):
-            rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='red', facecolor='none')
+            rect = patches.Rectangle((box[0], box[1]), box[2], box[3], linewidth=1, edgecolor='red', facecolor='none')
             ax.add_patch(rect)
 
-    plt.show()
-    plt.savefig('regions.png')
+    # plt.show()
+    plt.savefig('regions_{0}.png'.format(i))
