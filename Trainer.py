@@ -164,7 +164,13 @@ class Trainer:
                     # Perform NMS on ROIs
                     keep_rois_postNMS = nms_numpy(rois, 0.7)
                     rois = rois[keep_rois_postNMS, :]
-                    
+                    cls_prob = cls_prob[0, keep_rois_postNMS, :]
+
+                    # get those ROIs with higher face prob
+                    keep = cls_prob[:, 1] > 0.5
+
+                    rois = rois[keep, :]
+
                     rois = np.expand_dims(rois, 0)
                     
                     # Write logic for comparing GT_boxes and ROIs
