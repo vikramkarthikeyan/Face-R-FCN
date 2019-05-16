@@ -155,9 +155,13 @@ class Trainer:
 
                     #print(cls_prob, bbox_pred, rois)
 
+                    rois = rois[0,:,:].cpu().numpy()
+                    bbox_pred = bbox_pred[0,:,:].cpu().numpy()
+
+                    # apply bbox transformations
+                    adjusted_boxes = bbox_transform(rois, bbox_pred)
 
                     # Perform NMS on ROIs
-                    rois = rois[0,:,:].cpu().numpy()
                     keep_rois_postNMS = nms_numpy(rois, 0.7)
                     rois = rois[keep_rois_postNMS, :]
                     
@@ -208,6 +212,16 @@ def plot_boxes(image, rois, gt_boxes,  image_count):
     # plt.show()
     plt.savefig('validation_plots/regions_{}.png'.format(image_count))
 
+def bbox_transform(boxes, split_deltas):
+    results =  np.full(boxes.shape, 0.0, dtype=np.float)
+    
+    results[:,0] = (split_deltas[:,0] * boxes[:,0]) + boxes[:,0]
+    results[:,1] = (split_deltas[:,1] * boxes[:,1]) + boxes[:,1]
+    results[:,2] = np.exp(split_deltas[:,2]) * boxes[:,2]
+    results[:,3] = np.exp(split_deltas[:,3]) * boxes[:,3]
+    print(boxes, results)
+    return results
+    
 
 def nms_numpy(entries, thresh):
     x1 = entries[:, 0]
