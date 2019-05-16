@@ -179,7 +179,7 @@ class Trainer:
             return res
 
 
-def plot_boxes(image, rois, gt_boxes,  i):
+def plot_boxes(image, rois, gt_boxes,  image_count):
     image = torchvision.transforms.ToPILImage()(image.cpu())
     im = np.array(image, dtype=np.uint8)
 
@@ -199,4 +199,4 @@ def plot_boxes(image, rois, gt_boxes,  i):
         ax.add_patch(rect)
 
     # plt.show()
-    plt.savefig('validation_plots/regions_{}.png'.format(i))
+    plt.savefig('validation_plots/regions_{}.png'.format(image_count))
