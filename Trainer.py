@@ -157,7 +157,7 @@ class Trainer:
 
                     # Write logic for comparing GT_boxes and ROIs
                     image_location = image_paths[j]
-                    plot_boxes(image_location, scale_boxes_batch(bbox_pred, 8), [], [])
+                    plot_boxes(data, scale_boxes_batch(rois, 16, "up"), targets, str(i))
 
                 break
 
@@ -179,8 +179,9 @@ class Trainer:
             return res
 
 
-def plot_boxes(file, positive_anchors, negative_anchors, boxes, i):
-    im = np.array(Image.open(file).convert('RGB'), dtype=np.uint8)
+def plot_boxes(image, rois, gt_boxes, boxes, i):
+    print("Image dimensions:", image.shape)
+    im = np.array(image, dtype=np.uint8)
 
     # Create figure and axes
     fig, ax = plt.subplots(1)
@@ -188,21 +189,15 @@ def plot_boxes(file, positive_anchors, negative_anchors, boxes, i):
     # Display the image
     ax.imshow(im)
 
-    print("acnhors generatd!:", positive_anchors.shape)
-    # for i, box in enumerate(boxes):
-    # rect = patches.Rectangle((box[0],box[1]),box[2],box[3],linewidth=1,edgecolor='blue', facecolor='none')
-    # ax.add_patch(rect)
-
     # if positive_anchors:
-    for i, box in enumerate(positive_anchors):
+    for i, box in enumerate(rois):
         print(box)
-        rect = patches.Rectangle((box[0], box[1]), box[2], box[3], linewidth=1, edgecolor='green', facecolor='none')
+        rect = patches.Rectangle((box[0], box[1]), box[2], box[3], linewidth=1, edgecolor='blue', facecolor='none')
         ax.add_patch(rect)
 
-    if negative_anchors:
-        for i, box in enumerate(negative_anchors):
-            rect = patches.Rectangle((box[0], box[1]), box[2], box[3], linewidth=1, edgecolor='red', facecolor='none')
-            ax.add_patch(rect)
+    for i, box in enumerate(gt_boxes):
+        rect = patches.Rectangle((box[0], box[1]), box[2], box[3], linewidth=1, edgecolor='green', facecolor='none')
+        ax.add_patch(rect)
 
     # plt.show()
     plt.savefig('regions_{0}.png'.format(i))
