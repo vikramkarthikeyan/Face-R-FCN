@@ -39,7 +39,7 @@ class Trainer:
         # Create validation dataloader
         self.validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=validation_batch_size,
                                                              shuffle=False,
-                                                             collate_fn=custom_collate, num_workers=1)
+                                                             collate_fn=custom_collate, num_workers=0)
 
         self.num_classes = num_classes
         self.early_stopper = EarlyStopping.EarlyStopper()
@@ -153,13 +153,13 @@ class Trainer:
                     RCNN_loss_cls, RCNN_loss_bbox, \
                     rois_label = model([data], [image_paths[j]], target)
 
-                    print(cls_prob, bbox_pred, rois)
+                    #print(cls_prob, bbox_pred, rois)
 
                     # Write logic for comparing GT_boxes and ROIs
                     image_location = image_paths[j]
                     plot_boxes(data, scale_boxes_batch(rois, 16, "up"), targets, str(i))
 
-                break
+                print("Image {}/{}".format(i, len(self.validation_loader)))
 
     # Used - https://github.com/pytorch/examples/blob/master/imagenet/main.py
     def accuracy(self, output, target, topk=(1,)):
@@ -179,8 +179,8 @@ class Trainer:
             return res
 
 
-def plot_boxes(image, rois, gt_boxes, boxes, i):
-    print("Image dimensions:", image.shape)
+def plot_boxes(image, rois, gt_boxes,  i):
+    image = torchvision.transforms.ToPILImage()(image.cpu())
     im = np.array(image, dtype=np.uint8)
 
     # Create figure and axes
@@ -190,14 +190,13 @@ def plot_boxes(image, rois, gt_boxes, boxes, i):
     ax.imshow(im)
 
     # if positive_anchors:
-    for i, box in enumerate(rois):
-        print(box)
+    for i, box in enumerate(rois[0]):
         rect = patches.Rectangle((box[0], box[1]), box[2], box[3], linewidth=1, edgecolor='blue', facecolor='none')
         ax.add_patch(rect)
 
-    for i, box in enumerate(gt_boxes):
+    for i, box in enumerate(gt_boxes[0]):
         rect = patches.Rectangle((box[0], box[1]), box[2], box[3], linewidth=1, edgecolor='green', facecolor='none')
         ax.add_patch(rect)
 
     # plt.show()
-    plt.savefig('regions_{0}.png'.format(i))
+    plt.savefig('validation_plots/regions_{}.png'.format(i))
