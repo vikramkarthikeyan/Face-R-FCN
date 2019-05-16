@@ -159,7 +159,7 @@ class Trainer:
                     bbox_pred = bbox_pred[0,:,:].cpu().numpy()
 
                     # apply bbox transformations
-                    adjusted_boxes = bbox_transform(rois, bbox_pred)
+                    rois = bbox_transform(rois, bbox_pred)
 
                     # Perform NMS on ROIs
                     keep_rois_postNMS = nms_numpy(rois, 0.7)
@@ -219,7 +219,6 @@ def bbox_transform(boxes, split_deltas):
     results[:,1] = (split_deltas[:,1] * boxes[:,1]) + boxes[:,1]
     results[:,2] = np.exp(split_deltas[:,2]) * boxes[:,2]
     results[:,3] = np.exp(split_deltas[:,3]) * boxes[:,3]
-    print(boxes, results)
     return results
     
 
