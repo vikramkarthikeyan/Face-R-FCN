@@ -155,13 +155,15 @@ class Trainer:
 
                     #print(cls_prob, bbox_pred, rois)
 
-                    # Perform NMS on ROIs
-                    rois = rois.cpu().numpy()
-                    keep_rois_postNMS = nms_numpy(rois, 0.7)
-                    rois = rois[:, keep_rois_postNMS, :]
 
+                    # Perform NMS on ROIs
+                    rois = rois[0,:,:].cpu().numpy()
+                    keep_rois_postNMS = nms_numpy(rois, 0.7)
+                    rois = rois[keep_rois_postNMS, :]
+                    
+                    rois = np.expand_dims(rois, 0)
+                    
                     # Write logic for comparing GT_boxes and ROIs
-                    image_location = image_paths[j]
                     plot_boxes(data, scale_boxes_batch(rois, 16, "up"), targets, str(i))
 
                 print("Image {}/{}".format(i, len(self.validation_loader)))
