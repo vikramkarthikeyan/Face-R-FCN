@@ -55,10 +55,6 @@ class Trainer:
         # switch to train mode
         model.train()
 
-        # register hooks on each layer
-        hookF = [Hook(layer[1]) for layer in list(model._modules.items())]
-        hookB = [Hook(layer[1],backward=True) for layer in list(model._modules.items())]
-
         start = time.time()
 
         torch.cuda.empty_cache()
@@ -127,18 +123,6 @@ class Trainer:
                                                                   batch_time=batch_time, loss=losses), end="")
 
         print("\nTraining Accuracy: Acc@1: {top1.avg:.3f}%, Acc@5: {top5.avg:.3f}%".format(top1=top1, top5=top5))
-
-        print('***'*3+'  Forward Hooks Inputs & Outputs  '+'***'*3)
-        for hook in hookF:
-            print(hook.input)
-            print(hook.output)
-            print('---'*17)
-        print('\n')
-        print('***'*3+'  Backward Hooks Inputs & Outputs  '+'***'*3)
-        for hook in hookB:             
-            print(hook.input)          
-            print(hook.output)         
-            print('---'*17)
 
         pd.DataFrame(data=file_ip, columns=["Batch", "Loss", "RPN Classification Loss", "RPN Regression Loss",
                                             "RCNN Classification Loss", "RCNN Regression Loss"]
