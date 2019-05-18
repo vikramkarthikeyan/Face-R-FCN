@@ -72,9 +72,12 @@ class RPN(nn.Module):
         # rpn_classification_prob shape: 1 * 20 * 64 * 64
         # rpn_bbox_predictions shape: 1 * 80 * 64 * 64
 
+
+        print("Inputs to the RPN PROPOSAL: scores: {}, bbox_proposals: {}".format(rpn_classification_prob.requires_grad, rpn_bbox_predictions.requires_grad))
+        
         scores = rpn_classification_prob.data.cpu().numpy()
         bbox_proposals = rpn_bbox_predictions.data.cpu().numpy()
-
+        
         rois, scores = self.RPN_proposal(scores, bbox_proposals, image_metadata)
 
         # ROIs shape: 1 * 300 * 4
