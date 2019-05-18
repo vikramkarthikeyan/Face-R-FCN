@@ -51,6 +51,8 @@ class _RFCN(nn.Module):
         # Pass the image onto the feature extractor
         base_features = self.RCNN_base(reshaped_image)
 
+        print("\n\nBase features:", base_features.requires_grad)
+
         # Calculate scale of features vs image 
         base_feature_dimension = base_features.shape[-1]
         image_dimension = reshaped_image.shape[-1]
@@ -67,7 +69,8 @@ class _RFCN(nn.Module):
         
         # feed base feature map tp RPN to obtain rois
         rois, rpn_loss_cls, rpn_loss_bbox = self.RCNN_rpn(base_features, image_metadata, gt_boxes)
-
+        
+        print("RPN output: ROIS: {}, rpn_loss_cls: {}, rpn_loss_bbox: {}".format(rois.requires_grad, rpn_loss_cls.requires_grad, rpn_loss_bbox.requires_grad))
         # ROIs shape: (1, 300, 4)
         # Base features: (1, 1024, 64, 64)
         # if it is training phrase, then use ground truth bboxes for refining proposals
@@ -93,6 +96,8 @@ class _RFCN(nn.Module):
         cls_feat = self.RCNN_cls_base(base_features)
         bbox_base = self.RCNN_bbox_base(base_features)
         
+        print("Score maps: cls:{}, bbox:{} ".format(cls_feat.requires_grad, bbox_base.requires_grad))
+
         if rfcn_config.verbose:
             print("Features after conversion layer:", base_features.shape)
             print("PS Score maps for classification:", cls_feat.shape)
@@ -136,6 +141,7 @@ class _RFCN(nn.Module):
         cls_prob = cls_prob.view(1, rois.size(1), -1)
         bbox_pred = bbox_pred.view(1, rois.size(1), -1)
         
+        print("Final forward response- rois: {}, cls_prob: {}, bbox_pred: {}, rpn_loss_cls: {}, rpn_loss_bbox: {}, RCNN_loss_cls: {}, RCNN_loss_bbox: {}, rois_label: {}".format(rois.requires_grad, cls_prob.requires_grad, bbox_pred.requires_grad, rpn_loss_cls.requires_grad, rpn_loss_bbox.requires_grad, RCNN_loss_cls.requires_grad, RCNN_loss_bbox.requires_grad, rois_label.requires_grad))
         
         return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label
 
