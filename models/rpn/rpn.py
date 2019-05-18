@@ -6,7 +6,8 @@ import time
 
 from ..config import rfcn_config as cfg
 from torch.autograd import Variable
-from .proposal_layer import _ProposalLayer
+# from .proposal_layer import _ProposalLayer
+from ._proposal_layer import _ProposalLayer
 from .anchor_target_layer import _AnchorLayer
 
 
@@ -75,8 +76,11 @@ class RPN(nn.Module):
 
         print("Inputs to the RPN PROPOSAL: scores: {}, bbox_proposals: {}".format(rpn_classification_prob.requires_grad, rpn_bbox_predictions.requires_grad))
         
-        scores = rpn_classification_prob.data.cpu().numpy()
-        bbox_proposals = rpn_bbox_predictions.data.cpu().numpy()
+        # scores = rpn_classification_prob.data.cpu().numpy()
+        # bbox_proposals = rpn_bbox_predictions.data.cpu().numpy()
+
+        scores = rpn_classification_prob
+        bbox_proposals = rpn_bbox_predictions
         
         rois, scores = self.RPN_proposal(scores, bbox_proposals, image_metadata)
 
