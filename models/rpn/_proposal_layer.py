@@ -56,7 +56,7 @@ class _ProposalLayer(nn.Module):
             boxes_shape = self.boxes.shape
             self.boxes = np.reshape(self.boxes, (batch_size, boxes_shape[0], boxes_shape[1], boxes_shape[2], boxes_shape[3]))
 
-            self.boxes = torch.from_numpy(self.boxes)
+            self.boxes = torch.from_numpy(self.boxes).float()
             
         
         # Step 1.b - Transform bbox_deltas shape to match the anchor shape
@@ -66,7 +66,7 @@ class _ProposalLayer(nn.Module):
                                         bbox_deltas_shape[3])
                                         
         split_deltas = split_deltas.view(bbox_deltas_shape[0], rfcn_config.NUM_ANCHORS, bbox_deltas_shape[2],
-                                         bbox_deltas_shape[3], 4)
+                                         bbox_deltas_shape[3], 4).cpu()
 
         # boxes shape: 1,20,64,64,4
         # split_deltas shape: 1,20,64,64,4
@@ -218,19 +218,19 @@ def nms_numpy(entries, thresh):
         ind = idxs[-1]
         idx_keep.append(ind)
 
-        XX1 = torch.clamp(x1[idxs], min=x1[ind])
-        YY1 = torch.clamp(y1[idxs], min=y1[ind])
+        XX1 = torch.clamp(x1[idxs], min=x1[ind].data)
+        YY1 = torch.clamp(y1[idxs], min=y1[ind].data)
 
-        XX2 = torch.clamp(x2[idxs], max=x2[ind])
-        YY2 = torch.clamp(y2[idxs], max=y2[ind])
+        XX2 = torch.clamp(x2[idxs], max=x2[ind].data)
+        YY2 = torch.clamp(y2[idxs], max=y2[ind].data)
 
         W = torch.clamp((XX2 - XX1 + 1), min=0)
         H = torch.clamp((YY2 - YY1 + 1), min=0)
 
         mask = ((W * H).float() / areas.float()).lt(thresh)
-        print(mask)
+        # print(mask)
         # mask = ((W * H) / areas) < thresh
-        mask[-1] = False
+        mask[-1] = 0
 
         areas = areas[mask]
         idxs = idxs[mask]

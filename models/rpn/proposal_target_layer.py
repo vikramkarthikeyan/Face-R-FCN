@@ -20,6 +20,7 @@ class _ProposalTargetLayer(nn.Module):
         self.num_classes = n_classes
 
     def forward(self, rois, gt_boxes, features):
+        rois = rois.detach()
         batch_size = rois.shape[0]
         
         gt_boxes = torch.tensor(gt_boxes).float()
@@ -210,6 +211,9 @@ def bbox_transform_batch_old(ex_rois, gt_rois):
     return targets
 
 def bbox_transform_batch(anchors, gt_boxes):
+
+    #anchors = anchors.detach().numpy()
+
 
     targets = np.full(gt_boxes.shape, 0.0, dtype=np.float)
 

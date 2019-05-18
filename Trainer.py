@@ -70,7 +70,8 @@ class Trainer:
                 target = np.array(target, dtype=np.float)
                 target = np.expand_dims(target, axis=0)
 
-                try:
+                #try:
+                if True:
                     model.zero_grad()
 
                     # Compute Model output and loss
@@ -104,14 +105,16 @@ class Trainer:
 
                     losses.update(loss)
 
-                except RuntimeError as e:
-                    if 'out of memory' in str(e):
-                        print("out of memory...clearing cache...")
-                        torch.cuda.empty_cache()
-                        torch.cuda.synchronize()
-                        break
+                #except RuntimeError as e:
+                #    if 'out of memory' in str(e):
+                #        print("out of memory...clearing cache...")
+                #        torch.cuda.empty_cache()
+                #        torch.cuda.synchronize()
+                #        break
+                #    else:
+                #        print(e)
 
-            if i == 1:
+            if i == 1000:
                 break
 
             # measure elapsed time
@@ -138,7 +141,7 @@ class Trainer:
 
         with torch.no_grad():
 
-            for i, (images, targets, image_paths) in enumerate(self.validation_loader):
+            for i, (images, targets, image_paths) in enumerate(self.train_loader):
 
                 start = time.time()
 
@@ -216,7 +219,7 @@ def plot_boxes(image, rois, gt_boxes,  image_count):
         ax.add_patch(rect)
 
     # plt.show()
-    plt.savefig('validation_plots/regions_{}.png'.format(image_count))
+    plt.savefig('training_plots/regions_{}.png'.format(image_count))
 
 def bbox_transform(boxes, split_deltas):
     results =  np.full(boxes.shape, 0.0, dtype=np.float)
