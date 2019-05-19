@@ -25,9 +25,10 @@ validation_metadata_path = os.path.abspath("data/widerface/wider_face_split/wide
 
 
 # Hyperparameters
-LR = 0.001
+LR = 0.0001
 SGD_MOMENTUM = 0.9
 EPOCHS = 2
+WEIGHT_DECAY = 0.0005
 
 if __name__ == "__main__":
 
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     model = model.cuda()
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=SGD_MOMENTUM)
+    optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=SGD_MOMENTUM, weight_decay=WEIGHT_DECAY)
 
     start_epochs = 0 
     model_name = './saved_models/checkpoint.pth.tar'

@@ -74,7 +74,7 @@ class RPN(nn.Module):
         # rpn_bbox_predictions shape: 1 * 80 * 64 * 64
 
 
-        print("Inputs to the RPN PROPOSAL: scores: {}, bbox_proposals: {}".format(rpn_classification_prob.requires_grad, rpn_bbox_predictions.requires_grad))
+        #print("Inputs to the RPN PROPOSAL: scores: {}, bbox_proposals: {}".format(rpn_classification_prob.requires_grad, rpn_bbox_predictions.requires_grad))
         
         # scores = rpn_classification_prob.data.cpu().numpy()
         # bbox_proposals = rpn_bbox_predictions.data.cpu().numpy()
@@ -84,7 +84,7 @@ class RPN(nn.Module):
         
         rois, scores = self.RPN_proposal(scores, bbox_proposals, image_metadata)
         
-        print("Outputs of proposal layer, rois: {}, scores: {}".format(rois.requires_grad, scores.requires_grad))
+        #print("Outputs of proposal layer, rois: {}, scores: {}".format(rois.requires_grad, scores.requires_grad))
 
         # ROIs shape: 1 * 300 * 4
         # Corresponding scores shape: 1 * 300 * 1

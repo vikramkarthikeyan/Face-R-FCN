@@ -96,8 +96,6 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
 
         if rfcn_config.verbose:
             print("\nFace and BG ROIs:", num_fg_rois, bg_num_rois)
-        num_fg_rois = 0
-        bg_num_rois = 0
         if num_fg_rois > 0 and bg_num_rois > 0:
             # sampling fg
             fg_rois_per_this_image = min(fg_rois_per_image, num_fg_rois)

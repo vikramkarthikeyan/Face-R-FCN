@@ -51,7 +51,7 @@ class _RFCN(nn.Module):
         # Pass the image onto the feature extractor
         base_features = self.RCNN_base(reshaped_image)
 
-        print("\n\nBase features:", base_features.requires_grad)
+        #print("\n\nBase features:", base_features.requires_grad)
 
         # Calculate scale of features vs image 
         base_feature_dimension = base_features.shape[-1]
