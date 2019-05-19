@@ -27,7 +27,7 @@ validation_metadata_path = os.path.abspath("data/widerface/wider_face_split/wide
 # Hyperparameters
 LR = 0.0001
 SGD_MOMENTUM = 0.9
-EPOCHS = 2
+EPOCHS = 1
 WEIGHT_DECAY = 0.0005
 
 if __name__ == "__main__":
