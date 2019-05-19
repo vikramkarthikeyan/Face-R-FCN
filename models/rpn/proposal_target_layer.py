@@ -157,27 +157,40 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
 
         gt_rois_batch[i] = all_rois[i][gt_assignment[i][keep_inds]]
 
-    bbox_target_data = _compute_targets_pytorch(
+    bbox_target_data = get_bbox_targets(
         rois_batch, gt_rois_batch)
 
     bbox_targets, bbox_inside_weights = _get_bbox_regression_labels_pytorch(bbox_target_data, labels_batch, num_classes)
-
+    print(bbox_targets.shape)
     if rfcn_config.gc_collect:
         del keep_inds, fg_inds, bg_inds
     
     return labels_batch, rois_batch, bbox_targets, bbox_inside_weights
 
 
-def _compute_targets_pytorch(ex_rois, gt_rois):
-    """Compute bounding-box regression targets for an image."""
+# def _compute_targets_pytorch(ex_rois, gt_rois):
+#     """Compute bounding-box regression targets for an image."""
 
-    assert ex_rois.size(1) == gt_rois.size(1)
-    assert ex_rois.size(2) == 4
-    assert gt_rois.size(2) == 4
+#     assert ex_rois.size(1) == gt_rois.size(1)
+#     assert ex_rois.size(2) == 4
+#     assert gt_rois.size(2) == 4
 
-    targets = bbox_transform_batch(ex_rois, gt_rois)
+#     targets = bbox_transform_batch(ex_rois, gt_rois)
     
-    return targets
+#     return targets
+
+def get_bbox_targets(anchors, gt_boxes):
+    print("IN PROPOSAL TARGET BBOX TARGET CALC:", anchors.shape, gt_boxes.shape)
+
+    targets = np.full(gt_boxes.shape, 0.0, dtype=np.float)
+
+    targets[:, :, 0] = (gt_boxes[:, :, 0] - anchors[:, :, 0]) / anchors[:, :, 2] 
+    targets[:, :, 1] = (gt_boxes[:, :, 1] - anchors[:, :, 1]) / anchors[:, :, 3]
+
+    targets[:, :, 2] = np.log(gt_boxes[:, :, 2] / anchors[:, :, 2])
+    targets[:, :, 3] = np.log(gt_boxes[:, :, 3] / anchors[:, :, 3])
+
+    return torch.from_numpy(targets)
 
 
 def bbox_overlaps_vectorized(anchors, gt_boxes):
