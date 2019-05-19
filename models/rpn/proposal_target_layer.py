@@ -161,7 +161,7 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
         rois_batch, gt_rois_batch)
 
     bbox_targets, bbox_inside_weights = _get_bbox_regression_labels_pytorch(bbox_target_data, labels_batch, num_classes)
-    print(bbox_targets.shape)
+    #print(bbox_targets.shape)
     if rfcn_config.gc_collect:
         del keep_inds, fg_inds, bg_inds
     
@@ -180,7 +180,7 @@ def _sample_rois_pytorch(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, 
 #     return targets
 
 def get_bbox_targets(anchors, gt_boxes):
-    print("IN PROPOSAL TARGET BBOX TARGET CALC:", anchors.shape, gt_boxes.shape)
+    #print("IN PROPOSAL TARGET BBOX TARGET CALC:", anchors.shape, gt_boxes.shape)
 
     targets = np.full(gt_boxes.shape, 0.0, dtype=np.float)
 

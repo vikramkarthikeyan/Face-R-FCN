@@ -141,7 +141,7 @@ class Trainer:
 
         with torch.no_grad():
 
-            for i, (images, targets, image_paths) in enumerate(self.validation_loader):
+            for i, (images, targets, image_paths) in enumerate(self.train_loader):
 
                 start = time.time()
 
@@ -219,7 +219,7 @@ def plot_boxes(image, rois, gt_boxes,  image_count):
         ax.add_patch(rect)
 
     # plt.show()
-    plt.savefig('validation_plots/regions_{}.png'.format(image_count))
+    plt.savefig('training_plots/regions_{}.png'.format(image_count))
 
 def bbox_transform(boxes, split_deltas):
     results =  np.full(boxes.shape, 0.0, dtype=np.float)
