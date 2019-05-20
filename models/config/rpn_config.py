@@ -8,6 +8,6 @@ BATCHSIZE = 256
 
 
 # IOU >= thresh: positive example
-POSITIVE_OVERLAP = 0.9
+POSITIVE_OVERLAP = 0.7
 # IOU < thresh: negative example
 NEGATIVE_OVERLAP = 0.3
