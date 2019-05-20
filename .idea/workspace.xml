@@ -2,11 +2,190 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d9f2daa1-78d5-4613-92ef-2b321e0c04e0" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Trainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Trainer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/losses.csv" beforeDir="false" afterPath="$PROJECT_DIR$/losses.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/make.sh" beforeDir="false" afterPath="$PROJECT_DIR$/models/make.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/psroi_pooling/src/cuda/psroi_pooling.cu.o" beforeDir="false" afterPath="$PROJECT_DIR$/models/psroi_pooling/src/cuda/psroi_pooling.cu.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_10.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_100.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_101.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_102.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_103.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_104.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_105.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_107.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_108.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_109.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_11.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_111.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_113.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_114.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_115.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_118.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_119.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_12.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_120.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_121.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_122.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_123.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_124.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_125.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_126.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_127.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_128.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_129.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_13.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_130.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_131.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_132.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_133.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_135.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_136.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_137.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_138.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_139.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_14.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_140.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_141.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_143.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_144.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_145.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_146.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_147.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_148.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_149.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_15.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_150.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_151.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_152.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_153.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_154.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_155.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_156.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_157.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_158.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_159.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_160.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_161.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_162.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_163.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_164.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_165.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_166.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_167.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_168.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_169.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_17.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_170.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_171.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_172.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_173.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_174.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_175.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_176.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_178.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_179.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_18.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_180.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_181.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_182.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_183.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_184.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_185.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_186.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_187.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_189.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_190.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_191.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_192.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_193.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_194.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_195.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_196.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_197.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_198.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_199.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_20.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_200.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_201.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_202.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_203.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_204.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_205.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_206.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_21.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_22.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_23.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_24.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_25.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_26.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_28.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_29.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_30.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_31.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_32.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_33.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_34.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_37.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_38.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_39.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_40.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_41.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_42.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_43.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_44.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_45.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_46.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_47.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_48.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_49.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_50.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_51.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_53.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_54.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_55.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_56.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_57.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_58.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_59.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_61.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_62.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_63.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_64.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_65.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_66.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_67.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_68.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_69.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_7.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_70.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_71.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_72.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_73.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_74.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_75.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_76.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_78.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_79.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_8.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_81.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_82.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_83.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_84.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_85.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_86.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_87.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_88.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_89.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_9.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_91.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_92.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_93.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_95.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_96.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_97.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_98.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/validation_plots/regions_99.png" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -16,56 +195,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/models/rfcn.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="51" column="38" selection-start-line="51" selection-start-column="29" selection-end-line="51" selection-end-column="38" />
-              <folding>
-                <element signature="e#0#12#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Trainer.py">
+        <entry file="file://$PROJECT_DIR$/plotting.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="49">
-              <caret line="159" column="77" selection-start-line="159" selection-start-column="77" selection-end-line="159" selection-end-column="77" />
-              <folding>
-                <element signature="e#0#31#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/models/utils/image_processing.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="17" column="18" selection-start-line="17" selection-start-column="18" selection-end-line="17" selection-end-column="18" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/training.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="810">
-              <caret line="54" column="11" selection-start-line="54" selection-start-column="7" selection-end-line="54" selection-end-column="11" />
-              <folding>
-                <element signature="e#0#19#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/inference.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="600">
-              <caret line="40" column="18" selection-start-line="40" selection-start-column="18" selection-end-line="40" selection-end-column="18" />
+            <state relative-caret-position="150">
+              <caret line="10" column="50" lean-forward="true" selection-start-line="10" selection-start-column="50" selection-end-line="10" selection-end-column="50" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -145,6 +279,7 @@
         <option value="$PROJECT_DIR$/models/rpn/rpn.py" />
         <option value="$PROJECT_DIR$/models/rpn/anchor_target_layer.py" />
         <option value="$PROJECT_DIR$/Trainer.py" />
+        <option value="$PROJECT_DIR$/plotting.py" />
       </list>
     </option>
   </component>
@@ -170,13 +305,7 @@
             <path>
               <item name="Face-R-FCN" type="b2602c69:ProjectViewProjectNode" />
               <item name="Face-R-FCN" type="462c0819:PsiDirectoryNode" />
-              <item name="models" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Face-R-FCN" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Face-R-FCN" type="462c0819:PsiDirectoryNode" />
-              <item name="models" type="462c0819:PsiDirectoryNode" />
-              <item name="utils" type="462c0819:PsiDirectoryNode" />
+              <item name="losses" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -202,7 +331,28 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.plotting">
+    <configuration name="plotting" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Face-R-FCN" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/plotting.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="training" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Face-R-FCN" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -226,6 +376,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.plotting" />
         <item itemvalue="Python.training" />
       </list>
     </recent_temporary>
@@ -374,7 +525,7 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32937366" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.32937366" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.3995633" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -601,9 +752,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/utils/logger.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/models/utils/logger.py" />
     <entry file="file://$PROJECT_DIR$/models/resnets.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="289">
@@ -682,13 +831,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/utils/net_utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2805">
-          <caret line="197" column="11" selection-start-line="197" selection-start-column="11" selection-end-line="197" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/models/utils/net_utils.py" />
     <entry file="file://$PROJECT_DIR$/models/psroi_pooling/src/psroi_pooling_cuda.c">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="555">
