@@ -167,12 +167,12 @@ class Trainer:
                     # Perform NMS on ROIs
                     #keep_rois_postNMS = nms_numpy(rois, 0.3)
                     #rois = rois[keep_rois_postNMS, :]
-                    cls_prob = cls_prob[0, :, :]
+                    #cls_prob = cls_prob[0, :, :]
 
                     # get those ROIs with higher face prob
-                    keep = cls_prob[:, 1] > 0.48
+                    #keep = cls_prob[:, 1] > 0.48
 
-                    rois = rois[keep, :]
+                    #rois = rois[keep, :]
 
                     rois = np.expand_dims(rois, 0)
                     
