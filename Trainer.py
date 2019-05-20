@@ -165,7 +165,7 @@ class Trainer:
                     rois = bbox_transform(rois, bbox_pred)
 
                     # Perform NMS on ROIs
-                    keep_rois_postNMS = nms_numpy(rois, 0.7)
+                    keep_rois_postNMS = nms_numpy(rois, 0.3)
                     rois = rois[keep_rois_postNMS, :]
                     cls_prob = cls_prob[0, keep_rois_postNMS, :]
 
