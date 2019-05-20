@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+from torchvision.utils import save_image
 # from .resnets import resnet50
 from .utils.image_processing import scale_boxes_batch
 from .utils.image_plotting import plot_boxes
@@ -52,7 +52,7 @@ class _RFCN(nn.Module):
         base_features = self.RCNN_base(reshaped_image)
 
         #print("\n\nBase features:", base_features.requires_grad)
-
+        #save_image(tensor=base_features[0, :64], filename="base_features.jpg", nrow=16, padding=3)
         # Calculate scale of features vs image 
         base_feature_dimension = base_features.shape[-1]
         image_dimension = reshaped_image.shape[-1]

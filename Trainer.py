@@ -129,7 +129,7 @@ class Trainer:
 
         pd.DataFrame(data=file_ip, columns=["Batch", "Loss", "RPN Classification Loss", "RPN Regression Loss",
                                             "RCNN Classification Loss", "RCNN Regression Loss"]
-                     ).to_csv(path_or_buf="losses.csv")
+                     ).to_csv(path_or_buf="losses" + str(epoch) +".csv")
 
     def save_checkpoint(self, state, filename='./saved_models/checkpoint.pth.tar'):
         torch.save(state, filename)
@@ -170,7 +170,7 @@ class Trainer:
                     cls_prob = cls_prob[0, keep_rois_postNMS, :]
 
                     # get those ROIs with higher face prob
-                    keep = cls_prob[:, 1] > 0.5
+                    keep = cls_prob[:, 1] > 0.48
 
                     rois = rois[keep, :]
 
